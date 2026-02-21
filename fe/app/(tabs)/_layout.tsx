@@ -1,8 +1,10 @@
 import { Image } from 'expo-image'
-import { Tabs } from 'expo-router'
+import { Tabs, useRouter } from 'expo-router'
 import React from 'react'
 
 const TabLayout = () => {
+  const router = useRouter()
+
   return (
     <Tabs
       screenOptions={{
@@ -38,6 +40,25 @@ const TabLayout = () => {
           />
         )
       }} />
+      <Tabs.Screen
+        name="create"
+        options={{
+          tabBarLabel: "",
+          tabBarIcon: () => (
+            <Image
+              source={require("@/assets/images/tabs/plus.svg")}
+              contentFit="contain"
+              style={{ width: 60, height: 60, marginTop: 12 }}
+            />
+          ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault()
+            router.push("/create-event")
+          },
+        }}
+      />
       <Tabs.Screen name="saved" options={{
         tabBarLabel: "Saved",
         tabBarIcon: ({ focused }) => (

@@ -14,6 +14,7 @@ export default function RootLayout() {
     >
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="create-event" options={{ presentation: 'modal', headerShown: false }} />
     </Stack>
   </ThemeProvider>
 
