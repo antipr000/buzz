@@ -1,6 +1,8 @@
+import FeaturedEventCard from '@/components/FeaturedEventCard'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { CATEGORY_COLORS } from '@/constants/categoryColors'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import MaskedView from '@react-native-masked-view/masked-view'
@@ -14,45 +16,111 @@ const EVENTS = [
   {
     id: '1',
     category: 'Music',
-    categoryIcon: require('@/assets/images/events/music.svg'),
+    categoryIcon: require('@/assets/images/events/music/music2.svg'),
     title: 'Hoop Music Festival',
     description: 'The biggest music festival of the year featuring world...',
     date: 'Thu, Jan 15 | 8 PM',
     location: 'Central Park Arena',
     bg: require('@/assets/images/home/bg_music.png'),
-    eventColor: 'rgba(236,72,153,1)'
+    eventColor: CATEGORY_COLORS.Music
   },
   {
     id: '2',
     category: 'Tech',
-    categoryIcon: require('@/assets/images/events/tech.svg'),
+    categoryIcon: require('@/assets/images/events/tech/tech2.svg'),
     title: 'Hackathon',
     description: 'Build real solutions with code, creativity, and collab...',
     date: 'Fri, Jan 23 | 11 AM',
     location: 'Innovation Hub',
     bg: require('@/assets/images/home/bg_hackathon.png'),
-    eventColor: 'rgba(37,99,235,1)'
+    eventColor: CATEGORY_COLORS.Tech
   },
   {
     id: '3',
     category: 'Food',
-    categoryIcon: require('@/assets/images/events/food.svg'),
+    categoryIcon: require('@/assets/images/events/food/food2.svg'),
     title: 'Street Food Fest',
     description: 'A culinary journey through the best street food from...',
     date: 'Tue, Feb 2 | 5 PM',
     location: 'River Walk Plaza',
     bg: require('@/assets/images/home/bg_streetfood.png'),
-    eventColor: 'rgba(249,115,22,1)'
+    eventColor: CATEGORY_COLORS.Food
+  },
+]
+
+const FEATURED_EVENTS = [
+  {
+    id: 'f1',
+    category: 'Music',
+    categoryIcon: require('@/assets/images/events/music/music2.svg'),
+    calendarIcon: require('@/assets/images/events/music/calender.svg'),
+    timeIcon: require('@/assets/images/events/music/time.svg'),
+    locationIcon: require('@/assets/images/events/music/location.svg'),
+    title: 'Hoop Music Festival',
+    description: 'The biggest electronic music festival of the year featuring world class DJs and immersive light shows.',
+    date: 'Thu, Jan 15, 2026',
+    time: '8 PM',
+    location: 'Central Park Arena',
+    bg: require('@/assets/images/home/bg_music.png'),
+    eventColor: CATEGORY_COLORS.Music,
+    price: '1500',
+    attendees: 2337,
+    organizer: 'Pulse Events',
+    organizerLogo: require('@/assets/images/home/logo1.svg'),
+    isFeatured: true,
+    isPopular: true,
+  },
+  {
+    id: 'f2',
+    category: 'Tech',
+    categoryIcon: require('@/assets/images/events/tech/tech2.svg'),
+    calendarIcon: require('@/assets/images/events/tech/calender.svg'),
+    timeIcon: require('@/assets/images/events/tech/time.svg'),
+    locationIcon: require('@/assets/images/events/tech/location.svg'),
+    title: 'Hackathon',
+    description: 'Build real solutions with code, creativity, and collaboration. An intense 24–48 hour challenge to build bold ideas from scratch.',
+    date: 'Fri, Jan 23, 2026',
+    time: '11 AM',
+    location: 'Innovation Hub',
+    bg: require('@/assets/images/home/bg_hackathon.png'),
+    eventColor: CATEGORY_COLORS.Tech,
+    price: '750',
+    attendees: 564,
+    organizer: 'Startup Grind',
+    organizerLogo: require('@/assets/images/home/logo2.svg'),
+    isFeatured: true,
+    isPopular: false,
+  },
+  {
+    id: 'f3',
+    category: 'Food',
+    categoryIcon: require('@/assets/images/events/food/food2.svg'),
+    calendarIcon: require('@/assets/images/events/food/calender.svg'),
+    timeIcon: require('@/assets/images/events/food/time.svg'),
+    locationIcon: require('@/assets/images/events/food/location.svg'),
+    title: 'Street Food Festival',
+    description: 'A culinary journey through the best street food from around the world. Taste, explore, enjoy.',
+    date: 'Tue, Feb 2, 2026',
+    time: '5 PM',
+    location: 'River Walk Plaza',
+    bg: require('@/assets/images/home/bg_streetfood.png'),
+    eventColor: CATEGORY_COLORS.Food,
+    price: 'Free',
+    attendees: 1820,
+    organizer: 'Foodie Network',
+    organizerLogo: require('@/assets/images/home/logo3.svg'),
+    isFeatured: true,
+    isPopular: true,
   },
 ]
 
 const CATEGORIES = [
   { label: 'All Events', icon: null },
-  { label: 'Music', icon: require('@/assets/images/events/music.svg') },
-  { label: 'Art', icon: require('@/assets/images/events/art.svg') },
-  { label: 'Food', icon: require('@/assets/images/events/food.svg') },
-  { label: 'Tech', icon: require('@/assets/images/events/tech.svg') },
-  { label: 'Fitness', icon: require('@/assets/images/events/fitness.svg') },
+  { label: 'Music', icon: require('@/assets/images/events/music/music.svg') },
+  { label: 'Art', icon: require('@/assets/images/events/art/art.svg') },
+  { label: 'Food', icon: require('@/assets/images/events/food/food.svg') },
+  { label: 'Tech', icon: require('@/assets/images/events/tech/tech.svg') },
+  { label: 'Fitness', icon: require('@/assets/images/events/fitness/fitness.svg') },
 ]
 
 type EventCardProps = {
@@ -67,16 +135,20 @@ type EventCardProps = {
 }
 
 const EventCard = ({ category, categoryIcon, title, description, date, location, bg, eventColor }: EventCardProps) => (
-  <Card className='mr-4 p-0 gap-0 border-0 overflow-hidden w-[168px] h-[242px] flex items-center justify-end'>
+  <Card className='mr-4 p-0 gap-0 border-0 overflow-hidden w-[160px] h-[230px] flex items-center justify-end'>
     {/* Background Image + Overlay */}
     <Image source={bg} style={{ width: '100%', height: '100%', position: 'absolute' }} contentFit='cover' />
-    <View className='w-full h-full absolute opacity-40' style={{ backgroundColor: eventColor }} />
+    <LinearGradient
+      colors={[eventColor, '#040047']}
+      locations={[0, 0.4]}
+      style={{ width: '100%', height: '100%', position: 'absolute', opacity: 0.4 }}
+    />
 
     {/* Content */}
     <View className='p-3.5'>
       {/* Category Badge */}
       <Badge variant='outline' className='self-start border-0 mb-1 p-1 px-2' style={{ backgroundColor: eventColor }}>
-        {/* <Image source={categoryIcon} style={{ width: 14, height: 14 }} contentFit='contain' /> */}
+        <Image source={categoryIcon} style={{ width: 14, height: 14 }} contentFit='contain' />
         <Text className='text-primary-foreground text-[10px]'>{category}</Text>
       </Badge>
 
@@ -110,11 +182,11 @@ const EventCard = ({ category, categoryIcon, title, description, date, location,
 const Home = () => {
   return (
     <SafeAreaView className='flex-1 bg-surface'>
-      <ScrollView className='flex-1' showsVerticalScrollIndicator={false}>
-        <View className='px-5 py-5 pb-7 bg-secondary'>
+      <View className='flex-1'>
+        <View className='px-5 py-5 pb3 bg-secondary shrink-0'>
 
           {/* Header: Location + Notification */}
-          <View className='flex-row items-center justify-between mb-8'>
+          <View className='flex-row items-center justify-between mb-1'>
             <View className='flex-row items-center gap-2'>
               <Image source={require('@/assets/images/home/location.svg')} style={{ width: 18, height: 18 }} contentFit='contain' />
               <Text className='text-primary-foreground text-xs'>New Delhi, India</Text>
@@ -152,16 +224,16 @@ const Home = () => {
 
           {/* Search Bar */}
           <View className='flex-row items-center bg-surface rounded-lg px-3 gap-2'>
-            <Image source={require('@/assets/images/home/search.svg')} style={{ width: 15, height: 15 }} />
+            <Image source={require('@/assets/images/home/search.svg')} style={{ width: 11, height: 11 }} />
             <Input
               placeholder='Search by events, activities, venues, artists...'
-              className='flex-1 text-xs border-0 font-medium placeholder:text-[rgba(15,23,42,0.5)] px-0'
+              className='flex-1  text-xs border-0 font-medium placeholder:text-[rgba(15,23,42,0.5)] px-0'
             />
           </View>
         </View>
 
         {/* Trending Section */}
-        <View className='mt-6'>
+        <View className='mt-1.5 shrink-0'>
           {/* Section Header */}
           <View className='flex-row items-center justify-between px-5 mb-4'>
             <View className='flex-row items-center gap-1'>
@@ -171,8 +243,8 @@ const Home = () => {
                 Trending now – Feel the Buzz
               </Text>
 
-          
-              <Image source={require('@/assets/images/home/fire.gif')} style={{ width: 30, height: 30 }}  />
+
+              <Image source={require('@/assets/images/home/fire.gif')} style={{ width: 30, height: 30 }} />
             </View>
             <TouchableOpacity>
               <Text className='ml-2 text-primary text-xs font-medium translate-y-3'>See all</Text>
@@ -183,7 +255,7 @@ const Home = () => {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingLeft: 20, paddingRight: 8 }}
+            contentContainerStyle={{ paddingLeft: 20, paddingRight: 8, paddingTop: 10, paddingBottom: 10 }}
           >
             {EVENTS.map((event) => (
               <EventCard key={event.id} {...event} />
@@ -191,25 +263,32 @@ const Home = () => {
           </ScrollView>
         </View>
 
-        {/* Category Filters */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 16, paddingRight: 8, paddingTop: 20, paddingBottom: 20 }}
-        >
-          {CATEGORIES.map((cat) => (
-            <Badge
-              key={cat.label}
-              variant='outline'
-              className='border-primary/30 mr-3 px-4 py-2'
-            >
-              {cat.icon && <Image source={cat.icon} style={{ width: 16, height: 16 }} contentFit='contain' />}
-              <Text className='text-primary text-xs font-medium'>{cat.label}</Text>
-            </Badge>
+        <View className='shrink-0'>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingLeft: 16, paddingRight: 8, paddingTop: 10, paddingBottom: 10 }}
+          >
+            {CATEGORIES.map((cat) => (
+              <Badge
+                key={cat.label}
+                variant='outline'
+                className='border-primary mr-3 px-4 py-1.5'
+              >
+                {cat.icon && <Image source={cat.icon} style={{ width: 10, height: 10 }} contentFit='contain' />}
+                <Text className='text-primary text-xs font-medium'>{cat.label}</Text>
+              </Badge>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Featured Event Cards */}
+        <ScrollView  showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 4, paddingBottom: 8 }}>
+          {FEATURED_EVENTS.map((event) => (
+            <FeaturedEventCard key={event.id} {...event} />
           ))}
         </ScrollView>
-
-      </ScrollView>
+      </View>
     </SafeAreaView>
   )
 }
