@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import React from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Link } from 'expo-router'
 
 const EVENTS = [
   {
@@ -124,6 +125,7 @@ const CATEGORIES = [
 ]
 
 type EventCardProps = {
+  id: string
   category: string
   categoryIcon: ImageSource
   title: string
@@ -134,7 +136,7 @@ type EventCardProps = {
   eventColor: string
 }
 
-const EventCard = ({ category, categoryIcon, title, description, date, location, bg, eventColor }: EventCardProps) => (
+const EventCard = ({ id, category, categoryIcon, title, description, date, location, bg, eventColor }: EventCardProps) => (
   <Card className='mr-4 p-0 gap-0 border-0 overflow-hidden w-[160px] h-[230px] flex items-center justify-end'>
     {/* Background Image + Overlay */}
     <Image source={bg} style={{ width: '100%', height: '100%', position: 'absolute' }} contentFit='cover' />
@@ -171,10 +173,12 @@ const EventCard = ({ category, categoryIcon, title, description, date, location,
       </View>
 
       {/* Join Now Button */}
-      <Button variant='outline' className='border-0 p-0 h-9  bg-secondary rounded-lg mt-3 flex-row items-center justify-center gap-2'>
-        <Text className='text-primary-foreground text-[10px] font-semibold'>Join Now</Text>
-        <Image source={require('@/assets/images/home/arrow.svg')} style={{ width: 12, height: 12 }} contentFit='contain' />
-      </Button>
+      <Link href={`/event/${id}`} asChild>
+        <Button variant='outline' className='border-0 p-0 h-9  bg-secondary rounded-lg mt-3 flex-row items-center justify-center gap-2'>
+          <Text className='text-primary-foreground text-[10px] font-semibold'>Join Now</Text>
+          <Image source={require('@/assets/images/home/arrow.svg')} style={{ width: 12, height: 12 }} contentFit='contain' />
+        </Button>
+      </Link>
     </View>
   </Card>
 )
@@ -283,9 +287,13 @@ const Home = () => {
         </View>
 
         {/* Featured Event Cards */}
-        <ScrollView  showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 4, paddingBottom: 8 }}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 4, paddingBottom: 8 }}>
           {FEATURED_EVENTS.map((event) => (
-            <FeaturedEventCard key={event.id} {...event} />
+            <Link key={event.id} href={`/event/${event.id}`} asChild>
+              <TouchableOpacity activeOpacity={0.8}>
+                <FeaturedEventCard {...event} />
+              </TouchableOpacity>
+            </Link>
           ))}
         </ScrollView>
       </View>

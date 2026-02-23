@@ -13,7 +13,7 @@
         --primary: rgba(79, 70, 229, 1);
         --primary-foreground: rgba(249, 250, 251, 1);
         --secondary: rgba(4, 0, 71, 1);
-        --secondary-foreground: 0 0% 9%;
+        --secondary-foreground: rgba(15, 23, 42, 1);
         --muted: 0 0% 96.1%;
         --muted-foreground: 0 0% 45.1%;
         --accent: 0 0% 96.1%;
@@ -54,5 +54,23 @@
         --chart-3: 30 80% 55%;
         --chart-4: 280 65% 60%;
         --chart-5: 340 75% 55%;
+    }
+}
+
+@layer utilities {
+    .font-sans {
+        font-family: 'Poppins';
+    }
+
+    .font-medium {
+        font-family: 'Poppins_Medium';
+    }
+
+    .font-semibold {
+        font-family: 'Poppins_SemiBold';
+    }
+
+    .font-bold {
+        font-family: 'Poppins_Bold';
     }
 }
