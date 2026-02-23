@@ -185,9 +185,9 @@ const EventCard = ({ id, category, categoryIcon, title, description, date, locat
 
 const Home = () => {
   return (
-    <SafeAreaView className='flex-1 bg-surface'>
+    <SafeAreaView className='flex-1 bg-background'>
       <View className='flex-1'>
-        <View className='px-5 py-5 pb3 bg-secondary shrink-0'>
+        <View className='px-5 py-5 pb-3 bg-background shrink-0'>
 
           {/* Header: Location + Notification */}
           <View className='flex-row items-center justify-between mb-1'>
@@ -250,9 +250,11 @@ const Home = () => {
 
               <Image source={require('@/assets/images/home/fire.gif')} style={{ width: 30, height: 30 }} />
             </View>
-            <TouchableOpacity>
-              <Text className='ml-2 text-primary text-xs font-medium translate-y-3'>See all</Text>
-            </TouchableOpacity>
+            <Link href="/all" asChild>
+              <TouchableOpacity>
+                <Text className='ml-2 text-primary text-xs font-medium translate-y-3'>See all</Text>
+              </TouchableOpacity>
+            </Link>
           </View>
 
           {/* Horizontal Event Cards */}
