@@ -187,7 +187,7 @@ const Home = () => {
   return (
     <SafeAreaView className='flex-1 bg-background'>
       <View className='flex-1'>
-        <View className='px-5 py-5 pb-3 bg-background shrink-0'>
+        <View className='px-5 py-5 pb-3 bg-secondary shrink-0'>
 
           {/* Header: Location + Notification */}
           <View className='flex-row items-center justify-between mb-1'>
