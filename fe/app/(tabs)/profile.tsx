@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
 import { Card } from '@/components/ui/card'
 import { ChevronRight } from 'lucide-react-native'
+import { Link, Href } from 'expo-router'
 
 const STATS = [
   {
@@ -24,22 +25,26 @@ const STATS = [
   }
 ]
 
-const MENU_ITEMS = [
+const MENU_ITEMS: { icon: string; label: string; href: Href }[] = [
   {
     icon: require('@/assets/images/profile/bell.svg'),
-    label: 'Notifications'
+    label: 'Notifications',
+    href: '/#' as Href
   },
   {
     icon: require('@/assets/images/profile/settings.svg'),
-    label: 'Settings'
+    label: 'Settings',
+    href: '/#' as Href
   },
   {
     icon: require('@/assets/images/profile/shield.svg'),
-    label: 'Privacy Policy'
+    label: 'Privacy Policy',
+    href: '/#' as Href
   },
   {
     icon: require('@/assets/images/profile/question.svg'),
-    label: 'Help & support'
+    label: 'Help & support',
+    href: '/help' as Href
   }
 ]
 
@@ -80,15 +85,17 @@ const Profile = () => {
         {/* Menu Options */}
         <View className='gap-3'>
           {MENU_ITEMS.map((item, index) => (
-            <TouchableOpacity key={index} activeOpacity={0.7}>
-              <Card className='flex-row border border-[rgba(4,0,71,0.1)] items-center justify-between px-6 py-6 bg-background rounded-xl shadow-none'>
-                <View className='flex-row items-center gap-4'>
-                  <Image source={item.icon} style={{ width: 15, height: 15 }} contentFit='contain' />
-                  <Text className='text-black font-medium text-xs'>{item.label}</Text>
-                </View>
-                <ChevronRight size={15} color="rgba(79, 70, 229, 1)" />
-              </Card>
-            </TouchableOpacity>
+            <Link key={index} href={item.href} asChild>
+              <TouchableOpacity activeOpacity={0.7}>
+                <Card className='flex-row border border-[rgba(4,0,71,0.1)] items-center justify-between px-6 py-6 bg-background rounded-xl shadow-none'>
+                  <View className='flex-row items-center gap-4'>
+                    <Image source={item.icon} style={{ width: 15, height: 15 }} contentFit='contain' />
+                    <Text className='text-black font-medium text-xs'>{item.label}</Text>
+                  </View>
+                  <ChevronRight size={15} color="rgba(79, 70, 229, 1)" />
+                </Card>
+              </TouchableOpacity>
+            </Link>
           ))}
         </View>
 
