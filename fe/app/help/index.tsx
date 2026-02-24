@@ -32,20 +32,22 @@ const HelpCentre = () => {
                 {/* Section 1: How can I assist you? */}
                 <Text className='text-secondary font-semibold text-sm mb-4'>How can I assist you?</Text>
 
-               <Link href="/help/find-event" asChild>
-                <TouchableOpacity activeOpacity={0.8} className='mb-3'>
-                    <Card className='flex-row items-center justify-between p-4 bg-white rounded-md shadow-sm border border-[rgba(0,0,0,0.05)]'>
-                        <Text className='text-secondary font-medium text-xs'>Find Your Event Details</Text>
-                        <Image source={require('@/assets/images/help/event.gif')} style={{ width: 20, height: 20 }} />
-                    </Card>
-                </TouchableOpacity>
+                <Link href="/help/find-event" asChild>
+                    <TouchableOpacity activeOpacity={0.8} className='mb-3'>
+                        <Card className='flex-row items-center justify-between p-4 bg-white rounded-md shadow-sm border border-[rgba(0,0,0,0.05)]'>
+                            <Text className='text-secondary font-medium text-xs'>Find Your Event Details</Text>
+                            <Image source={require('@/assets/images/help/event.gif')} style={{ width: 20, height: 20 }} />
+                        </Card>
+                    </TouchableOpacity>
                 </Link>
+                <Link href="/help/recent-events" asChild>
                 <TouchableOpacity activeOpacity={0.8} className='mb-5'>
                     <Card className='flex-row items-center justify-between p-4 bg-white rounded-md shadow-sm border border-[rgba(0,0,0,0.05)]'>
                         <Text className='text-secondary font-medium text-xs'>Need help with your recent bookings ?</Text>
                         <Image source={require('@/assets/images/help/calender.gif')} style={{ width: 20, height: 20 }} />
                     </Card>
                 </TouchableOpacity>
+                </Link>
 
                 {/* Section 2: Top help topics */}
                 <Text className='text-[rgba(15,23,42,0.7)] text-xs font-medium mb-6'>Top help topics</Text>

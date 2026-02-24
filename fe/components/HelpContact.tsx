@@ -1,0 +1,28 @@
+import React from 'react'
+import { View } from 'react-native'
+import { Text } from '@/components/ui/text'
+import { Button } from '@/components/ui/button'
+
+interface HelpContactProps {
+    userName?: string
+}
+
+const HelpContact = ({ userName = 'Tayne' }: HelpContactProps) => {
+    return (
+        <View className='p-5 bg-white border-t border-[rgba(0,0,0,0.05)] pt-6 pb-8'>
+            <Text className='text-[rgba(251,13,21,1)] font-semibold text-sm mb-1'>Contact Us</Text>
+            <Text className='text-secondary-foreground text-xs mb-4'>Hi {userName}, let us help you</Text>
+
+            <View className='gap-3'>
+                <Button className='w-full rounded-md h-11 bg-primary'>
+                    <Text className='text-white text-[13px] font-bold'>CHAT WITH US</Text>
+                </Button>
+                <Button variant="outline" className='w-full rounded-md h-11 border-primary bg-background'>
+                    <Text className='text-primary text-[13px] font-bold'>CALL ME NOW</Text>
+                </Button>
+            </View>
+        </View>
+    )
+}
+
+export default HelpContact
