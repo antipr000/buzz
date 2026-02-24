@@ -41,24 +41,26 @@ const HelpCentre = () => {
                     </TouchableOpacity>
                 </Link>
                 <Link href="/help/recent-events" asChild>
-                <TouchableOpacity activeOpacity={0.8} className='mb-5'>
-                    <Card className='flex-row items-center justify-between p-4 bg-white rounded-md shadow-sm border border-[rgba(0,0,0,0.05)]'>
-                        <Text className='text-secondary font-medium text-xs'>Need help with your recent bookings ?</Text>
-                        <Image source={require('@/assets/images/help/calender.gif')} style={{ width: 20, height: 20 }} />
-                    </Card>
-                </TouchableOpacity>
+                    <TouchableOpacity activeOpacity={0.8} className='mb-5'>
+                        <Card className='flex-row items-center justify-between p-4 bg-white rounded-md shadow-sm border border-[rgba(0,0,0,0.05)]'>
+                            <Text className='text-secondary font-medium text-xs'>Need help with your recent bookings ?</Text>
+                            <Image source={require('@/assets/images/help/calender.gif')} style={{ width: 20, height: 20 }} />
+                        </Card>
+                    </TouchableOpacity>
                 </Link>
 
                 {/* Section 2: Top help topics */}
                 <Text className='text-[rgba(15,23,42,0.7)] text-xs font-medium mb-6'>Top help topics</Text>
 
                 <View className='flex-row flex-wrap justify-between gap-y-4 mb-8'>
-                    <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
-                        <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
-                            <Text className='text-secondary font-bold text-xs text-center'>Payment & Refund</Text>
-                            <Image source={require('@/assets/images/help/payment.gif')} style={{ width: 45, height: 45 }} />
-                        </Card>
-                    </TouchableOpacity>
+                    <Link href={"/help/payment-refund" as any} asChild>
+                        <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
+                            <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
+                                <Text className='text-secondary font-bold text-xs text-center'>Payment & Refund</Text>
+                                <Image source={require('@/assets/images/help/payment.gif')} style={{ width: 45, height: 45 }} />
+                            </Card>
+                        </TouchableOpacity>
+                    </Link>
 
                     <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
                         <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
