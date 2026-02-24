@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
 import { Card } from '@/components/ui/card'
 import { ChevronLeft } from 'lucide-react-native'
-import { router } from 'expo-router'
+import { router, Link } from 'expo-router'
 
 const HelpCentre = () => {
     return (
@@ -32,13 +32,14 @@ const HelpCentre = () => {
                 {/* Section 1: How can I assist you? */}
                 <Text className='text-secondary font-semibold text-sm mb-4'>How can I assist you?</Text>
 
+               <Link href="/help/find-event" asChild>
                 <TouchableOpacity activeOpacity={0.8} className='mb-3'>
                     <Card className='flex-row items-center justify-between p-4 bg-white rounded-md shadow-sm border border-[rgba(0,0,0,0.05)]'>
                         <Text className='text-secondary font-medium text-xs'>Find Your Event Details</Text>
                         <Image source={require('@/assets/images/help/event.gif')} style={{ width: 20, height: 20 }} />
                     </Card>
                 </TouchableOpacity>
-
+                </Link>
                 <TouchableOpacity activeOpacity={0.8} className='mb-5'>
                     <Card className='flex-row items-center justify-between p-4 bg-white rounded-md shadow-sm border border-[rgba(0,0,0,0.05)]'>
                         <Text className='text-secondary font-medium text-xs'>Need help with your recent bookings ?</Text>
