@@ -53,7 +53,7 @@ const HelpCentre = () => {
                 <Text className='text-[rgba(15,23,42,0.7)] text-xs font-medium mb-6'>Top help topics</Text>
 
                 <View className='flex-row flex-wrap justify-between gap-y-4 mb-8'>
-                    <Link href={"/help/payment-refund" as any} asChild>
+                    <Link href="/help/payment-refund" asChild>
                         <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
                             <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
                                 <Text className='text-secondary font-bold text-xs text-center'>Payment & Refund</Text>
@@ -62,26 +62,32 @@ const HelpCentre = () => {
                         </TouchableOpacity>
                     </Link>
 
-                    <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
-                        <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
-                            <Text className='text-secondary font-bold text-xs text-center'>Cancellation & Exchange</Text>
-                            <Image source={require('@/assets/images/help/cancel.gif')} style={{ width: 45, height: 45 }} />
-                        </Card>
-                    </TouchableOpacity>
+                    <Link href="/help/cancellation-exchange" asChild>
+                        <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
+                            <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
+                                <Text className='text-secondary font-bold text-xs text-center'>Cancellation & Exchange</Text>
+                                <Image source={require('@/assets/images/help/cancel.gif')} style={{ width: 45, height: 45 }} />
+                            </Card>
+                        </TouchableOpacity>
+                    </Link>
 
-                    <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
-                        <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
-                            <Text className='text-secondary font-bold text-[11px] text-center'>Event Booking/Creating Queries</Text>
-                            <Image source={require('@/assets/images/help/query.gif')} style={{ width: 45, height: 45 }} />
-                        </Card>
-                    </TouchableOpacity>
+                    <Link href="/help/event-booking-queries" asChild>
+                        <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
+                            <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
+                                <Text className='text-secondary font-bold text-[11px] text-center'>Event Booking/Creating Queries</Text>
+                                <Image source={require('@/assets/images/help/query.gif')} style={{ width: 45, height: 45 }} />
+                            </Card>
+                        </TouchableOpacity>
+                    </Link>
 
-                    <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
-                        <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
-                            <Text className='text-secondary font-bold text-xs text-center'>General</Text>
-                            <Image source={require('@/assets/images/help/general.gif')} style={{ width: 45, height: 45 }} />
-                        </Card>
-                    </TouchableOpacity>
+                    <Link href="/help/general-queries" asChild>
+                        <TouchableOpacity activeOpacity={0.8} className='w-[48%]'>
+                            <Card className='p-4 bg-white rounded-xl shadow-sm border-0 items-center justify-between h-[120px] gap-0 '>
+                                <Text className='text-secondary font-bold text-xs text-center'>General</Text>
+                                <Image source={require('@/assets/images/help/general.gif')} style={{ width: 45, height: 45 }} />
+                            </Card>
+                        </TouchableOpacity>
+                    </Link>
                 </View>
 
                 {/* Section 3: Need more help? */}
