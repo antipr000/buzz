@@ -6,16 +6,15 @@ import { Image } from 'expo-image'
 import { Card } from '@/components/ui/card'
 import { ChevronLeft } from 'lucide-react-native'
 import { router, Link } from 'expo-router'
+import BackButton from '@/components/BackButton'
 
 const HelpCentre = () => {
     return (
         <SafeAreaView edges={['top']} className='flex-1 bg-background'>
             {/* Header */}
-            <View className='flex-row items-center justify-between px-5 py-6 pb-4 bg-white'>
+            <View className='flex-row items-center justify-between px-5 py-10 pb-4 bg-white'>
                 <View className='flex-row items-center gap-4'>
-                    <TouchableOpacity onPress={() => router.back()}>
-                        <ChevronLeft size={15} color="rgba(29, 27, 32, 1)" />
-                    </TouchableOpacity>
+                    <BackButton />
                     <Text className='font-semibold text-xs text-secondary'>Help Centre</Text>
                 </View>
                 <TouchableOpacity>

@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react-native'
 import { router } from 'expo-router'
 import HelpContact from '@/components/HelpContact'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
+import BackButton from '@/components/BackButton'
 
 interface FaqItem {
     question: string;
@@ -23,10 +24,8 @@ const HelpPageTemplate = ({ title, faqs }: HelpPageTemplateProps) => {
     return (
         <SafeAreaView edges={['top']} className='flex-1 border-0'>
             {/* Header */}
-            <View className='flex-row items-center px-5 py-6 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
-                <TouchableOpacity onPress={() => router.back()} className='mr-4'>
-                    <ChevronLeft size={16} color="rgba(29, 27, 32, 1)" />
-                </TouchableOpacity>
+            <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
+                <BackButton size={16} />
                 <Text className='font-bold text-xs text-secondary-foreground'>{title}</Text>
             </View>
 

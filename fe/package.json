@@ -22,6 +22,7 @@
     "@rn-primitives/collapsible": "^1.2.0",
     "@rn-primitives/separator": "^1.2.0",
     "@rn-primitives/slot": "^1.2.0",
+    "@rn-primitives/tabs": "^1.2.0",
     "babel-preset-expo": "^54.0.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

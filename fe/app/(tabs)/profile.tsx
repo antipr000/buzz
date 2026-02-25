@@ -29,7 +29,7 @@ const MENU_ITEMS: { icon: string; label: string; href: Href }[] = [
   {
     icon: require('@/assets/images/profile/bell.svg'),
     label: 'Notifications',
-    href: '/#' as Href
+    href: '/notifications' as Href
   },
   {
     icon: require('@/assets/images/profile/settings.svg'),

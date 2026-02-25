@@ -8,15 +8,14 @@ import { router } from 'expo-router'
 import { Image } from 'expo-image'
 import { Separator } from '@/components/ui/separator'
 import HelpContact from '@/components/HelpContact'
+import BackButton from '@/components/BackButton'
 
 const RecentEvents = () => {
     return (
         <SafeAreaView edges={['top']} className='flex-1 '>
             {/* Header */}
-            <View className='flex-row items-center px-5 py-6 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
-                <TouchableOpacity onPress={() => router.back()} className='mr-4'>
-                    <ChevronLeft size={16} color="rgba(29, 27, 32, 1)" />
-                </TouchableOpacity>
+            <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
+                <BackButton size={16} />
                 <Text className='font-bold text-xs text-secondary-foreground'>Recent Events</Text>
             </View>
 

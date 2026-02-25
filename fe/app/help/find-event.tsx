@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft } from 'lucide-react-native'
 import { router } from 'expo-router'
+import BackButton from '@/components/BackButton'
 
 const FindEventDetails = () => {
     const [inputValue, setInputValue] = useState('')
@@ -22,10 +23,8 @@ const FindEventDetails = () => {
                 <View className='flex-1 justify-between bg-[rgba(244,246,251,1)]'>
                     <View>
                         {/* Header */}
-                        <View className='flex-row items-center px-5 py-6 pb-4 bg-white'>
-                            <TouchableOpacity onPress={() => router.back()} className='mr-4'>
-                                <ChevronLeft size={15} color="rgba(29, 27, 32, 1)" />
-                            </TouchableOpacity>
+                        <View className='flex-row items-center px-5 py-10 pb-4 bg-white'>
+                            <BackButton />
                             <Text className='font-semibold text-xs text-secondary-foreground'>Find Your Event Details</Text>
                         </View>
 
@@ -40,7 +39,7 @@ const FindEventDetails = () => {
                             </Text>
 
                             <Text className='text-secondary-foreground font-bold text-sm tracking-[6px] mb-4'>
-                                    _ _ _ _
+                                _ _ _ _
                             </Text>
 
                             <Text className='text-secondary-foreground font-bold text-xs mb-2'>
