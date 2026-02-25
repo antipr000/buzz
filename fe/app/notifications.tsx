@@ -54,7 +54,7 @@ const Notifications = () => {
                                     contentFit="contain"
                                 />
                             </View>
-                            <Text className='text-secondary-foreground font-bold text-base'>No buzz right now</Text>
+                            <Text className='text-secondary-foreground font-semibold text-base'>No buzz right now</Text>
                         </View>
                     )}
 

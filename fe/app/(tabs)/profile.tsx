@@ -39,7 +39,7 @@ const MENU_ITEMS: { icon: string; label: string; href: Href }[] = [
   {
     icon: require('@/assets/images/profile/shield.svg'),
     label: 'Privacy Policy',
-    href: '/#' as Href
+    href: '/privacy' as Href
   },
   {
     icon: require('@/assets/images/profile/question.svg'),
