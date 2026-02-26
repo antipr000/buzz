@@ -5,7 +5,7 @@ import { Text } from '@/components/ui/text'
 import { Input } from '@/components/ui/input'
 import { Image } from 'expo-image'
 import { ChevronLeft, PlusCircle } from 'lucide-react-native'
-import { useRouter } from 'expo-router'
+import { useRouter, Link } from 'expo-router'
 import AddressForm from '@/components/AddressForm'
 
 const AddressDetails = () => {
@@ -48,9 +48,11 @@ const AddressDetails = () => {
             <AddressForm />
 
             <View className='absolute bottom-0 w-full bg-white px-5 py-4 border-t border-[rgba(0,0,0,0.05)] pt-4 pb-8'>
-                <TouchableOpacity activeOpacity={0.8} className='bg-primary w-full h-12 rounded-lg items-center justify-center'>
-                    <Text className='text-white font-bold text-[14px]'>Proceed</Text>
-                </TouchableOpacity>
+                <Link href="/event/payment" asChild>
+                    <TouchableOpacity activeOpacity={0.8} className='bg-primary w-full h-12 rounded-lg items-center justify-center'>
+                        <Text className='text-white font-bold text-[14px]'>Proceed</Text>
+                    </TouchableOpacity>
+                </Link>
             </View>
         </SafeAreaView>
     )
