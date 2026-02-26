@@ -34,7 +34,7 @@ const MENU_ITEMS: { icon: string; label: string; href: Href }[] = [
   {
     icon: require('@/assets/images/profile/settings.svg'),
     label: 'Settings',
-    href: '/#' as Href
+    href: '/settings' as Href
   },
   {
     icon: require('@/assets/images/profile/shield.svg'),
