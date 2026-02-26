@@ -64,9 +64,11 @@ const Profile = () => {
             <Text className='text-[rgba(249,250,251,0.7)] text-[10px]'>you@gmail.com</Text>
           </View>
         </View>
-        <TouchableOpacity className='px-4 py-1 rounded-full border border-background'>
-          <Text className='text-white text-xs'>Edit</Text>
-        </TouchableOpacity>
+        <Link href="/profile/edit" asChild>
+          <TouchableOpacity className='px-4 py-1 rounded-full border border-background'>
+            <Text className='text-white text-xs'>Edit</Text>
+          </TouchableOpacity>
+        </Link>
       </View>
 
       <ScrollView className='flex-1' contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>

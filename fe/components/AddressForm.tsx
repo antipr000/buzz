@@ -56,7 +56,7 @@ const AddressForm = () => {
                     <Text className='text-[#475569] font-semibold text-[12px] mb-1.5'>Mobile Number <Text className='text-red-500'>*</Text></Text>
                     <View className='border border-[rgba(0,0,0,0.2)] rounded-md h-9 px-3 flex-row items-center justify-between'>
                         <Input
-                            value='7878678901'
+                            value='+91 7878678901'
                             className='flex-1 border-0 h-full p-0 py-0 shadow-none text-[11px] text-[#334155]'
                             style={{ borderWidth: 0 }}
                             keyboardType="numeric"

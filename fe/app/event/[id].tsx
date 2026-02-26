@@ -234,6 +234,8 @@ export default function EventDetails() {
                         <Text className="text-[12px] text-[rgba(15,23,42,0.7)] ">Total</Text>
                         <Text className="text-[16px] font-semibold text-secondary-foreground">₹{totalPrice}</Text>
                     </View>
+
+                    
                     <Link href="/event/address" asChild>
                         <TouchableOpacity activeOpacity={0.7} className="bg-primary px-8  h-10 rounded-lg items-center justify-center">
                             <Text className="text-primary-foreground text-[14px] font-bold">Proceed</Text>
