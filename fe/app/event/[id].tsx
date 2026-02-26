@@ -6,7 +6,7 @@ import { Text } from '@/components/ui/text'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter, Link } from 'expo-router'
 import React, { useState } from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -229,19 +229,21 @@ export default function EventDetails() {
                         </View>
                     </View>
                 </View>
-                 <View className=" w-full  px-6 py-4 flex-row items-center justify-between  pb-8">
-                <View>
-                    <Text className="text-[12px] text-[rgba(15,23,42,0.7)] ">Total</Text>
-                    <Text className="text-[16px] font-semibold text-secondary-foreground">₹{totalPrice}</Text>
+                <View className=" w-full  px-6 py-4 flex-row items-center justify-between  pb-8">
+                    <View>
+                        <Text className="text-[12px] text-[rgba(15,23,42,0.7)] ">Total</Text>
+                        <Text className="text-[16px] font-semibold text-secondary-foreground">₹{totalPrice}</Text>
+                    </View>
+                    <Link href="/event/address" asChild>
+                        <TouchableOpacity activeOpacity={0.7} className="bg-primary px-8  h-10 rounded-lg items-center justify-center">
+                            <Text className="text-primary-foreground text-[14px] font-bold">Proceed</Text>
+                        </TouchableOpacity>
+                    </Link>
                 </View>
-                <TouchableOpacity activeOpacity={0.7} className="bg-primary px-8  h-10 rounded-lg items-center justify-center" onPress={() => { }}>
-                    <Text className="text-primary-foreground text-[14px] font-bold">Proceed</Text>
-                </TouchableOpacity>
-            </View>
             </ScrollView>
 
             {/* Bottom Sticky CTA */}
-           
+
         </View>
     )
 }
