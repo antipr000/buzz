@@ -6,6 +6,7 @@ import { Image } from 'expo-image'
 import { Card } from '@/components/ui/card'
 import { ChevronRight } from 'lucide-react-native'
 import { Link, Href } from 'expo-router'
+import { SignOutDialog } from '@/components/SignOutDialog'
 
 const STATS = [
   {
@@ -102,9 +103,11 @@ const Profile = () => {
         </View>
 
         {/* Sign out button */}
-        <TouchableOpacity className='mt-24 py-2.5 px-12 self-center rounded-full border border-primary items-center justify-center bg-transparent'>
-          <Text className='text-primary font-semibold text-sm'>Sign out</Text>
-        </TouchableOpacity>
+        <SignOutDialog>
+          <TouchableOpacity className='mt-24 py-2.5 px-12 self-center rounded-full border border-primary items-center justify-center bg-transparent'>
+            <Text className='text-primary font-semibold text-sm'>Sign out</Text>
+          </TouchableOpacity>
+        </SignOutDialog>
 
       </ScrollView>
     </SafeAreaView>

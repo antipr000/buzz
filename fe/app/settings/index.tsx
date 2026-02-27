@@ -6,6 +6,8 @@ import { Image } from 'expo-image'
 import { ChevronRight } from 'lucide-react-native'
 import BackButton from '@/components/BackButton'
 import { Link } from 'expo-router'
+import { SignOutDialog } from '@/components/SignOutDialog'
+import { DeleteAccountDialog } from '@/components/DeleteAccountDialog'
 
 const Settings = () => {
     const [whatsappEnabled, setWhatsappEnabled] = useState(false);
@@ -110,21 +112,25 @@ const Settings = () => {
                         <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
-                        <View className='flex-row items-center gap-4'>
-                            <Image source={require('@/assets/images/settings/delete.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
-                            <Text className='text-secondary-foreground font-medium text-xs'>Delete Account</Text>
-                        </View>
-                        <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
-                    </TouchableOpacity>
+                    <DeleteAccountDialog>
+                        <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
+                            <View className='flex-row items-center gap-4'>
+                                <Image source={require('@/assets/images/settings/delete.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
+                                <Text className='text-secondary-foreground font-medium text-xs'>Delete Account</Text>
+                            </View>
+                            <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
+                        </TouchableOpacity>
+                    </DeleteAccountDialog>
 
-                    <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
-                        <View className='flex-row items-center gap-4'>
-                            <Image source={require('@/assets/images/settings/sign-out.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
-                            <Text className='text-secondary-foreground font-medium text-xs'>Sign Out</Text>
-                        </View>
-                        <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
-                    </TouchableOpacity>
+                    <SignOutDialog>
+                        <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
+                            <View className='flex-row items-center gap-4'>
+                                <Image source={require('@/assets/images/settings/sign-out.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
+                                <Text className='text-secondary-foreground font-medium text-xs'>Sign Out</Text>
+                            </View>
+                            <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
+                        </TouchableOpacity>
+                    </SignOutDialog>
                 </View>
 
             </ScrollView>

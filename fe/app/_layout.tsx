@@ -7,6 +7,7 @@ import AnimatedSplashScreen from '@/components/AnimatedSplashScreen';
 import { ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
+import { PortalHost } from '@rn-primitives/portal';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync().catch(() => { });
@@ -43,5 +44,6 @@ export default function RootLayout() {
       <Stack.Screen name="event/[id]" options={{ presentation: 'modal', headerShown: false }} />
       <Stack.Screen name="all" options={{ headerShown: false, presentation: 'modal' }} />
     </Stack>
+     <PortalHost />
   </ThemeProvider>;
 }
