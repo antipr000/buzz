@@ -40,10 +40,11 @@ export default function RootLayout() {
       <Stack.Screen name="location" />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="create-event" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="event/[id]" options={{ presentation: 'modal', headerShown: false }} />
-      <Stack.Screen name="all" options={{ headerShown: false, presentation: 'modal' }} />
+      <Stack.Screen name="create-event" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="event-created" options={{ presentation: 'fullScreenModal' }} />
+      <Stack.Screen name="event/[id]" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="all" options={{ presentation: 'modal' }} />
     </Stack>
-     <PortalHost />
+    <PortalHost />
   </ThemeProvider>;
 }

@@ -222,7 +222,10 @@ export default function CreateEventScreen() {
                 </View>
                 {/* Footer Button */}
                 <View className="p-4  items-center">
-                    <Button className="bg-primary px-10  rounded-xl">
+                    <Button
+                        className="bg-primary px-10  rounded-xl"
+                        onPress={() => router.push('/event-created')}
+                    >
                         <Text className="text-white text-sm font-bold ">Create Event</Text>
                     </Button>
                 </View>

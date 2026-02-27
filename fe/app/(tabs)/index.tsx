@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { Image, ImageSource } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
-import React from 'react'
+import React, { useState } from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Link } from 'expo-router'
@@ -184,6 +184,8 @@ const EventCard = ({ id, category, categoryIcon, title, description, date, locat
 )
 
 const Home = () => {
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
+
   return (
     <SafeAreaView className='flex-1 bg-background'>
       <View className='flex-1'>
@@ -275,16 +277,22 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingLeft: 16, paddingRight: 8, paddingTop: 10, paddingBottom: 10 }}
           >
-            {CATEGORIES.map((cat) => (
-              <Badge
-                key={cat.label}
-                variant='outline'
-                className='border-primary mr-3 px-4 py-1.5'
-              >
-                {cat.icon && <Image source={cat.icon} style={{ width: 10, height: 10 }} contentFit='contain' />}
-                <Text className='text-primary text-xs font-medium'>{cat.label}</Text>
-              </Badge>
-            ))}
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat.label;
+              return (
+                <TouchableOpacity
+                  key={cat.label}
+                  activeOpacity={0.7}
+                  onPress={() => setSelectedCategory(cat.label)}
+                  className={`flex-row items-center gap-[6px] rounded-full border border-primary mr-3 px-4 py-1.5 ${isSelected ? 'bg-primary' : 'bg-transparent'}`}
+                >
+                  {cat.icon && <Image source={cat.icon} style={{ width: 10, height: 10 }} contentFit='contain' />}
+                  <Text className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-primary'}`}>
+                    {cat.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
