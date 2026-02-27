@@ -35,6 +35,8 @@ export default function RootLayout() {
         headerShown: false
       }}
     >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="location" />
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="create-event" options={{ presentation: 'modal', headerShown: false }} />

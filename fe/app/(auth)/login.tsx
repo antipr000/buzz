@@ -81,15 +81,17 @@ const LoginScreen = () => {
                 </View>
 
                 {/* Sign In Button */}
-                <Button className='w-full rounded-xl h-11 mb-4 bg-primary'>
-                    <Text className='text-primary-foreground text-sm font-medium'>Sign in</Text>
-                </Button>
+                <Link href="/location" asChild>
+                    <Button className='w-full rounded-xl h-11 mb-4 bg-primary'>
+                        <Text className='text-primary-foreground text-sm font-medium'>Sign in</Text>
+                    </Button>
+                </Link>
 
                 {/* OR Divider */}
                 <Text className='text-secondary-foreground text-xs font-bold mb-4'>OR</Text>
 
                 {/* Google Sign In */}
-                <Button onPress={() => router.replace("/(tabs)")} variant='outline' className='w-full rounded-xl h-11 border-primary bg-background mb-4'>
+                <Button onPress={() => router.replace("/location")} variant='outline' className='w-full rounded-xl h-11 border-primary bg-background mb-4'>
                     <Image
                         source={require("@/assets/images/google.svg")}
                         contentFit="contain"
@@ -100,7 +102,7 @@ const LoginScreen = () => {
 
                 {/* Don't have an account? Sign up */}
                 <View className='flex flex-row items-center mb-6'>
-                    <Text className='text-xs text-muted-foreground opacity-60'>Don't have an account? </Text>
+                    <Text className='text-xs text-muted-foreground opacity-60'>Don&apos;t have an account? </Text>
                     <Link href={"/(auth)" as any} asChild>
                         <Text className='text-xs text-primary font-medium'>Sign up</Text>
                     </Link>
