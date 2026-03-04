@@ -61,7 +61,7 @@ export default function CreateEventScreen() {
             {/* Header */}
             <View
                 className="pb-4 px-4 bg-secondary flex-row items-center gap-4"
-                style={{ paddingTop: Math.max(insets.top, 20) }}
+                style={{ paddingTop: Math.max(insets.top, 40) }}
             >
                 <TouchableOpacity onPress={() => router.back()} className="p-1">
                     <ArrowLeft size={24} color="rgba(249, 250, 251, 1)" />
