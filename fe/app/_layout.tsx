@@ -8,6 +8,7 @@ import { ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { PortalHost } from '@rn-primitives/portal';
+import { StatusBar } from 'expo-status-bar';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync().catch(() => { });
@@ -46,5 +47,10 @@ export default function RootLayout() {
       <Stack.Screen name="all" options={{ presentation: 'modal' }} />
     </Stack>
     <PortalHost />
+    <StatusBar
+      backgroundColor="transparent"
+      translucent={true}
+      style="auto"
+    />
   </ThemeProvider>;
 }
