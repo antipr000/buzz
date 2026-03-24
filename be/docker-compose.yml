@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: buzz
+      POSTGRES_USER: buzz
+      POSTGRES_PASSWORD: buzz1234
+    ports:
+      - "5439:5432"
+    volumes:
+      - postgres-data-buzz:/var/lib/postgresql/data
+
+volumes:
+  postgres-data-buzz:
