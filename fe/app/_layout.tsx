@@ -10,6 +10,9 @@ import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, P
 import { PortalHost } from '@rn-primitives/portal';
 import { StatusBar } from 'expo-status-bar';
 
+import { queryClient } from "@/lib/query-client";
+import { QueryClientProvider } from "@tanstack/react-query";
+
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync().catch(() => { });
 
@@ -31,26 +34,30 @@ export default function RootLayout() {
     );
   }
 
-  return <ThemeProvider value={NAV_THEME['light']}>
-    <Stack
-      screenOptions={{
-        headerShown: false
-      }}
-    >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="location" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="create-event" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="event-created" options={{ presentation: 'fullScreenModal' }} />
-      <Stack.Screen name="event/[id]" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="all" options={{ presentation: 'modal' }} />
-    </Stack>
-    <PortalHost />
-    <StatusBar
-      backgroundColor="transparent"
-      translucent={true}
-      style="auto"
-    />
-  </ThemeProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider value={NAV_THEME['light']}>
+        <Stack
+          screenOptions={{
+            headerShown: false
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="location" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="create-event" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="event-created" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="event/[id]" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="all" options={{ presentation: 'modal' }} />
+        </Stack>
+        <PortalHost />
+        <StatusBar
+          backgroundColor="transparent"
+          translucent={true}
+          style="auto"
+        />
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
 }
