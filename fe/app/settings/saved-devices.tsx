@@ -1,59 +1,49 @@
-import { View, ScrollView, TouchableOpacity } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { Text } from '@/components/ui/text'
-import BackButton from '@/components/BackButton'
+import PageLayout from '@/components/PageLayout'
 
 const SavedDevices = () => {
     return (
-        <SafeAreaView edges={['top']} className='flex-1 bg-white'>
-            {/* Header */}
-            <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
-                <BackButton size={15} />
-                <Text className='font-semibold text-xs text-secondary-foreground ml-3'>Saved Devices</Text>
-            </View>
+        <PageLayout title="Saved Devices" contentContainerStyle={{ padding: 20 }}>
+            <Text className='font-semibold text-xs text-secondary-foreground mb-4'>1/2 Saved Devices</Text>
 
-            <ScrollView showsVerticalScrollIndicator={false} className='flex-1 bg-background' contentContainerStyle={{ padding: 20 }}>
+            <View className='bg-white rounded-md p-5 shadow-sm border border-[rgba(0,0,0,0.03)]'>
 
-                <Text className='font-semibold text-xs text-secondary-foreground mb-4'>1/2 Saved Devices</Text>
-
-                <View className='bg-white rounded-md p-5 shadow-sm border border-[rgba(0,0,0,0.03)]'>
-
-                    {/* Device 1 */}
-                    <View className='flex-row justify-between mb-6'>
-                        <View className='flex-1 pr-4'>
-                            <View className='flex-row items-center gap-2 mb-2'>
-                                <Text className='font-medium text-xs text-secondary-foreground'>iPhone</Text>
-                                <View className='bg-[rgba(220,255,198,1)] px-2 py-0.5 rounded-md'>
-                                    <Text className='text-[rgba(19,158,1,1)] text-[10px] font-medium'>Current device</Text>
-                                </View>
+                {/* Device 1 */}
+                <View className='flex-row justify-between mb-6'>
+                    <View className='flex-1 pr-4'>
+                        <View className='flex-row items-center gap-2 mb-2'>
+                            <Text className='font-medium text-xs text-secondary-foreground'>iPhone</Text>
+                            <View className='bg-[rgba(220,255,198,1)] px-2 py-0.5 rounded-md'>
+                                <Text className='text-[rgba(19,158,1,1)] text-[10px] font-medium'>Current device</Text>
                             </View>
-                            <Text className='text-[rgba(15,23,42,0.5)] text-[11px] mb-0.5 '>BMS App 7.0.2 192.0.0.2</Text>
-                            <Text className='text-[rgba(15,23,42,0.5)] text-[11px] '>Last used: 21st Dec 2025, 17:51</Text>
                         </View>
-                        <TouchableOpacity activeOpacity={0.7} className='pt-1'>
-                            <Text className='text-[rgba(255,43,23,1)] text-[11px] '>Remove</Text>
-                        </TouchableOpacity>
+                        <Text className='text-[rgba(15,23,42,0.5)] text-[11px] mb-0.5 '>BMS App 7.0.2 192.0.0.2</Text>
+                        <Text className='text-[rgba(15,23,42,0.5)] text-[11px] '>Last used: 21st Dec 2025, 17:51</Text>
                     </View>
-
-                    {/* Device 2 */}
-                    <View className='flex-row justify-between'>
-                        <View className='flex-1 pr-4'>
-                            <View className='flex-row items-center gap-2 mb-2'>
-                                <Text className='font-medium text-xs text-secondary-foreground'>Android</Text>
-                            </View>
-                            <Text className='text-[rgba(15,23,42,0.5)] text-[11px] mb-0.5 '>BMS App 7.0.2 192.0.0.2</Text>
-                            <Text className='text-[rgba(15,23,42,0.5)] text-[11px] '>Last used: 21st Dec 2025, 17:51</Text>
-                        </View>
-                        <TouchableOpacity activeOpacity={0.7} className='pt-1'>
-                            <Text className='text-[rgba(255,43,23,1)] text-[11px] '>Remove</Text>
-                        </TouchableOpacity>
-                    </View>
-
+                    <TouchableOpacity activeOpacity={0.7} className='pt-1'>
+                        <Text className='text-[rgba(255,43,23,1)] text-[11px] '>Remove</Text>
+                    </TouchableOpacity>
                 </View>
 
-            </ScrollView>
-        </SafeAreaView>
+                {/* Device 2 */}
+                <View className='flex-row justify-between'>
+                    <View className='flex-1 pr-4'>
+                        <View className='flex-row items-center gap-2 mb-2'>
+                            <Text className='font-medium text-xs text-secondary-foreground'>Android</Text>
+                        </View>
+                        <Text className='text-[rgba(15,23,42,0.5)] text-[11px] mb-0.5 '>BMS App 7.0.2 192.0.0.2</Text>
+                        <Text className='text-[rgba(15,23,42,0.5)] text-[11px] '>Last used: 21st Dec 2025, 17:51</Text>
+                    </View>
+                    <TouchableOpacity activeOpacity={0.7} className='pt-1'>
+                        <Text className='text-[rgba(255,43,23,1)] text-[11px] '>Remove</Text>
+                    </TouchableOpacity>
+                </View>
+
+            </View>
+
+        </PageLayout>
     )
 }
 

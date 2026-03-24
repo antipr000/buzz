@@ -12,18 +12,18 @@ const FindEventDetails = () => {
     const [inputValue, setInputValue] = useState('')
 
     return (
-        <SafeAreaView edges={['top']} className='flex-1 bg-background'>
+        <SafeAreaView edges={['top']} className='flex-1 bg-white'>
             <ScrollView
                 contentContainerStyle={{ flexGrow: 1 }}
                 automaticallyAdjustKeyboardInsets={true}
                 keyboardShouldPersistTaps="handled"
-                className="flex-1"
+                className="flex-1 bg-background"
                 showsVerticalScrollIndicator={false}
             >
                 <View className='flex-1 justify-between bg-[rgba(244,246,251,1)]'>
                     <View>
                         {/* Header */}
-                        <View className='flex-row items-center px-5 py-10 pb-4 bg-white'>
+                        <View className='flex-row items-center px-5 py-5 pb-4 bg-white'>
                             <BackButton />
                             <Text className='font-semibold text-xs text-secondary-foreground'>Find Your Event Details</Text>
                         </View>

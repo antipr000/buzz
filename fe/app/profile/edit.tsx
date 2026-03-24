@@ -1,27 +1,18 @@
 import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native'
 import React, { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui/text'
 import { Input } from '@/components/ui/input'
 import { Image } from 'expo-image'
 import { router, Link } from 'expo-router'
-import BackButton from '@/components/BackButton'
-import { ChevronLeft, ChevronRight } from 'lucide-react-native'
+import { ChevronRight } from 'lucide-react-native'
+import PageLayout from '@/components/PageLayout'
 
 const EditProfile = () => {
     const [identifyType, setIdentifyType] = useState<string | null>(null);
     const [maritalStatus, setMaritalStatus] = useState<string | null>(null);
 
     return (
-        <SafeAreaView className='flex-1 bg-background' edges={['top']}>
-            {/* Header */}
-            <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
-                <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-                    <ChevronLeft size={20} color="rgba(29,27,32,1)" />
-                </TouchableOpacity>
-                <Text className='font-bold text-sm text-secondary-foreground ml-4'>Edit Profile</Text>
-            </View>
-
+        <PageLayout title="Edit Profile" scrollEnabled={false} contentContainerStyle={{ padding: 0 }}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
                 {/* Banner / Photo Upload */}
                 <View className='bg-primary h-[117px] items-center justify-center relative overflow-hidden'>
@@ -175,7 +166,7 @@ const EditProfile = () => {
                 </TouchableOpacity>
             </View>
 
-        </SafeAreaView>
+        </PageLayout>
     )
 }
 

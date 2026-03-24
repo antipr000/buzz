@@ -1,22 +1,15 @@
-import { View, TouchableOpacity } from 'react-native'
+import { TouchableOpacity, View } from 'react-native'
 import React from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui/text'
-import { router } from 'expo-router'
-import { ChevronLeft } from 'lucide-react-native'
+import { Button } from '@/components/ui/button'
 import AddressForm from '@/components/AddressForm'
+import PageLayout from '@/components/PageLayout'
+import { useRouter } from 'expo-router'
 
 const AddAddress = () => {
+    const router = useRouter()
     return (
-        <SafeAreaView className='flex-1 bg-background' edges={['top']}>
-            {/* Header */}
-            <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
-                <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
-                    <ChevronLeft size={20} color="rgba(29,27,32,1)" />
-                </TouchableOpacity>
-                <Text className='font-bold text-sm text-secondary-foreground ml-4'>Edit Profile</Text>
-            </View>
-
+        <PageLayout title="Address" scrollEnabled={false} contentContainerStyle={{ padding: 0 }}>
             {/* Address Form container with top padding */}
             <View className='flex-1 pt-4'>
                 <AddressForm />
@@ -32,7 +25,7 @@ const AddAddress = () => {
                     <Text className='text-white font-semibold text-[13px]'>Save Changes</Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </PageLayout>
     )
 }
 

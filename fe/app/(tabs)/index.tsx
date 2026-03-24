@@ -1,6 +1,5 @@
 import FeaturedEventCard from '@/components/FeaturedEventCard'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
 import { Input } from '@/components/ui/input'
@@ -174,10 +173,10 @@ const EventCard = ({ id, category, categoryIcon, title, description, date, locat
 
       {/* Join Now Button */}
       <Link href={`/event/${id}`} asChild>
-        <Button variant='outline' className='border-0 p-0 h-9  bg-secondary rounded-lg mt-3 flex-row items-center justify-center gap-2'>
+        <TouchableOpacity activeOpacity={0.8} className='border-0 p-0 h-9  bg-secondary rounded-lg mt-3 flex-row items-center justify-center gap-2'>
           <Text className='text-primary-foreground text-[10px] font-semibold'>Join Now</Text>
           <Image source={require('@/assets/images/home/arrow.svg')} style={{ width: 12, height: 12 }} contentFit='contain' />
-        </Button>
+        </TouchableOpacity>
       </Link>
     </View>
   </Card>

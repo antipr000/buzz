@@ -1,11 +1,10 @@
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Text } from "@/components/ui/text"
 import { Image } from 'expo-image'
 import { Link, router } from "expo-router"
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 // Reusing the same structure as the sign-up page for consistency
@@ -82,27 +81,27 @@ const LoginScreen = () => {
 
                 {/* Sign In Button */}
                 <Link href="/location" asChild>
-                    <Button className='w-full rounded-xl h-11 mb-4 bg-primary'>
+                    <TouchableOpacity activeOpacity={0.8} className='w-full rounded-xl h-11 mb-4 bg-primary items-center justify-center'>
                         <Text className='text-primary-foreground text-sm font-medium'>Sign in</Text>
-                    </Button>
+                    </TouchableOpacity>
                 </Link>
 
                 {/* OR Divider */}
                 <Text className='text-secondary-foreground text-xs font-bold mb-4'>OR</Text>
 
                 {/* Google Sign In */}
-                <Button onPress={() => router.replace("/location")} variant='outline' className='w-full rounded-xl h-11 border-primary bg-background mb-4'>
+                <TouchableOpacity onPress={() => router.replace("/location")} activeOpacity={0.8} className='w-full rounded-xl h-11 border border-primary bg-background mb-4 flex-row items-center justify-center gap-2'>
                     <Image
                         source={require("@/assets/images/google.svg")}
                         contentFit="contain"
                         style={{ width: 15, height: 15 }}
                     />
                     <Text className='text-primary text-sm font-medium'>Sign in with Google</Text>
-                </Button>
+                </TouchableOpacity>
 
                 {/* Don't have an account? Sign up */}
                 <View className='flex flex-row items-center mb-6'>
-                    <Text className='text-xs text-muted-foreground opacity-60'>Don&apos;t have an account? </Text>
+                    <Text className='text-xs text-muted-foreground  opacity-60'>Don&apos;t have an account? </Text>
                     <Link href={"/(auth)" as any} asChild>
                         <Text className='text-xs text-primary font-medium'>Sign up</Text>
                     </Link>

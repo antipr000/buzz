@@ -1,11 +1,10 @@
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Text } from "@/components/ui/text"
 import { Image } from 'expo-image'
 import { Link } from "expo-router"
 import React, { useState } from 'react'
-import { ScrollView, View } from 'react-native'
+import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SignUpScreen = () => {
@@ -105,22 +104,22 @@ const SignUpScreen = () => {
         </View>
 
         {/* Sign Up Button */}
-        <Button className='w-full rounded-xl h-11 mb-4 bg-primary'>
+        <TouchableOpacity activeOpacity={0.8} className='w-full rounded-xl h-11 mb-4 bg-primary items-center justify-center'>
           <Text className='text-primary-foreground text-sm font-medium'>Sign up</Text>
-        </Button>
+        </TouchableOpacity>
 
         {/* OR Divider */}
         <Text className='text-secondary-foreground text-xs font-bold mb-4'>OR</Text>
 
         {/* Google Sign In */}
-        <Button variant="outline" className='w-full rounded-xl h-11 border-primary bg-background mb-4'>
+        <TouchableOpacity activeOpacity={0.8} className='w-full border rounded-xl h-11 border-primary bg-background mb-4 flex-row items-center justify-center gap-2'>
           <Image
             source={require("@/assets/images/google.svg")}
             contentFit="contain"
             style={{ width: 15, height: 15 }}
           />
           <Text className='text-primary text-sm font-medium'>Sign in with Google</Text>
-        </Button>
+        </TouchableOpacity>
 
         {/* Already have account */}
         <View className='flex flex-row items-center mb-6'>

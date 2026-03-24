@@ -1,12 +1,10 @@
-import { View, TouchableOpacity, ScrollView } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { TouchableOpacity, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import { Text } from '@/components/ui/text'
-import { ChevronLeft, ChevronDown, ChevronUp } from 'lucide-react-native'
-import { router } from 'expo-router'
+import { ChevronDown, ChevronUp } from 'lucide-react-native'
 import HelpContact from '@/components/HelpContact'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
-import BackButton from '@/components/BackButton'
+import PageLayout from '@/components/PageLayout'
 
 interface FaqItem {
     question: string;
@@ -22,15 +20,9 @@ const HelpPageTemplate = ({ title, faqs }: HelpPageTemplateProps) => {
     const [openIndex, setOpenIndex] = useState<number | null>(null)
 
     return (
-        <SafeAreaView edges={['top']} className='flex-1 border-0'>
-            {/* Header */}
-            <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
-                <BackButton size={16} />
-                <Text className='font-bold text-xs text-secondary-foreground'>{title}</Text>
-            </View>
-
+        <PageLayout title={title} scrollEnabled={false} contentContainerStyle={{ padding: 0 }}>
             {/* Content Area */}
-            <ScrollView showsVerticalScrollIndicator={false} className='flex-1 bg-[rgba(244,246,251,1)]' contentContainerStyle={{ padding: 16 }}>
+            <ScrollView showsVerticalScrollIndicator={false} className='flex-1 bg-background' contentContainerStyle={{ padding: 16 }}>
                 {faqs.map((faq, index) => (
                     <Collapsible
                         key={index}
@@ -58,7 +50,7 @@ const HelpPageTemplate = ({ title, faqs }: HelpPageTemplateProps) => {
             {/* Bottom Contact Section */}
             <HelpContact />
 
-        </SafeAreaView>
+        </PageLayout>
     )
 }
 

@@ -18,11 +18,11 @@ const PAYMENT_OPTIONS: { id: string; label: string; icon: ImageSource }[] = [
 
 const Payment = () => {
     const router = useRouter();
-
+// TODO: See if we can use the layout
     return (
         <SafeAreaView edges={['top']} className='flex-1 '>
             {/* Header */}
-            <View className='flex-row items-center px-5 py-6 pb-4 '>
+            <View className='flex-row items-center px-5 py-5 pb-4 '>
                 <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} className='hitSlop-10'>
                     <ChevronLeft size={20} color="rgba(29,27,32,1)" />
                 </TouchableOpacity>

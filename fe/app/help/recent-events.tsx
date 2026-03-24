@@ -1,24 +1,14 @@
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View, ScrollView } from 'react-native'
 import React from 'react'
 import { Text } from '@/components/ui/text'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft } from 'lucide-react-native'
-import { router } from 'expo-router'
 import { Image } from 'expo-image'
 import { Separator } from '@/components/ui/separator'
 import HelpContact from '@/components/HelpContact'
-import BackButton from '@/components/BackButton'
+import PageLayout from '@/components/PageLayout'
 
 const RecentEvents = () => {
     return (
-        <SafeAreaView edges={['top']} className='flex-1 '>
-            {/* Header */}
-            <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
-                <BackButton size={16} />
-                <Text className='font-bold text-xs text-secondary-foreground'>Recent Events</Text>
-            </View>
-
+        <PageLayout title="Recent Events" scrollEnabled={false} contentContainerStyle={{ padding: 0 }}>
             {/* Content Area */}
             <ScrollView className='flex-1 bg-background' contentContainerStyle={{ padding: 16 }}>
 
@@ -72,7 +62,7 @@ const RecentEvents = () => {
             {/* Bottom Contact Section */}
             <HelpContact />
 
-        </SafeAreaView>
+        </PageLayout>
     )
 }
 
