@@ -6,7 +6,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from core.config import config as app_config
 from core.database import Base
-from user.models.user import User  # Important for autogenerate
+import models  # noqa: F401 — registers all ORM tables on Base.metadata for autogenerate
 from alembic import context
 
 # this is the Alembic Config object, which provides

@@ -12,7 +12,6 @@ Copy the template and configure your environment variables:
 cp .env.example .env  # If not already present
 ```
 
-```
 ### 2. Install Dependencies
 Sync your local environment from the lockfile:
 ```bash
@@ -25,13 +24,15 @@ Bring up the PostgreSQL container:
 docker compose up -d
 ```
 
-### 3. Run Migrations
+### 4. Run Migrations
 Initialize your database schema using Alembic:
 ```bash
 uv run alembic upgrade head
 ```
 
-### 4. Start the Application
+**Autogenerate and model discovery:** Alembic compares the database to SQLAlchemy metadata. All mapped tables must be imported so they attach to `Base.metadata`. The backend does this in [`models/__init__.py`](models/__init__.py), which [`migrations/env.py`](migrations/env.py) imports. If you add a new model, import it there before running `alembic revision --autogenerate`, or new tables will be missing from the migration.
+
+### 5. Start the Application
 Launch the FastAPI development server:
 ```bash
 uv run main.py
@@ -42,7 +43,12 @@ The API will be available at [http://localhost:8000](http://localhost:8000).
 
 ##  Project Structure
 - `core/`: Global configurations, database setup, and logging.
-- `user/`: User module (models, pydantic schemas, services, and routes).
+- `<domain>/`: Feature-first modules (`user/`, `profile/`, `event/`, `booking/`, etc.) each containing:
+  - `models/`: SQLAlchemy models for that domain
+  - `schemas/`: Pydantic request/response schemas
+  - `services/`: Business logic
+  - `routes/`: FastAPI routers
+- `models/__init__.py`: Central registry that imports all ORM models so Alembic autogenerate can discover every table.
 - `migrations/`: Alembic migration scripts and history.
 
 ---
@@ -58,14 +64,16 @@ The API will be available at [http://localhost:8000](http://localhost:8000).
 
 ## Adding New Models
 
-When adding a new model in `be/user/models/`, always inherit from `Base` and implement `get_key()`:
+When adding a new mapped class, inherit from [`BaseEntity`](core/database.py) (or [`TimestampedModel`](core/database.py) for tables without the default `id` column) and implement `get_key()` where applicable:
 
 ```python
-class Post(Base):
+class Post(BaseEntity):
     __tablename__ = "posts"
     def get_key(self) -> str:
-        return "pst"  # This creates IDs like pst_abc123
+        return "pst"  # IDs like pst_abc123
 ```
+
+**Register the model for Alembic:** add `from myapp.models.post import Post` (or equivalent) to [`models/__init__.py`](models/__init__.py) and export it in `__all__`. Without that import, `alembic revision --autogenerate` will not see the new table.
 
 ## Database Access
 

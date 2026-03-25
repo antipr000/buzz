@@ -25,35 +25,53 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 class Base(DeclarativeBase):
-    # Base configuration for prefixed IDs
+    """Root declarative base (shared metadata)."""
+
+
+class TimestampMixin:
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class TimestampedModel(Base, TimestampMixin):
+    """Tables with created_at / updated_at but no default id (e.g. composite PK)."""
+
+    __abstract__ = True
+
+
+class BaseEntity(Base, TimestampMixin):
+    """Default entity: prefixed id + timestamps."""
+
+    __abstract__ = True
+
     def get_key(self) -> str:
-        """Override this in your models (e.g., return 'user')"""
+        """Override in concrete models (e.g. return 'usr')."""
         return "base"
 
     id: Mapped[str] = mapped_column(
         String(255),
         primary_key=True,
         index=True,
-        # Default for when ID is not provided in __init__ (manual inserts)
-        default=lambda: generate_model_id("base")
-    )
-
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), 
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: generate_model_id("base"),
     )
 
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-            
+
         if not self.id:
             self.id = generate_model_id(self.get_key())
+
+
+# Backwards-compatible alias for code that imports ``Base`` as the id-bearing model base.
+BaseModel = BaseEntity
 
 # Dependency to get an async database session for each request
 async def get_db():

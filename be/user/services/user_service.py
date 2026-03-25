@@ -6,12 +6,10 @@ from user.schemas.user import UserCreate
 
 async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
     """Creates a new user in the database."""
-    # Storing password as-is as requested
     new_user = User(
-        username=user_in.username,
         email=user_in.email,
-        hashed_password=user_in.password, # Just testing
-        is_active=user_in.is_active
+        password=user_in.password,
+        full_name=user_in.full_name,
     )
     db.add(new_user)
     await db.commit()
