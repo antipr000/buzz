@@ -9,7 +9,8 @@ async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
     new_user = User(
         email=user_in.email,
         password=user_in.password,
-        full_name=user_in.full_name,
+        first_name=user_in.first_name,
+        last_name=user_in.last_name,
     )
     db.add(new_user)
     await db.commit()

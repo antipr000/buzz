@@ -1,10 +1,18 @@
+from __future__ import annotations
+
 import enum
 from datetime import date, time
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Date, Enum, ForeignKey, Integer, String, Time
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
+
+if TYPE_CHECKING:
+    from booking.models.booking import Booking
+    from profile.models.profile import Profile
+    from saved_event.models.saved_event import SavedEvent
 
 # See if longitude and latitude are needed
 class EventCategory(str, enum.Enum):
@@ -47,6 +55,19 @@ class Event(BaseEntity):
         ForeignKey("profiles.user_id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
+    )
+
+    organizer: Mapped[Profile] = relationship(
+        back_populates="organized_events",
+        lazy="raise",
+    )
+    bookings: Mapped[list[Booking]] = relationship(
+        back_populates="event",
+        lazy="raise",
+    )
+    saved_events: Mapped[list[SavedEvent]] = relationship(
+        back_populates="event",
+        lazy="raise",
     )
 
     def get_key(self) -> str:

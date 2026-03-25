@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
+
+if TYPE_CHECKING:
+    from booking.models.booking import Booking
 
 
 class PaymentStatus(str, enum.Enum):
@@ -40,6 +46,8 @@ class Payment(BaseEntity):
         Enum(PaymentStatus, native_enum=False, length=32),
         nullable=False,
     )
+
+    booking: Mapped[Booking] = relationship(back_populates="payments", lazy="raise")
 
     def get_key(self) -> str:
         return "pay"

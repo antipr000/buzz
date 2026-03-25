@@ -1,10 +1,18 @@
-import enum
-from datetime import datetime
+from __future__ import annotations
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+import enum
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
+
+if TYPE_CHECKING:
+    from event.models.event import Event
+    from payment.models.payment import Payment
+    from ticket.models.ticket import Ticket
+    from user.models.user import User
 
 
 class BookingStatus(str, enum.Enum):
@@ -31,6 +39,17 @@ class Booking(BaseEntity):
     status: Mapped[BookingStatus] = mapped_column(
         Enum(BookingStatus, native_enum=False, length=32),
         nullable=False,
+    )
+
+    user: Mapped[User] = relationship(back_populates="bookings", lazy="raise")
+    event: Mapped[Event] = relationship(back_populates="bookings", lazy="raise")
+    tickets: Mapped[list[Ticket]] = relationship(
+        back_populates="booking",
+        lazy="raise",
+    )
+    payments: Mapped[list[Payment]] = relationship(
+        back_populates="booking",
+        lazy="raise",
     )
 
     def get_key(self) -> str:

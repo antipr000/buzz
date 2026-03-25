@@ -1,10 +1,17 @@
+from __future__ import annotations
+
 import enum
 from datetime import date
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Date, Enum, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import TimestampedModel
+
+if TYPE_CHECKING:
+    from event.models.event import Event
+    from user.models.user import User
 
 
 class ProfileIdentify(str, enum.Enum):
@@ -37,3 +44,9 @@ class Profile(TimestampedModel):
     )
     mobile_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
     profile_image: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
+    user: Mapped[User] = relationship(back_populates="profile", lazy="raise")
+    organized_events: Mapped[list[Event]] = relationship(
+        back_populates="organizer",
+        lazy="raise",
+    )

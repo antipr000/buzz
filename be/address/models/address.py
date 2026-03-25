@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum, ForeignKey, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
+
+if TYPE_CHECKING:
+    from user.models.user import User
 
 
 
@@ -39,6 +45,8 @@ class Address(BaseEntity):
     state: Mapped[str] = mapped_column(String(128), nullable=False)
     country: Mapped[str] = mapped_column(String(128), nullable=False)
     pin_code: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    user: Mapped[User] = relationship(back_populates="addresses", lazy="raise")
 
     def get_key(self) -> str:
         return "adr"
