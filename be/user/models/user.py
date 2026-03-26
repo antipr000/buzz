@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String
+from sqlalchemy import String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from core.database import BaseEntity
+from core.database import Base, TimestampMixin
 
 if TYPE_CHECKING:
     from address.models.address import Address
@@ -15,10 +16,13 @@ if TYPE_CHECKING:
     from saved_event.models.saved_event import SavedEvent
 
 
-class User(BaseEntity):
+class User(Base, TimestampMixin):
+    """App user row; `id` matches Supabase `auth.users.id` (JWT `sub`)."""
+
     __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
-    password: Mapped[str] = mapped_column(String, nullable=False)
     first_name: Mapped[str] = mapped_column(String, nullable=False)
     last_name: Mapped[str] = mapped_column(String, nullable=False)
 
@@ -43,6 +47,3 @@ class User(BaseEntity):
         back_populates="user",
         lazy="raise",
     )
-
-    def get_key(self) -> str:
-        return "usr"

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import TimestampedModel
@@ -15,8 +16,8 @@ if TYPE_CHECKING:
 class SavedEvent(TimestampedModel):
     __tablename__ = "saved_events"
 
-    user_id: Mapped[str] = mapped_column(
-        String(255),
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )

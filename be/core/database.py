@@ -1,28 +1,33 @@
 from datetime import datetime, timezone
+
 from cuid2 import Cuid
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
 from core.config import config
 
-# Helper to generate a prefixed CUID2
+
 def generate_model_id(prefix: str) -> str:
     """Generates a prefixed CUID2 ID (length 16 per user requirement)."""
     return f"{prefix}_{Cuid(length=16).generate()}"
 
-# Create the async engine
-# Note: Requires 'asyncpg' driver
+
 engine = create_async_engine(
     url=config.async_db_url,
     echo=config.debug,
+    pool_pre_ping=True,
+    pool_size=config.db_pool_size,
+    max_overflow=config.db_max_overflow,
+    pool_recycle=config.db_pool_recycle,
 )
 
-# Create an async session factory
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
 
 class Base(DeclarativeBase):
     """Root declarative base (shared metadata)."""
@@ -70,19 +75,12 @@ class BaseEntity(Base, TimestampMixin):
             self.id = generate_model_id(self.get_key())
 
 
-# Backwards-compatible alias for code that imports ``Base`` as the id-bearing model base.
 BaseModel = BaseEntity
 
-# Dependency to get an async database session for each request
+
 async def get_db():
     async with AsyncSessionLocal() as session:
         try:
             yield session
         finally:
             await session.close()
-
-# Helper to initialize the database (useful for scripts or startup)
-# async def init_db():
-#     async with engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.create_all)
-#         print("Database initialized and tables created if they did not exist.")

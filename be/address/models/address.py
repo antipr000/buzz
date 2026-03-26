@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import enum
+import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, ForeignKey, Integer, String
+from sqlalchemy import Enum, ForeignKey, Integer, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
@@ -23,8 +24,8 @@ class AddressType(str, enum.Enum):
 class Address(BaseEntity):
     __tablename__ = "addresses"
 
-    user_id: Mapped[str] = mapped_column(
-        String(255),
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

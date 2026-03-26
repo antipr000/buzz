@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import enum
+import uuid
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, Enum, ForeignKey, String
+from sqlalchemy import Date, Enum, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import TimestampedModel
@@ -28,8 +29,8 @@ class MaritalStatus(str, enum.Enum):
 class Profile(TimestampedModel):
     __tablename__ = "profiles"
 
-    user_id: Mapped[str] = mapped_column(
-        String(255),
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )

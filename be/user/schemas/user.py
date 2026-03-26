@@ -1,16 +1,11 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
 from datetime import datetime
+import uuid
 
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    first_name: str
-    last_name: str
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class UserResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     email: EmailStr
     first_name: str
     last_name: str

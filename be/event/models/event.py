@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import enum
+import uuid
 from datetime import date, time
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, Enum, ForeignKey, Integer, String, Time
+from sqlalchemy import Boolean, Date, Enum, ForeignKey, Integer, String, Time, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
@@ -50,8 +51,8 @@ class Event(BaseEntity):
     event_cover: Mapped[str | None] = mapped_column(String(512), nullable=True)
     is_featured: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_popular: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    organizer_id: Mapped[str] = mapped_column(
-        String(255),
+    organizer_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
         ForeignKey("profiles.user_id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
