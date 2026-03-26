@@ -1,5 +1,12 @@
+import ssl
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Committed CA: Dashboard → Database → SSL → prod-ca-2021.crt in `be/`
+_BE_DIR = Path(__file__).resolve().parent.parent
+_SUPABASE_CA_PATH = _BE_DIR / "prod-ca-2021.crt"
 
 
 class Config(BaseSettings):
@@ -30,9 +37,22 @@ class Config(BaseSettings):
     def db_url(self) -> str:
         return f"{self.db_engine}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
+    def _is_local_db_host(self) -> bool:
+        h = self.db_host.lower().strip()
+        return h in ("localhost", "127.0.0.1", "::1", "host.docker.internal")
+
     @property
     def async_db_url(self) -> str:
         return f"postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+
+    def _ssl_context_for_asyncpg(self) -> ssl.SSLContext | bool:
+        if self._is_local_db_host():
+            return False
+        return ssl.create_default_context(cafile=str(_SUPABASE_CA_PATH))
+
+    @property
+    def asyncpg_connect_args(self) -> dict:
+        return {"ssl": self._ssl_context_for_asyncpg()}
 
     @property
     def supabase_jwt_issuer(self) -> str:

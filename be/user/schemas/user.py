@@ -7,8 +7,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 class UserResponse(BaseModel):
     id: uuid.UUID
     email: EmailStr
-    first_name: str
-    last_name: str
+    full_name: str
     created_at: datetime
     updated_at: datetime
 

@@ -23,8 +23,7 @@ class User(Base, TimestampMixin):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
-    first_name: Mapped[str] = mapped_column(String, nullable=False)
-    last_name: Mapped[str] = mapped_column(String, nullable=False)
+    full_name: Mapped[str] = mapped_column(String, nullable=False)
 
     profile: Mapped[Profile | None] = relationship(
         back_populates="user",

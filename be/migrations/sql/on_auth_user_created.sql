@@ -9,30 +9,20 @@ security definer
 set search_path = public
 as $$
 declare
-  fn text;
-  ln text;
-  full_n text;
+  full_name text;
 begin
-  fn := coalesce(nullif(trim(new.raw_user_meta_data ->> 'first_name'), ''), '');
-  ln := coalesce(nullif(trim(new.raw_user_meta_data ->> 'last_name'), ''), '');
-  full_n := nullif(trim(new.raw_user_meta_data ->> 'full_name'), '');
-  if fn = '' and full_n is not null then
-    fn := split_part(full_n, ' ', 1);
-    ln := case
-      when strpos(full_n, ' ') > 0 then trim(substring(full_n from strpos(full_n, ' ') + 1))
-      else ''
-    end;
-  end if;
-  if fn = '' then
-    fn := 'User';
-  end if;
+  -- Google OAuth sets `name` in user_metadata; `full_name` covers other providers / manual metadata.
+  full_name := coalesce(
+    nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
+    'User'
+  );
 
-  insert into public.users (id, email, first_name, last_name, created_at, updated_at)
+  insert into public.users (id, email, full_name, created_at, updated_at)
   values (
     new.id,
     coalesce(new.email, ''),
-    fn,
-    ln,
+    full_name,
     now(),
     now()
   )

@@ -15,6 +15,7 @@ def generate_model_id(prefix: str) -> str:
 
 engine = create_async_engine(
     url=config.async_db_url,
+    connect_args=config.asyncpg_connect_args,
     echo=config.debug,
     pool_pre_ping=True,
     pool_size=config.db_pool_size,
