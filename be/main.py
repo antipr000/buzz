@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import config
+import models  # noqa: F401 — side-effect: load every mapped class so relationships resolve
 from user.routes.user_router import user_router
 
 @asynccontextmanager
