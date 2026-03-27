@@ -1,13 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, Redirect } from "expo-router";
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function WelcomeScreen() {
+    const { session, isLoading } = useAuth();
+    if (isLoading) {
+        return (
+            <View className="flex-1 bg-white items-center justify-center">
+                <ActivityIndicator size="large" color="black" />
+            </View>
+        );
+    }
+
+    if (session) {
+        return <Redirect href="/location" />;
+    }
+
     return (
         <View className="flex-1 bg-primary relative overflow-hidden">
             {/* Background Image with Opacity */}
@@ -36,7 +50,7 @@ export default function WelcomeScreen() {
                     </View>
 
                     <View className="w-full gap-6 mt-6 px-10">
-                        <Link href="/(auth)/signup" asChild>
+                        <Link href="/signup" asChild>
                             <Button className="w-full bg-white rounded-lg h-12">
                                 <Text className="text-secondary-foreground text-sm font-medium">
                                     Find events near me
@@ -44,7 +58,7 @@ export default function WelcomeScreen() {
                             </Button>
                         </Link>
 
-                        <Link href="/(auth)/signup" asChild>
+                        <Link href="/signup" asChild>
                             <Button
                                 variant="outline"
                                 className="w-full bg-primary border border-white/40 rounded-lg h-12"

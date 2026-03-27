@@ -12,7 +12,7 @@ const EventCreated = () => {
         //Automatically dismiss the flow and redirect to tabs after 3 seconds
         const timer = setTimeout(() => {
             router.dismissAll();
-            router.replace('/(tabs)');
+            router.replace('/(main)/(tabs)');
         }, 3000);
         return () => clearTimeout(timer);
     }, [router]);

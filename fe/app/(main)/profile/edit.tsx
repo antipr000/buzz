@@ -159,7 +159,7 @@ const EditProfile = () => {
             <View className='absolute bottom-0 left-0 right-0 bg-white border-t border-[rgba(0,0,0,0.05)] px-4 py-3 pb-6'>
                 <TouchableOpacity
                     activeOpacity={0.8}
-                    onPress={() => router.push('/(tabs)')}
+                    onPress={() => router.push('/(main)/(tabs)')}
                     className='bg-primary w-full h-[42px] rounded-lg items-center justify-center'
                 >
                     <Text className='text-white font-semibold text-[13px]'>Save Changes</Text>

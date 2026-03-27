@@ -44,7 +44,7 @@ export default function LocationAccessScreen() {
 
                 {/* Bottom Section - Action Buttons */}
                 <View className="w-full gap-6 mt-8">
-                    <Link href="/(tabs)" asChild>
+                    <Link href="/(main)/(tabs)" asChild>
                         <Button className="w-full bg-primary rounded-xl h-12">
                             <Text className="text-white text-sm font-semibold">
                                 Allow Location
@@ -52,7 +52,7 @@ export default function LocationAccessScreen() {
                         </Button>
                     </Link>
 
-                    <Link href="/(tabs)" asChild>
+                    <Link href="/(main)/(tabs)" asChild>
                         <Button
                             variant="outline"
                             className="w-full bg-white border border-primary rounded-xl h-12"

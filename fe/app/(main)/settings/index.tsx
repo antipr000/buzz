@@ -36,7 +36,7 @@ const Settings = () => {
                     <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
                 </TouchableOpacity>
 
-                <Link href="/(tabs)/saved" asChild>
+                <Link href="/saved" asChild>
                     <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
                         <View className='flex-row items-center gap-4'>
                             <Image source={require('@/assets/images/settings/heart.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />

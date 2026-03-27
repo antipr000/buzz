@@ -11,6 +11,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { StatusBar } from 'expo-status-bar';
 
 import { queryClient } from "@/lib/query-client";
+import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -36,6 +37,7 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <ThemeProvider value={NAV_THEME['light']}>
         <Stack
           screenOptions={{
@@ -43,13 +45,8 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" />
-          <Stack.Screen name="location" />
           <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="create-event" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="event-created" options={{ presentation: 'fullScreenModal' }} />
-          <Stack.Screen name="event/[id]" options={{ presentation: 'modal' }} />
-          <Stack.Screen name="all" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="(main)" />
         </Stack>
         <PortalHost />
         <StatusBar
@@ -58,6 +55,7 @@ export default function RootLayout() {
           style="auto"
         />
       </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

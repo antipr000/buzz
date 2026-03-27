@@ -1,136 +1,268 @@
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Text } from "@/components/ui/text"
-import { Image } from 'expo-image'
-import { Link } from "expo-router"
-import React, { useState } from 'react'
-import { ScrollView, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Text } from "@/components/ui/text";
+import { getSupabase } from "@/lib/supabase";
+import { Image } from "expo-image";
+import { Link, router } from "expo-router";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const MIN_PASSWORD_LEN = 6;
 
 const SignUpScreen = () => {
-  const [checked, setChecked] = useState(false)
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+
+  const onSignUp = async () => {
+    setError(null);
+    setInfo(null);
+
+    const name = fullName.trim();
+    const mail = email.trim();
+
+    if (!name || !mail || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    if (!termsAccepted) {
+      setError("Please accept the terms and conditions.");
+      return;
+    }
+    if (password.length < MIN_PASSWORD_LEN) {
+      setError(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    let supabase: ReturnType<typeof getSupabase>;
+    try {
+      supabase = getSupabase();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Supabase is not configured.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: mail,
+        password,
+        options: {
+          data: {
+            full_name: name,
+            name,
+          },
+        },
+      });
+
+      console.log(data);
+
+      if (authError) {
+        setError(authError.message);
+        return;
+      }
+
+      if (data.session) {
+        router.replace("/location");
+        return;
+      }
+
+      setInfo(
+        "Check your email to confirm your account, then sign in. (You can disable email confirmation in Supabase Auth settings while testing.)"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onGooglePlaceholder = () => {
+    Alert.alert(
+      "Coming soon",
+      "Google sign-up will be enabled in the next phase."
+    );
+  };
 
   return (
-    <SafeAreaView className='flex-1 bg-background'>
+    <SafeAreaView className="flex-1 bg-background">
       <ScrollView
-        contentContainerClassName='flex-grow items-center justify-center px-8'
-        keyboardShouldPersistTaps='handled'
+        contentContainerClassName="flex-grow items-center justify-center px-8"
+        keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets={true}
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo */}
         <Image
           source={require("@/assets/images/top.svg")}
           contentFit="contain"
           style={{ width: 60, height: 63 }}
         />
 
-        {/* Title */}
-        <Text className='text-secondary text-xl font-medium mt-2 mb-7'>
+        <Text className="text-secondary text-xl font-medium mt-2 mb-7">
           Get Started Now
         </Text>
 
-        {/* Full Name */}
-        <View className='w-full mb-3'>
-          <View className='flex flex-row items-center gap-2 mb-1.5'>
+        {error ? (
+          <Text className="text-destructive text-xs w-full mb-3">{error}</Text>
+        ) : null}
+        {info ? (
+          <Text className="text-muted-foreground text-xs w-full mb-3">
+            {info}
+          </Text>
+        ) : null}
+
+        <View className="w-full mb-3">
+          <View className="flex flex-row items-center gap-2 mb-1.5">
             <Image
               source={require("@/assets/images/user.svg")}
               contentFit="contain"
               style={{ width: 15, height: 15 }}
             />
-            <Text className='text-xs font-medium text-secondary-foreground'>Full Name</Text>
+            <Text className="text-xs font-medium text-secondary-foreground">
+              Full Name
+            </Text>
           </View>
-          <Input placeholder="John Smith" className="h-10 text-xs placeholder:text-[rgba(10,13,26,0.3)]" />
+          <Input
+            placeholder="John Smith"
+            value={fullName}
+            onChangeText={setFullName}
+            autoCapitalize="words"
+            className="h-10 text-xs placeholder:text-[rgba(10,13,26,0.3)]"
+          />
         </View>
 
-        {/* Email */}
-        <View className='w-full mb-3'>
-          <View className='flex flex-row items-center gap-2 mb-1.5'>
+        <View className="w-full mb-3">
+          <View className="flex flex-row items-center gap-2 mb-1.5">
             <Image
               source={require("@/assets/images/email.svg")}
               contentFit="contain"
               style={{ width: 15, height: 15 }}
             />
-            <Text className='text-xs font-medium text-secondary-foreground'>Email</Text>
+            <Text className="text-xs font-medium text-secondary-foreground">
+              Email
+            </Text>
           </View>
           <Input
             placeholder="you@gmail.com"
             keyboardType="email-address"
             autoCapitalize="none"
+            autoComplete="email"
+            value={email}
+            onChangeText={setEmail}
             className="h-10 text-xs placeholder:text-[rgba(10,13,26,0.3)]"
           />
         </View>
 
-        {/* Password */}
-        <View className='w-full mb-3'>
-          <View className='flex flex-row items-center gap-2 mb-1.5'>
+        <View className="w-full mb-3">
+          <View className="flex flex-row items-center gap-2 mb-1.5">
             <Image
               source={require("@/assets/images/lock.svg")}
               contentFit="contain"
               style={{ width: 15, height: 15 }}
             />
-            <Text className='text-xs font-medium text-secondary-foreground'>Password</Text>
+            <Text className="text-xs font-medium text-secondary-foreground">
+              Password
+            </Text>
           </View>
           <Input
             placeholder="••••••••••"
             secureTextEntry
+            value={password}
+            onChangeText={setPassword}
             className="h-10 text-xs placeholder:text-[rgba(10,13,26,0.3)]"
           />
         </View>
 
-        {/* Confirm Password */}
-        <View className='w-full mb-4'>
-          <View className='flex flex-row items-center gap-2 mb-1.5'>
+        <View className="w-full mb-4">
+          <View className="flex flex-row items-center gap-2 mb-1.5">
             <Image
               source={require("@/assets/images/lock.svg")}
               contentFit="contain"
               style={{ width: 15, height: 15 }}
             />
-            <Text className='text-xs font-bold text-secondary-foreground'>Confirm Password</Text>
+            <Text className="text-xs font-bold text-secondary-foreground">
+              Confirm Password
+            </Text>
           </View>
           <Input
             placeholder="••••••••••"
             secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
             className="h-10 text-xs placeholder:text-[rgba(10,13,26,0.3)]"
           />
         </View>
 
-        {/* Terms Checkbox */}
-        <View className='flex flex-row items-center gap-2 w-full mb-6'>
-          <Checkbox checked={checked} onCheckedChange={setChecked} className="rounded-sm w-4 h-4" />
-          <Text className='text-[11px] text-muted-foreground'>
+        <View className="flex flex-row items-center gap-2 w-full mb-6">
+          <Checkbox
+            checked={termsAccepted}
+            onCheckedChange={(v) => setTermsAccepted(v === true)}
+            className="rounded-sm w-4 h-4"
+          />
+          <Text className="text-[11px] text-muted-foreground">
             I have agreed to the terms and conditions
           </Text>
         </View>
 
-        {/* Sign Up Button */}
-        <TouchableOpacity activeOpacity={0.8} className='w-full rounded-xl h-11 mb-4 bg-primary items-center justify-center'>
-          <Text className='text-primary-foreground text-sm font-medium'>Sign up</Text>
+        <TouchableOpacity
+          onPress={onSignUp}
+          disabled={submitting}
+          activeOpacity={0.8}
+          className="w-full rounded-xl h-11 mb-4 bg-primary items-center justify-center"
+        >
+          {submitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text className="text-primary-foreground text-sm font-medium">
+              Sign up
+            </Text>
+          )}
         </TouchableOpacity>
 
-        {/* OR Divider */}
-        <Text className='text-secondary-foreground text-xs font-bold mb-4'>OR</Text>
+        <Text className="text-secondary-foreground text-xs font-bold mb-4">
+          OR
+        </Text>
 
-        {/* Google Sign In */}
-        <TouchableOpacity activeOpacity={0.8} className='w-full border rounded-xl h-11 border-primary bg-background mb-4 flex-row items-center justify-center gap-2'>
+        <TouchableOpacity
+          onPress={onGooglePlaceholder}
+          activeOpacity={0.8}
+          className="w-full border rounded-xl h-11 border-primary bg-background mb-4 flex-row items-center justify-center gap-2"
+        >
           <Image
             source={require("@/assets/images/google.svg")}
             contentFit="contain"
             style={{ width: 15, height: 15 }}
           />
-          <Text className='text-primary text-sm font-medium'>Sign in with Google</Text>
+          <Text className="text-primary text-sm font-medium">
+            Sign in with Google
+          </Text>
         </TouchableOpacity>
 
-        {/* Already have account */}
-        <View className='flex flex-row items-center mb-6'>
-          <Text className='text-xs text-muted-foreground'>Already have an account? </Text>
-          <Link href={"/login" as any} asChild>
-            <Text className='text-xs text-primary font-medium'>Sign in</Text>
+        <View className="flex flex-row items-center mb-6">
+          <Text className="text-xs text-muted-foreground">
+            Already have an account?{" "}
+          </Text>
+          <Link href="/login" asChild>
+            <Text className="text-xs text-primary font-medium">Sign in</Text>
           </Link>
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default SignUpScreen
+export default SignUpScreen;
