@@ -9,10 +9,16 @@ import { Stack } from "expo-router";
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 import { PortalHost } from '@rn-primitives/portal';
 import { StatusBar } from 'expo-status-bar';
+import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
 
 import { queryClient } from "@/lib/query-client";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
+
+if (Platform.OS === "web") {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync().catch(() => { });

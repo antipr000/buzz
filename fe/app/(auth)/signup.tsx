@@ -1,13 +1,14 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { getAuthRedirectUri } from "@/lib/auth-redirect";
+import { signInWithGoogle } from "@/lib/google-oauth";
 import { getSupabase } from "@/lib/supabase";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   TouchableOpacity,
   View,
@@ -23,12 +24,14 @@ const SignUpScreen = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+  /** Set after sign-up when Supabase requires email confirmation (no session yet). */
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   const onSignUp = async () => {
     setError(null);
-    setInfo(null);
+    setVerificationEmail(null);
 
     const name = fullName.trim();
     const mail = email.trim();
@@ -60,18 +63,19 @@ const SignUpScreen = () => {
 
     setSubmitting(true);
     try {
+      const emailRedirectTo = getAuthRedirectUri();
+
       const { data, error: authError } = await supabase.auth.signUp({
         email: mail,
         password,
         options: {
+          emailRedirectTo,
           data: {
             full_name: name,
             name,
           },
         },
       });
-
-      console.log(data);
 
       if (authError) {
         setError(authError.message);
@@ -83,19 +87,39 @@ const SignUpScreen = () => {
         return;
       }
 
-      setInfo(
-        "Check your email to confirm your account, then sign in. (You can disable email confirmation in Supabase Auth settings while testing.)"
-      );
+      setPassword("");
+      setConfirmPassword("");
+      setVerificationEmail(mail);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const onGooglePlaceholder = () => {
-    Alert.alert(
-      "Coming soon",
-      "Google sign-up will be enabled in the next phase."
-    );
+  const onGoogleSignUp = async () => {
+    setError(null);
+    if (!termsAccepted) {
+      setError("Please accept the terms and conditions.");
+      return;
+    }
+    setGoogleSubmitting(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result.status === "success") {
+        router.replace("/location");
+        return;
+      }
+      if (result.status === "cancelled") {
+        return;
+      }
+      setError(result.message);
+    } finally {
+      setGoogleSubmitting(false);
+    }
+  };
+
+  const clearVerificationFlow = () => {
+    setVerificationEmail(null);
+    setError(null);
   };
 
   return (
@@ -113,18 +137,42 @@ const SignUpScreen = () => {
         />
 
         <Text className="text-secondary text-xl font-medium mt-2 mb-7">
-          Get Started Now
+          {verificationEmail ? "Check your email" : "Get Started Now"}
         </Text>
 
         {error ? (
-          <Text className="text-destructive text-xs w-full mb-3">{error}</Text>
-        ) : null}
-        {info ? (
-          <Text className="text-muted-foreground text-xs w-full mb-3">
-            {info}
-          </Text>
+          <Text className="text-destructive text-center text-xs w-full mb-3">{error}</Text>
         ) : null}
 
+        {verificationEmail ? (
+          <View className="w-full mb-6">
+            <Text className="text-secondary-foreground text-center text-sm leading-5 mb-2">
+              We sent a verification link to{" "}
+              <Text className="font-semibold text-foreground">{verificationEmail}</Text>.
+              Open the link to confirm your account, then sign in.
+            </Text>
+            <Text className="text-muted-foreground text-center text-xs leading-5 mb-6">
+              Check your spam folder if you do not see it.
+            </Text>
+            <Link href="/login" asChild>
+              <TouchableOpacity activeOpacity={0.8} className="w-full rounded-xl h-11 mb-3 border border-primary items-center justify-center">
+                <Text className="text-primary text-sm font-medium">Go to sign in</Text>
+              </TouchableOpacity>
+            </Link>
+            <TouchableOpacity
+              onPress={clearVerificationFlow}
+              activeOpacity={0.7}
+              className="w-full min-h-11 py-3 justify-center items-center"
+            >
+              <Text className="text-center text-xs text-muted-foreground">
+                Use a different email
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {!verificationEmail ? (
+        <>
         <View className="w-full mb-3">
           <View className="flex flex-row items-center gap-2 mb-1.5">
             <Image
@@ -220,7 +268,7 @@ const SignUpScreen = () => {
 
         <TouchableOpacity
           onPress={onSignUp}
-          disabled={submitting}
+          disabled={submitting || googleSubmitting}
           activeOpacity={0.8}
           className="w-full rounded-xl h-11 mb-4 bg-primary items-center justify-center"
         >
@@ -238,18 +286,25 @@ const SignUpScreen = () => {
         </Text>
 
         <TouchableOpacity
-          onPress={onGooglePlaceholder}
+          onPress={onGoogleSignUp}
+          disabled={submitting || googleSubmitting}
           activeOpacity={0.8}
           className="w-full border rounded-xl h-11 border-primary bg-background mb-4 flex-row items-center justify-center gap-2"
         >
-          <Image
-            source={require("@/assets/images/google.svg")}
-            contentFit="contain"
-            style={{ width: 15, height: 15 }}
-          />
-          <Text className="text-primary text-sm font-medium">
-            Sign in with Google
-          </Text>
+          {googleSubmitting ? (
+            <ActivityIndicator />
+          ) : (
+            <>
+              <Image
+                source={require("@/assets/images/google.svg")}
+                contentFit="contain"
+                style={{ width: 15, height: 15 }}
+              />
+              <Text className="text-primary text-sm font-medium">
+                Sign in with Google
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <View className="flex flex-row items-center mb-6">
@@ -260,6 +315,8 @@ const SignUpScreen = () => {
             <Text className="text-xs text-primary font-medium">Sign in</Text>
           </Link>
         </View>
+        </>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,3 +1,4 @@
+import { useAuthDeepLink } from "@/hooks/useAuthDeepLink";
 import { getSupabase } from "@/lib/supabase";
 import type { Session, User } from "@supabase/supabase-js";
 import {
@@ -23,6 +24,9 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Handles the OAuth when app not running ,switched apps etc .
+  useAuthDeepLink();
 
   useEffect(() => {
     let supabase: ReturnType<typeof getSupabase>;
@@ -61,7 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Resume token refresh when returning to foreground (timers are throttled in background).
   useEffect(() => {
     let supabase: ReturnType<typeof getSupabase>;
     try {
@@ -83,9 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.auth.startAutoRefresh();
     }
 
-    return () => {
-      sub.remove();
-    };
+    return () => sub.remove();
   }, []);
 
   const signOut = useCallback(async () => {

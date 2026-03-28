@@ -1,13 +1,13 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { signInWithGoogle } from "@/lib/google-oauth";
 import { getSupabase } from "@/lib/supabase";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   TouchableOpacity,
   View,
@@ -19,6 +19,7 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
   const [keepSignedIn, setKeepSignedIn] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const onSignIn = async () => {
@@ -46,7 +47,15 @@ const LoginScreen = () => {
         password,
       });
       if (authError) {
-        setError(authError.message);
+        // check implementation 
+        const msg = authError.message ?? "";
+        if (/email not confirmed/i.test(msg)) {
+          setError(
+            "Confirm your email using the link we sent you, then try signing in again."
+          );
+        } else {
+          setError(msg);
+        }
         return;
       }
       router.replace("/location");
@@ -55,11 +64,22 @@ const LoginScreen = () => {
     }
   };
 
-  const onGooglePlaceholder = () => {
-    Alert.alert(
-      "Coming soon",
-      "Google sign-in will be enabled in the next phase."
-    );
+  const onGoogleSignIn = async () => {
+    setError(null);
+    setGoogleSubmitting(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result.status === "success") {
+        router.replace("/location");
+        return;
+      }
+      if (result.status === "cancelled") {
+        return;
+      }
+      setError(result.message);
+    } finally {
+      setGoogleSubmitting(false);
+    }
   };
 
   return (
@@ -81,7 +101,7 @@ const LoginScreen = () => {
         </Text>
 
         {error ? (
-          <Text className="text-destructive text-xs w-full mb-3">{error}</Text>
+          <Text className="text-destructive text-center text-xs w-full mb-3">{error}</Text>
         ) : null}
 
         <View className="w-full mb-3">
@@ -139,7 +159,7 @@ const LoginScreen = () => {
 
         <TouchableOpacity
           onPress={onSignIn}
-          disabled={submitting}
+          disabled={submitting || googleSubmitting}
           activeOpacity={0.8}
           className="w-full rounded-xl h-11 mb-4 bg-primary items-center justify-center"
         >
@@ -157,18 +177,25 @@ const LoginScreen = () => {
         </Text>
 
         <TouchableOpacity
-          onPress={onGooglePlaceholder}
+          onPress={onGoogleSignIn}
+          disabled={submitting || googleSubmitting}
           activeOpacity={0.8}
           className="w-full rounded-xl h-11 border border-primary bg-background mb-4 flex-row items-center justify-center gap-2"
         >
-          <Image
-            source={require("@/assets/images/google.svg")}
-            contentFit="contain"
-            style={{ width: 15, height: 15 }}
-          />
-          <Text className="text-primary text-sm font-medium">
-            Sign in with Google
-          </Text>
+          {googleSubmitting ? (
+            <ActivityIndicator />
+          ) : (
+            <>
+              <Image
+                source={require("@/assets/images/google.svg")}
+                contentFit="contain"
+                style={{ width: 15, height: 15 }}
+              />
+              <Text className="text-primary text-sm font-medium">
+                Sign in with Google
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
 
         <View className="flex flex-row items-center mb-6">
