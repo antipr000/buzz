@@ -25,6 +25,9 @@ class Config(BaseSettings):
     db_port: int = Field(default=5438, alias="DB_PORT")
     cors_origins: list[str] = Field(default=["*"], alias="CORS_ORIGINS")
 
+    # Optional: verify PSP webhook signatures in production
+    payment_webhook_secret: str = Field(default="", alias="PAYMENT_WEBHOOK_SECRET")
+
     # Supabase project URL (https://<ref>.supabase.co) — JWT verification via JWKS (see Supabase JWT docs)
     supabase_url: str = Field(default="", alias="SUPABASE_URL")
 

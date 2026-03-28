@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import BaseEntity
 
 if TYPE_CHECKING:
+    from booking.models.booking import Booking
     from user.models.user import User
 
 
@@ -48,6 +49,10 @@ class Address(BaseEntity):
     pin_code: Mapped[int] = mapped_column(Integer, nullable=False)
 
     user: Mapped[User] = relationship(back_populates="addresses", lazy="raise")
+    bookings: Mapped[list[Booking]] = relationship(
+        back_populates="address",
+        lazy="raise",
+    )
 
     def get_key(self) -> str:
         return "adr"

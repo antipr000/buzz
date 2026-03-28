@@ -5,7 +5,7 @@ import uuid
 from datetime import date, time
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Date, Enum, ForeignKey, Integer, String, Time, Uuid
+from sqlalchemy import Boolean, Date, Enum, Float, ForeignKey, Index, Integer, String, Time, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from profile.models.profile import Profile
     from saved_event.models.saved_event import SavedEvent
 
-# See if longitude and latitude are needed
 class EventCategory(str, enum.Enum):
     MUSIC = "Music"
     NIGHTLIFE = "Nightlife"
@@ -32,11 +31,9 @@ class EventCategory(str, enum.Enum):
     CULTURE = "Culture"
 
 
-# See if longitude and latitude are needed
-
-
 class Event(BaseEntity):
     __tablename__ = "events"
+    __table_args__ = (Index("ix_events_date_id", "date", "id"),)
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(String, nullable=False)
@@ -57,6 +54,9 @@ class Event(BaseEntity):
         nullable=False,
         index=True,
     )
+    latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    language: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     organizer: Mapped[Profile] = relationship(
         back_populates="organized_events",

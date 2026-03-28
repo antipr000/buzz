@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import BaseEntity
 
 if TYPE_CHECKING:
+    from address.models.address import Address
     from event.models.event import Event
     from payment.models.payment import Payment
     from ticket.models.ticket import Ticket
@@ -41,8 +42,18 @@ class Booking(BaseEntity):
         Enum(BookingStatus, native_enum=False, length=32),
         nullable=False,
     )
+    address_id: Mapped[str | None] = mapped_column(
+        String(255),
+        ForeignKey("addresses.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     user: Mapped[User] = relationship(back_populates="bookings", lazy="raise")
+    address: Mapped[Address | None] = relationship(
+        back_populates="bookings",
+        lazy="raise",
+    )
     event: Mapped[Event] = relationship(back_populates="bookings", lazy="raise")
     tickets: Mapped[list[Ticket]] = relationship(
         back_populates="booking",
