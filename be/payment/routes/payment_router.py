@@ -7,14 +7,21 @@ from booking.models.booking import Booking
 from core.auth import get_current_user
 from core.database import get_db
 from payment.models.payment import Payment
-from payment.schemas.confirm import PaymentConfirmBody, WebhookBody
+from payment.schemas.confirm import (
+    PaymentConfirmBody,
+    PaymentOutcomeResponse,
+    WebhookBody,
+)
 from payment.services.payment_service import PaymentService
 from user.models.user import User
 
 payment_router = APIRouter(tags=["Payments"])
 
 
-@payment_router.post("/payments/{payment_id}/confirm")
+@payment_router.post(
+    "/payments/{payment_id}/confirm",
+    response_model=PaymentOutcomeResponse,
+)
 async def confirm_payment(
     payment_id: str,
     body: PaymentConfirmBody,
@@ -33,13 +40,16 @@ async def confirm_payment(
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-    return {
-        "paymentId": updated.id,
-        "status": updated.status.value,
-    }
+    return PaymentOutcomeResponse(
+        payment_id=updated.id,
+        status=updated.status.value,
+    )
 
 
-@payment_router.post("/payments/webhook")
+@payment_router.post(
+    "/payments/webhook",
+    response_model=PaymentOutcomeResponse,
+)
 async def payment_webhook(
     body: WebhookBody,
     db: AsyncSession = Depends(get_db),
@@ -55,4 +65,7 @@ async def payment_webhook(
         raise HTTPException(status_code=404, detail=str(e)) from e
     if updated is None:
         raise HTTPException(status_code=404, detail="Payment not found")
-    return {"paymentId": updated.id, "status": updated.status.value}
+    return PaymentOutcomeResponse(
+        payment_id=updated.id,
+        status=updated.status.value,
+    )

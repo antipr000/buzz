@@ -27,11 +27,7 @@ from user.models.user import User
 event_router = APIRouter(prefix="/events", tags=["Events"])
 
 
-@event_router.get(
-    "/discover",
-    response_model=DiscoverResponse,
-    response_model_by_alias=True,
-)
+@event_router.get("/discover", response_model=DiscoverResponse)
 async def discover_events(
     lat: float = Query(..., description="User latitude"),
     lng: float = Query(..., description="User longitude"),
@@ -58,11 +54,7 @@ async def discover_events(
     )
 
 
-@event_router.post(
-    "/create",
-    response_model=CreateEventResponse,
-    response_model_by_alias=True,
-)
+@event_router.post("/create", response_model=CreateEventResponse)
 async def create_event(
     body: CreateEventBody,
     db: AsyncSession = Depends(get_db),
@@ -75,11 +67,7 @@ async def create_event(
     return CreateEventResponse(id=ev.id)
 
 
-@event_router.post(
-    "/purchase",
-    response_model=PurchaseResponse,
-    response_model_by_alias=True,
-)
+@event_router.post("/purchase", response_model=PurchaseResponse)
 async def purchase_tickets(
     body: PurchaseBody,
     db: AsyncSession = Depends(get_db),
@@ -97,11 +85,7 @@ async def purchase_tickets(
     )
 
 
-@event_router.get(
-    "/saved",
-    response_model=SavedListResponse,
-    response_model_by_alias=True,
-)
+@event_router.get("/saved", response_model=SavedListResponse)
 async def list_saved_events(
     cursor: str | None = Query(None),
     limit: int = Query(20, ge=1, le=50),
@@ -130,11 +114,7 @@ async def save_event(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@event_router.post(
-    "/bookings",
-    response_model=BookingListResponse,
-    response_model_by_alias=True,
-)
+@event_router.post("/bookings", response_model=BookingListResponse)
 async def list_my_bookings(
     body: BookingsListBody | None = Body(default=None),
     db: AsyncSession = Depends(get_db),

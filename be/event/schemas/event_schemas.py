@@ -1,13 +1,13 @@
-"""Request/response models for events (camelCase JSON)."""
+"""Request/response models for events (snake_case JSON)."""
 
 from __future__ import annotations
 
 from datetime import date, time
 from typing import Annotated
 
-from pydantic import BeforeValidator, Field
+from pydantic import BeforeValidator
 
-from core.schemas.camel import CamelModel
+from core.schemas.schema_model import SchemaModel
 from event.models.event import EventCategory
 
 
@@ -26,12 +26,12 @@ def _parse_event_category(v: object) -> EventCategory:
     raise ValueError("Invalid category")
 
 
-class OrganizerOut(CamelModel):
+class OrganizerOut(SchemaModel):
     name: str
     logo: str | None = None
 
 
-class EventCard(CamelModel):
+class EventCard(SchemaModel):
     id: str
     category: str
     title: str
@@ -47,18 +47,18 @@ class EventCard(CamelModel):
     participants: int
 
 
-class PaginationOut(CamelModel):
+class PaginationOut(SchemaModel):
     next_cursor: str | None
     has_more: bool
 
 
-class DiscoverResponse(CamelModel):
-    user_location: str | None = Field(default=None, serialization_alias="userLocation")
-    trending_events: list[EventCard] = Field(serialization_alias="trendingEvents")
+class DiscoverResponse(SchemaModel):
+    user_location: str | None = None
+    trending_events: list[EventCard]
     pagination: PaginationOut
 
 
-class CreateEventBody(CamelModel):
+class CreateEventBody(SchemaModel):
     event_cover: str | None = None
     title: str
     description: str
@@ -72,14 +72,14 @@ class CreateEventBody(CamelModel):
     language: str | None = None
 
 
-class CreateEventResponse(CamelModel):
+class CreateEventResponse(SchemaModel):
     id: str
 
 
-class SaveEventBody(CamelModel):
+class SaveEventBody(SchemaModel):
     event_id: str
 
 
-class SavedListResponse(CamelModel):
-    saved_events: list[EventCard] = Field(serialization_alias="savedEvents")
+class SavedListResponse(SchemaModel):
+    saved_events: list[EventCard]
     pagination: PaginationOut

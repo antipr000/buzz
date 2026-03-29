@@ -12,11 +12,7 @@ from user.models.user import User
 profile_router = APIRouter(prefix="/user", tags=["Profile"])
 
 
-@profile_router.get(
-    "/profile/stats",
-    response_model=ProfileStatsResponse,
-    response_model_by_alias=True,
-)
+@profile_router.get("/profile/stats", response_model=ProfileStatsResponse)
 async def profile_stats(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),

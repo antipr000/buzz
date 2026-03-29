@@ -1,10 +1,12 @@
 from datetime import datetime
 import uuid
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import ConfigDict, EmailStr
+
+from core.schemas.schema_model import SchemaModel
 
 
-class UserResponse(BaseModel):
+class UserResponse(SchemaModel):
     id: uuid.UUID
     email: EmailStr
     full_name: str

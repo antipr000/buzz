@@ -1,23 +1,23 @@
 import uuid
 
-from pydantic import EmailStr, Field
+from pydantic import EmailStr
 
-from core.schemas.camel import CamelModel
+from core.schemas.schema_model import SchemaModel
 
 
-class UserBriefOut(CamelModel):
+class UserBriefOut(SchemaModel):
     id: uuid.UUID
     name: str
     email: EmailStr
-    profile_image: str | None = Field(default=None, serialization_alias="profileImage")
+    profile_image: str | None = None
 
 
-class StatsOut(CamelModel):
-    events_attended: int = Field(serialization_alias="eventsAttended")
-    saved_events: int = Field(serialization_alias="savedEvents")
-    events_created: int = Field(serialization_alias="eventsCreated")
+class StatsOut(SchemaModel):
+    events_attended: int
+    saved_events: int
+    events_created: int
 
 
-class ProfileStatsResponse(CamelModel):
+class ProfileStatsResponse(SchemaModel):
     user: UserBriefOut
     stats: StatsOut

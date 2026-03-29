@@ -6,7 +6,7 @@ from typing import Annotated
 from pydantic import BeforeValidator, Field
 
 from address.models.address import AddressType
-from core.schemas.camel import CamelModel
+from core.schemas.schema_model import SchemaModel
 from payment.models.payment import PaymentMethod
 from ticket.models.ticket import TicketTier
 
@@ -20,7 +20,7 @@ def _parse_address_type(v: object) -> AddressType:
     raise ValueError("Invalid address type")
 
 
-class AddressIn(CamelModel):
+class AddressIn(SchemaModel):
     first_name: str
     last_name: str
     mobile_number: str
@@ -35,34 +35,34 @@ class AddressIn(CamelModel):
     address_type: Annotated[AddressType, BeforeValidator(_parse_address_type)]
 
 
-class TicketLineIn(CamelModel):
+class TicketLineIn(SchemaModel):
     ticket_tier: TicketTier
     price: int
     quantity: int = Field(ge=1)
 
 
-class PurchaseBody(CamelModel):
+class PurchaseBody(SchemaModel):
     event_id: str
     tickets: list[TicketLineIn]
     address: AddressIn
     payment_method: PaymentMethod
 
 
-class PurchaseResponse(CamelModel):
+class PurchaseResponse(SchemaModel):
     booking_id: str
     payment_id: str
     amount: int
     payment_status: str
 
 
-class TicketLineOut(CamelModel):
+class TicketLineOut(SchemaModel):
     ticket_tier: str
     price: int
     quantity: int
     seats: list[str]
 
 
-class BookingListItem(CamelModel):
+class BookingListItem(SchemaModel):
     id: str
     event_id: str
     booking_date: datetime
@@ -75,11 +75,11 @@ class BookingListItem(CamelModel):
     status: str
 
 
-class BookingListResponse(CamelModel):
+class BookingListResponse(SchemaModel):
     data: list[BookingListItem]
 
 
-class BookingsListBody(CamelModel):
+class BookingsListBody(SchemaModel):
     """Optional filters for POST /events/bookings."""
 
     status: str | None = None

@@ -14,7 +14,7 @@ from common.pagination import (
     decode_saved_cursor,
     encode_saved_cursor,
 )
-from core.schemas.camel import to_camel
+from core.schemas.schema_model import to_camel
 from event.models.event import EventCategory
 from event.schemas.event_schemas import CreateEventBody
 from ticket.models.ticket import TicketTier
