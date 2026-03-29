@@ -1,21 +1,31 @@
-import axios from 'axios';
+import axios from "axios";
 
-// Replace with your actual base URL
-const BASE_URL = 'http://localhost:8000';
+import { getSupabase } from "@/lib/supabase";
+
+const baseURL =
+  process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1";
 
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// Optional: Add interceptors for authentication or error handling
 apiClient.interceptors.request.use(
-  (config) => {
-    // Example: Add auth token if available
-    // const token = await getToken();
-    // if (token) config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    try {
+      const supabase = getSupabase();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch {
+      // Missing Supabase env or client — requests stay unauthenticated
+    }
     return config;
   },
   (error) => Promise.reject(error)
@@ -24,8 +34,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Example: Centralized error handling
-    console.error('API Error:', error.response?.data || error.message);
+    console.error("API Error:", error.response?.data ?? error.message);
     return Promise.reject(error);
   }
 );
