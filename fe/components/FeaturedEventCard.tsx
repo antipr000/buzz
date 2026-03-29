@@ -1,7 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
-import { CATEGORY_COLORS } from '@/constants/categoryColors'
 import { Image, ImageSource } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import React from 'react'

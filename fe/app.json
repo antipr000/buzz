@@ -40,7 +40,13 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "We use your location to show events happening around you."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

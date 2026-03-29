@@ -1,27 +1,22 @@
-import { View, ScrollView, TouchableOpacity, Platform, KeyboardAvoidingView } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { ArrowLeft, ImageIcon, Ticket } from 'lucide-react-native';
+import { ArrowLeft, ImageIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import { CATEGORY_COLORS } from '@/constants/categoryColors';
+import {
+    EVENT_CATEGORY_ICONS,
+    EVENT_CATEGORY_LABELS,
+    type EventCategoryLabel,
+} from '@/constants/eventCategories';
 
-const CATEGORY_ASSETS: Record<string, any> = {
-    Music: require('@/assets/images/events/music/music.svg'),
-    Tech: require('@/assets/images/events/tech/tech.svg'),
-    Food: require('@/assets/images/events/food/food.svg'),
-    Fitness: require('@/assets/images/events/fitness/fitness.svg'),
-    Art: require('@/assets/images/events/art/art.svg'),
-};
-
-// Use the available categories from assets
-const CATEGORIES = Object.keys(CATEGORY_ASSETS);
+const CATEGORIES: EventCategoryLabel[] = [...EVENT_CATEGORY_LABELS];
 
 export default function CreateEventScreen() {
     const router = useRouter();
@@ -125,7 +120,7 @@ export default function CreateEventScreen() {
                     >
                         {CATEGORIES.map((category) => {
                             const isSelected = selectedCategory === category;
-                            const asset = CATEGORY_ASSETS[category];
+                            const asset = EVENT_CATEGORY_ICONS[category];
 
                             return (
                                 <TouchableOpacity

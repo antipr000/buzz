@@ -4,7 +4,6 @@ import { ActivityIndicator, View } from "react-native";
 
 export default function MainLayout() {
   const { session, isLoading } = useAuth();
-
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
@@ -16,6 +15,8 @@ export default function MainLayout() {
   if (!session) {
     return <Redirect href="/login" />;
   }
+
+  console.log("session", session.access_token);
 
   return (
     <Stack

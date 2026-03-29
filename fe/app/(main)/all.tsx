@@ -4,13 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Image } from 'expo-image'
 import { Link, useRouter } from 'expo-router'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
+import { EVENT_CATEGORY_ICONS } from '@/constants/eventCategories'
 import FeaturedEventCard from '@/components/FeaturedEventCard'
 
 const TRENDING_EVENTS = [
     {
         id: 'f1',
         category: 'Music',
-        categoryIcon: require('@/assets/images/events/music/music2.svg'),
+        categoryIcon: EVENT_CATEGORY_ICONS.Music,
         calendarIcon: require('@/assets/images/events/music/calender.svg'),
         timeIcon: require('@/assets/images/events/music/time.svg'),
         locationIcon: require('@/assets/images/events/music/location.svg'),
@@ -31,7 +32,7 @@ const TRENDING_EVENTS = [
     {
         id: 'f2',
         category: 'Tech',
-        categoryIcon: require('@/assets/images/events/tech/tech2.svg'),
+        categoryIcon: EVENT_CATEGORY_ICONS.Tech,
         calendarIcon: require('@/assets/images/events/tech/calender.svg'),
         timeIcon: require('@/assets/images/events/tech/time.svg'),
         locationIcon: require('@/assets/images/events/tech/location.svg'),
@@ -52,7 +53,7 @@ const TRENDING_EVENTS = [
     {
         id: 'f3',
         category: 'Food',
-        categoryIcon: require('@/assets/images/events/food/food2.svg'),
+        categoryIcon: EVENT_CATEGORY_ICONS.Food,
         calendarIcon: require('@/assets/images/events/food/calender.svg'),
         timeIcon: require('@/assets/images/events/food/time.svg'),
         locationIcon: require('@/assets/images/events/food/location.svg'),

@@ -39,6 +39,35 @@ uv run main.py
 ```
 The API will be available at [http://localhost:8000](http://localhost:8000).
 
+### 6. Dev seed data (optional)
+
+From the `be/` directory, with the same `.env` as the app (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_PORT`, etc.):
+
+```bash
+# From `be/` (or use `uv run --directory be` from the monorepo root)
+uv run python scripts/seed_events.py
+
+# From monorepo root (e.g. `buzz/`), same effect:
+uv run --directory be python scripts/seed_events.py
+
+# One sample purchase (booking, address, payment, tickets) on an upcoming [seed] event with price > 0
+uv run python scripts/seed_bookings.py
+```
+
+Scripts add `be/` to `sys.path` and `chdir` there so `import models` works even though Python’s default path is `be/scripts/`.
+
+Optional environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `SEED_ORGANIZER_USER_ID` | `ad6b9852-d87c-4bc8-a495-242bb53cfc10` | Owner of seeded events (`profiles.user_id` must exist) |
+| `SEED_BUYER_USER_ID` | same as above | User who receives the sample booking |
+
+**Discover API:** seeded events use coordinates around **lat `19.0760`, lng `72.8777`** (see [`scripts/seed_constants.py`](scripts/seed_constants.py)). Call discover with those values and a large enough `radius_km` so the offset events are included.
+
+**Order:** run `seed_events.py` before `seed_bookings.py`. Re-running `seed_events.py` removes previous `[seed]` events and their bookings, then recreates events (new IDs). Re-running `seed_bookings.py` removes that buyer’s bookings on `[seed]` events only, then creates a new purchase.
+
+After those deletes, both scripts also remove **orphan addresses** for the configured seed user(s): any `addresses` row for `SEED_ORGANIZER_USER_ID` / `SEED_BUYER_USER_ID` that no booking references.
 
 
 ##  Project Structure
@@ -58,6 +87,8 @@ The API will be available at [http://localhost:8000](http://localhost:8000).
 | Command | Description |
 | --- | --- |
 | `uv run main.py` | Start the dev server |
+| `uv run python scripts/seed_events.py` | Replace dev `[seed]` events (and their bookings) |
+| `uv run python scripts/seed_bookings.py` | Add a sample booking/payment on a seeded event |
 | `uv run alembic revision --autogenerate -m "description"` | Generate a new migration |
 | `uv run alembic upgrade head` | Apply all pending migrations |
 | `docker compose down -v` | Wipe database and reset volumes |

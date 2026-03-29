@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
+import { EVENT_CATEGORY_ICONS } from '@/constants/eventCategories'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter, Link } from 'expo-router'
@@ -20,7 +21,7 @@ export default function EventDetails() {
     const event = {
         id: id,
         category: 'Music',
-        categoryIcon: require('@/assets/images/events/music/music2.svg'),
+        categoryIcon: EVENT_CATEGORY_ICONS.Music,
         title: 'Hoop Music Festival',
         description: 'The biggest electronic music festival of the year featuring world class DJs and immersive light shows.',
         date: 'Thu, Jan 15, 2026',

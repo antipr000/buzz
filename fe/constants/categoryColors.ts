@@ -1,10 +1,15 @@
-export const CATEGORY_COLORS: Record<string, string> = {
-    Music: '#EC4899',
-    Tech: '#2563EB',
-    Gaming: '#8B5CF6',
-    Food: '#F97316',
-    Wellness: '#22C55E',
-    Fitness: '#EF4444',
-    Family: '#FACC15',
-    Art: '#FEF08A',
+import type { EventCategoryLabel } from '@/constants/eventCategories';
+
+/** Brand tint per category — keys must match `EventCategoryLabel` only. */
+export const CATEGORY_COLORS: Record<EventCategoryLabel, string> = {
+  Music: '#EC4899',
+  Art: '#FEF08A',
+  Food: '#F97316',
+  Fitness: '#EF4444',
+  Tech: '#2563EB',
+  Gaming: '#8B5CF6',
+  Sports: '#22C55E',
+  Nightlife: '#DB2777',
+  Workshop: '#FACC15',
+  Network: '#1D4ED8',
 };

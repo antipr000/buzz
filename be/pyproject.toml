@@ -28,6 +28,11 @@ dev = [
 pythonpath = ["."]
 testpaths = ["tests"]
 
+[tool.ruff.lint.per-file-ignores]
+# Seed scripts prepend `be/` to sys.path and chdir before app imports.
+"scripts/seed_events.py" = ["E402"]
+"scripts/seed_bookings.py" = ["E402"]
+
 
 [tool.alembic]
 

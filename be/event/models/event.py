@@ -15,20 +15,20 @@ if TYPE_CHECKING:
     from profile.models.profile import Profile
     from saved_event.models.saved_event import SavedEvent
 
+
 class EventCategory(str, enum.Enum):
+    """Must match `fe/assets/images/common/category/*.svg` basenames (Title Case)."""
+
     MUSIC = "Music"
-    NIGHTLIFE = "Nightlife"
-    TECH = "Tech"
-    STARTUP = "Startup"
-    GAMING = "Gaming"
-    FOOD = "Food"
-    SOCIAL = "Social"
-    WELLNESS = "Wellness"
-    FITNESS = "Fitness"
-    FAMILY = "Family"
-    KIDS = "Kids"
     ART = "Art"
-    CULTURE = "Culture"
+    FOOD = "Food"
+    FITNESS = "Fitness"
+    TECH = "Tech"
+    GAMING = "Gaming"
+    SPORTS = "Sports"
+    NIGHTLIFE = "Nightlife"
+    WORKSHOP = "Workshop"
+    NETWORK = "Network"
 
 
 class Event(BaseEntity):

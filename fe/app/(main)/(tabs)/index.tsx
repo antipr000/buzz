@@ -2,12 +2,13 @@ import FeaturedEventCard from '@/components/FeaturedEventCard'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
+import { EVENT_CATEGORY_ICONS, EVENT_CATEGORY_LABELS } from '@/constants/eventCategories'
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { Image, ImageSource } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Link } from 'expo-router'
@@ -16,7 +17,7 @@ const EVENTS = [
   {
     id: '1',
     category: 'Music',
-    categoryIcon: require('@/assets/images/events/music/music2.svg'),
+    categoryIcon: EVENT_CATEGORY_ICONS.Music,
     title: 'Hoop Music Festival',
     description: 'The biggest music festival of the year featuring world...',
     date: 'Thu, Jan 15 | 8 PM',
@@ -27,7 +28,7 @@ const EVENTS = [
   {
     id: '2',
     category: 'Tech',
-    categoryIcon: require('@/assets/images/events/tech/tech2.svg'),
+    categoryIcon: EVENT_CATEGORY_ICONS.Tech,
     title: 'Hackathon',
     description: 'Build real solutions with code, creativity, and collab...',
     date: 'Fri, Jan 23 | 11 AM',
@@ -38,7 +39,7 @@ const EVENTS = [
   {
     id: '3',
     category: 'Food',
-    categoryIcon: require('@/assets/images/events/food/food2.svg'),
+    categoryIcon: EVENT_CATEGORY_ICONS.Food,
     title: 'Street Food Fest',
     description: 'A culinary journey through the best street food from...',
     date: 'Tue, Feb 2 | 5 PM',
@@ -52,7 +53,7 @@ const FEATURED_EVENTS = [
   {
     id: 'f1',
     category: 'Music',
-    categoryIcon: require('@/assets/images/events/music/music2.svg'),
+    categoryIcon: EVENT_CATEGORY_ICONS.Music,
     calendarIcon: require('@/assets/images/events/music/calender.svg'),
     timeIcon: require('@/assets/images/events/music/time.svg'),
     locationIcon: require('@/assets/images/events/music/location.svg'),
@@ -73,7 +74,7 @@ const FEATURED_EVENTS = [
   {
     id: 'f2',
     category: 'Tech',
-    categoryIcon: require('@/assets/images/events/tech/tech2.svg'),
+    categoryIcon: EVENT_CATEGORY_ICONS.Tech,
     calendarIcon: require('@/assets/images/events/tech/calender.svg'),
     timeIcon: require('@/assets/images/events/tech/time.svg'),
     locationIcon: require('@/assets/images/events/tech/location.svg'),
@@ -94,7 +95,7 @@ const FEATURED_EVENTS = [
   {
     id: 'f3',
     category: 'Food',
-    categoryIcon: require('@/assets/images/events/food/food2.svg'),
+    categoryIcon: EVENT_CATEGORY_ICONS.Food,
     calendarIcon: require('@/assets/images/events/food/calender.svg'),
     timeIcon: require('@/assets/images/events/food/time.svg'),
     locationIcon: require('@/assets/images/events/food/location.svg'),
@@ -115,12 +116,11 @@ const FEATURED_EVENTS = [
 ]
 
 const CATEGORIES = [
-  { label: 'All Events', icon: null },
-  { label: 'Music', icon: require('@/assets/images/events/music/music.svg') },
-  { label: 'Art', icon: require('@/assets/images/events/art/art.svg') },
-  { label: 'Food', icon: require('@/assets/images/events/food/food.svg') },
-  { label: 'Tech', icon: require('@/assets/images/events/tech/tech.svg') },
-  { label: 'Fitness', icon: require('@/assets/images/events/fitness/fitness.svg') },
+  { label: 'All Events', icon: null as null },
+  ...EVENT_CATEGORY_LABELS.map((label) => ({
+    label,
+    icon: EVENT_CATEGORY_ICONS[label],
+  })),
 ]
 
 type EventCardProps = {
@@ -183,7 +183,17 @@ const EventCard = ({ id, category, categoryIcon, title, description, date, locat
 )
 
 const Home = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Events')
+
+  const filteredEvents = useMemo(() => {
+    if (selectedCategory === 'All Events') return EVENTS
+    return EVENTS.filter((e) => e.category === selectedCategory)
+  }, [selectedCategory])
+
+  const filteredFeatured = useMemo(() => {
+    if (selectedCategory === 'All Events') return FEATURED_EVENTS
+    return FEATURED_EVENTS.filter((e) => e.category === selectedCategory)
+  }, [selectedCategory])
 
   return (
     <SafeAreaView className='flex-1 bg-background'>
@@ -264,9 +274,15 @@ const Home = () => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingLeft: 20, paddingRight: 8, paddingTop: 10, paddingBottom: 10 }}
           >
-            {EVENTS.map((event) => (
-              <EventCard key={event.id} {...event} />
-            ))}
+            {filteredEvents.length === 0 ? (
+              <View className="pl-2 pr-6 py-6 justify-center">
+                <Text className="text-primary text-xs">No events in this category yet.</Text>
+              </View>
+            ) : (
+              filteredEvents.map((event) => (
+                <EventCard key={event.id} {...event} />
+              ))
+            )}
           </ScrollView>
         </View>
 
@@ -297,13 +313,19 @@ const Home = () => {
 
         {/* Featured Event Cards */}
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: 4, paddingBottom: 8 }}>
-          {FEATURED_EVENTS.map((event) => (
-            <Link key={event.id} href={`/event/${event.id}`} asChild>
-              <TouchableOpacity activeOpacity={0.8}>
-                <FeaturedEventCard {...event} />
-              </TouchableOpacity>
-            </Link>
-          ))}
+          {filteredFeatured.length === 0 ? (
+            <View className="px-5 py-10">
+              <Text className="text-primary text-xs text-center">No featured events in this category yet.</Text>
+            </View>
+          ) : (
+            filteredFeatured.map((event) => (
+              <Link key={event.id} href={`/event/${event.id}`} asChild>
+                <TouchableOpacity activeOpacity={0.8}>
+                  <FeaturedEventCard {...event} />
+                </TouchableOpacity>
+              </Link>
+            ))
+          )}
         </ScrollView>
       </View>
     </SafeAreaView>

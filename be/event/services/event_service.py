@@ -100,9 +100,9 @@ class EventService:
             Event.event_date >= today,
         ]
         if category and category.strip().lower() not in ("all", ""):
-            cat_key = category.strip().title()
+            cat_lower = category.strip().lower()
             try:
-                ec = next(c for c in EventCategory if c.value == cat_key)
+                ec = next(c for c in EventCategory if c.value.lower() == cat_lower)
                 filters.append(Event.category == ec)
             except StopIteration:
                 pass

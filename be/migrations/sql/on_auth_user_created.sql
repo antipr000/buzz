@@ -10,12 +10,19 @@ set search_path = public
 as $$
 declare
   full_name text;
+  profile_image text;
 begin
   -- Google OAuth sets `name` in user_metadata; `full_name` covers other providers / manual metadata.
   full_name := coalesce(
     nullif(trim(new.raw_user_meta_data ->> 'name'), ''),
     nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
     'User'
+  );
+
+  -- Google uses `picture`; Supabase/other providers often use `avatar_url`.
+  profile_image := coalesce(
+    nullif(trim(new.raw_user_meta_data ->> 'picture'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'avatar_url'), '')
   );
 
   insert into public.users (id, email, full_name, created_at, updated_at)
@@ -28,8 +35,8 @@ begin
   )
   on conflict (id) do nothing;
 
-  insert into public.profiles (user_id, created_at, updated_at)
-  values (new.id, now(), now())
+  insert into public.profiles (user_id, profile_image, created_at, updated_at)
+  values (new.id, profile_image, now(), now())
   on conflict (user_id) do nothing;
 
   return new;

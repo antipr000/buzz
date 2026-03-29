@@ -1,12 +1,48 @@
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
-import React from "react";
-import { View, StyleSheet } from "react-native";
+import * as Location from "expo-location";
+import { Link, router } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const USER_LOCATION_KEY = "buzz:user_location";
+
 export default function LocationAccessScreen() {
+    const [requesting, setRequesting] = useState(false);
+
+    const onAllowLocation = useCallback(async () => {
+        setRequesting(true);
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                Alert.alert(
+                    "Location access",
+                    "Permission was denied. You can enable it in system settings or enter a location manually."
+                );
+                return;
+            }
+            const position = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Balanced,
+            });
+            const { latitude, longitude } = position.coords;
+            await AsyncStorage.setItem(
+                USER_LOCATION_KEY,
+                JSON.stringify({ latitude, longitude, updatedAt: Date.now() })
+            );
+            router.replace("/(main)/(tabs)");
+        } catch (e) {
+            console.warn("Location error", e);
+            Alert.alert(
+                "Could not get location",
+                "Something went wrong reading your position. Try again or enter a location manually."
+            );
+        } finally {
+            setRequesting(false);
+        }
+    }, []);
     return (
         <View className="flex-1 bg-white relative">
             {/* Background Map Image */}
@@ -44,13 +80,19 @@ export default function LocationAccessScreen() {
 
                 {/* Bottom Section - Action Buttons */}
                 <View className="w-full gap-6 mt-8">
-                    <Link href="/(main)/(tabs)" asChild>
-                        <Button className="w-full bg-primary rounded-xl h-12">
+                    <Button
+                        className="w-full bg-primary rounded-xl h-12"
+                        onPress={onAllowLocation}
+                        disabled={requesting}
+                    >
+                        {requesting ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
                             <Text className="text-white text-sm font-semibold">
                                 Allow Location
                             </Text>
-                        </Button>
-                    </Link>
+                        )}
+                    </Button>
 
                     <Link href="/(main)/(tabs)" asChild>
                         <Button
