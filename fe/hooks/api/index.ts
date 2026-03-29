@@ -1,5 +1,6 @@
 /**
- * React Query hooks that call @/api/* — add useDiscoverEvents, useCurrentUser, etc. here.
+ * API hooks (TanStack Query + @/services). Add a file per hook, re-export here.
  */
 
-export {};
+export { useDiscoverEvents, type UseDiscoverEventsArgs } from "./useDiscoverEvents";
+export { useInfiniteDiscoverEvents, type UseInfiniteDiscoverEventsArgs } from "./useInfiniteDiscoverEvents";

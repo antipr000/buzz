@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { Link, router } from "expo-router";
+import { persistUserLocation } from "@/lib/user-location";
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const USER_LOCATION_KEY = "buzz:user_location";
 
 export default function LocationAccessScreen() {
     const [requesting, setRequesting] = useState(false);
@@ -27,11 +25,7 @@ export default function LocationAccessScreen() {
             const position = await Location.getCurrentPositionAsync({
                 accuracy: Location.Accuracy.Balanced,
             });
-            const { latitude, longitude } = position.coords;
-            await AsyncStorage.setItem(
-                USER_LOCATION_KEY,
-                JSON.stringify({ latitude, longitude, updatedAt: Date.now() })
-            );
+            await persistUserLocation(position);
             router.replace("/(main)/(tabs)");
         } catch (e) {
             console.warn("Location error", e);

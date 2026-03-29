@@ -54,7 +54,10 @@ export default function FeaturedEventCard({
     isPopular = true,
 }: FeaturedEventCardProps) {
     return (
-        <Card className='mx-4 mb-5 p-0 rounded-lg border border-[rgba(79,70,229,0.3)] overflow-hidden bg-white'>
+        <Card
+            className='mb-5 p-0 rounded-lg border border-[rgba(79,70,229,0.3)] overflow-hidden bg-white'
+            style={{ marginHorizontal: 16 }}
+        >
             {/* ── Image Section ── */}
             <View className='h-[110px] w-full bg-white rounded-t-lg overflow-hidden'>
                 <Image source={bg} style={{ width: '100%', height: '100%', position: 'absolute' }} contentFit='cover' />
@@ -120,7 +123,7 @@ export default function FeaturedEventCard({
             </View>
 
             {/* ── Content Section ── */}
-            <View className='px-3 py-2 pt-0'>
+            <View style={{ paddingHorizontal: 14, paddingTop: 8, paddingBottom: 12 }}>
                 {/* Category + Popular */}
                 <View className='flex-row items-center gap-2 mb-2'>
                     <Badge variant='outline' className='border-0 px-2.5 py-1' style={{ backgroundColor: eventColor }}>

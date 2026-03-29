@@ -31,7 +31,7 @@ event_router = APIRouter(prefix="/events", tags=["Events"])
 async def discover_events(
     lat: float = Query(..., description="User latitude"),
     lng: float = Query(..., description="User longitude"),
-    radius: int = Query(30, ge=1, le=500, description="Search radius in km"),
+    radius: int = Query(30, ge=1, le=2000, description="Search radius in km"),
     category: str | None = Query(None, description="Category filter or All"),
     cursor: str | None = Query(None, description="Pagination cursor"),
     limit: int = Query(20, ge=1, le=50),
