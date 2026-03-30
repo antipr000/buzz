@@ -36,3 +36,8 @@ export type DiscoverResponse = {
   trending_events: EventCard[];
   pagination: PaginationOut;
 };
+
+export type SavedListResponse = {
+  saved_events: EventCard[];
+  pagination: PaginationOut;
+};

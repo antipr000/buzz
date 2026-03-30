@@ -12,6 +12,11 @@ export type DiscoverQueryKeyInput = {
   limit?: number;
 };
 
+/** Stable key for GET /events/saved infinite query (cursor is pageParam, not in key). */
+export type SavedQueryKeyInput = {
+  limit: number;
+};
+
 export const queryKeys = {
   events: {
     all: ["events"] as const,
@@ -29,9 +34,9 @@ export const queryKeys = {
         p.limit ?? 20,
       ] as const,
 
-    /** GET /events/saved — include cursor, limit */
-    saved: (params: Record<string, unknown>) =>
-      [...queryKeys.events.all, "saved", params] as const,
+    /** GET /events/saved */
+    saved: (p: SavedQueryKeyInput) =>
+      [...queryKeys.events.all, "saved", p.limit] as const,
 
     /** POST /events/bookings — include body filters when you use them */
     bookings: (body: Record<string, unknown>) =>

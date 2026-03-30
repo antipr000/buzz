@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import { useDiscoverEvents } from '@/hooks/api'
 import { readUserLocation, type StoredUserLocation } from '@/lib/user-location'
-import MaskedView from '@react-native-masked-view/masked-view'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Link } from 'expo-router'
@@ -190,22 +189,9 @@ export default function HomeTabScreen() {
             </View>
           </View>
 
-          <MaskedView
-            maskElement={
-              <Text className='text-2xl font-bold'>
-                Discover Events
-              </Text>
-            }
-          >
-            <View className='h-[52px]'>
-              <LinearGradient
-                colors={['#C4F000', '#FF1962']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={{ flex: 1 }}
-              />
-            </View>
-          </MaskedView>
+          <Text className='mb-2 text-2xl font-bold text-[#F97316]'>
+            Discover Events
+          </Text>
 
           <View className='flex-row items-center gap-2 rounded-lg bg-surface px-3'>
             <Image

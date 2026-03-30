@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import type { DiscoverResponse } from "@/services/types/events";
+import type { DiscoverResponse, SavedListResponse } from "@/services/types/events";
 
 export async function saveEvent(eventId: string): Promise<void> {
   await apiClient.post("/events/save", { event_id: eventId });
@@ -36,5 +36,22 @@ export async function getDiscoverEvents(
       },
     }
   );
+  return data;
+}
+
+export type SavedEventsRequestParams = {
+  cursor?: string | null;
+  limit?: number;
+};
+
+export async function getSavedEvents(
+  params: SavedEventsRequestParams = {}
+): Promise<SavedListResponse> {
+  const { data } = await apiClient.get<SavedListResponse>("/events/saved", {
+    params: {
+      cursor: params.cursor ?? undefined,
+      limit: params.limit,
+    },
+  });
   return data;
 }
