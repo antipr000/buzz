@@ -20,6 +20,7 @@ from event.schemas.event_schemas import (
     category_api_value,
 )
 from profile.models.profile import Profile
+from saved_event.models.saved_event import SavedEvent
 from ticket.models.ticket import Ticket
 
 
@@ -38,6 +39,19 @@ def _haversine_km(lat: float, lng: float):
     )
     c = 2 * func.asin(func.sqrt(a))
     return literal(6371.0) * c
+
+
+async def _saved_event_ids_for_user(
+    db: AsyncSession, user_id: uuid.UUID, event_ids: list[str]
+) -> set[str]:
+    if not event_ids:
+        return set()
+    stmt = select(SavedEvent.event_id).where(
+        SavedEvent.user_id == user_id,
+        SavedEvent.event_id.in_(event_ids),
+    )
+    rows = (await db.execute(stmt)).scalars().all()
+    return set(rows)
 
 
 async def _participant_counts(db: AsyncSession, event_ids: list[str]) -> dict[str, int]:
@@ -80,6 +94,7 @@ class EventService:
     async def discover(
         db: AsyncSession,
         *,
+        user_id: uuid.UUID,
         lat: float,
         lng: float,
         radius_km: int,
@@ -136,7 +151,13 @@ class EventService:
 
         ids = [e.id for e in events]
         counts = await _participant_counts(db, ids)
-        cards = [_to_event_card(e, counts.get(e.id, 0)) for e in events]
+        saved_ids = await _saved_event_ids_for_user(db, user_id, ids)
+        cards = [
+            _to_event_card(e, counts.get(e.id, 0)).model_copy(
+                update={"is_saved": e.id in saved_ids}
+            )
+            for e in events
+        ]
 
         next_cursor: str | None = None
         if has_more and events:

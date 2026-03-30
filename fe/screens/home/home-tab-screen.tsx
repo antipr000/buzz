@@ -332,11 +332,7 @@ export default function HomeTabScreen() {
             </View>
           ) : (
             trending.map((card) => (
-              <Link key={card.id} href={`/event/${card.id}`} asChild>
-                <TouchableOpacity activeOpacity={0.8}>
-                  <FeaturedEventCard {...toFeaturedDiscoverProps(card)} />
-                </TouchableOpacity>
-              </Link>
+              <FeaturedEventCard key={card.id} {...toFeaturedDiscoverProps(card)} />
             ))
           )}
         </ScrollView>

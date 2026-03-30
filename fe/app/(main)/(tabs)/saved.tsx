@@ -1,7 +1,7 @@
 import { Text } from '@/components/ui/text'
 import { TouchableOpacity, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Link, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
 import { EVENT_CATEGORY_ICONS } from '@/constants/eventCategories'
 import FeaturedEventCard from '@/components/FeaturedEventCard'
@@ -12,6 +12,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 const SAVED_EVENTS = [
   {
     id: 'f1',
+    eventId: 'f1',
+    isSavedInitially: true,
     category: 'Music',
     categoryIcon: EVENT_CATEGORY_ICONS.Music,
     calendarIcon: require('@/assets/images/events/music/calender.svg'),
@@ -33,6 +35,8 @@ const SAVED_EVENTS = [
   },
   {
     id: 'f2',
+    eventId: 'f2',
+    isSavedInitially: true,
     category: 'Tech',
     categoryIcon: EVENT_CATEGORY_ICONS.Tech,
     calendarIcon: require('@/assets/images/events/tech/calender.svg'),
@@ -54,6 +58,8 @@ const SAVED_EVENTS = [
   },
   {
     id: 'f3',
+    eventId: 'f3',
+    isSavedInitially: true,
     category: 'Food',
     categoryIcon: EVENT_CATEGORY_ICONS.Food,
     calendarIcon: require('@/assets/images/events/food/calender.svg'),
@@ -115,11 +121,7 @@ export default function SavedEvents() {
           contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
         >
           {SAVED_EVENTS.map((event) => (
-            <Link key={event.id} href={`/event/${event.id}`} asChild>
-              <TouchableOpacity activeOpacity={0.8}>
-                <FeaturedEventCard {...event} />
-              </TouchableOpacity>
-            </Link>
+            <FeaturedEventCard key={event.id} {...event} />
           ))}
         </ScrollView>
       </View>

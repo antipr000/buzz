@@ -148,6 +148,8 @@ export function toFeaturedDiscoverProps(
     : FALLBACK_ORGANIZER_LOGO;
 
   return {
+    eventId: card.id,
+    isSavedInitially: card.is_saved,
     category: label,
     categoryIcon: EVENT_CATEGORY_ICONS[label],
     calendarIcon: icons.calendar,

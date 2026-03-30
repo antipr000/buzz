@@ -13,6 +13,8 @@ from event.schemas.event_schemas import EventCard, OrganizerOut, category_api_va
 from event.services.event_service import _participant_counts
 from profile.models.profile import Profile
 from saved_event.models.saved_event import SavedEvent
+
+
 def _to_card(event: Event, participants: int) -> EventCard:
     org = event.organizer
     user = org.user
@@ -30,6 +32,7 @@ def _to_card(event: Event, participants: int) -> EventCard:
         organizer=OrganizerOut(name=user.full_name, logo=org.profile_image),
         event_cover=event.event_cover,
         participants=participants,
+        is_saved=True,
     )
 
 
@@ -97,3 +100,11 @@ class SavedEventService:
         db.add(SavedEvent(user_id=user_id, event_id=event_id))
         await db.commit()
         return True
+
+    @staticmethod
+    async def unsave(db: AsyncSession, *, user_id: uuid.UUID, event_id: str) -> None:
+        row = await db.get(SavedEvent, (user_id, event_id))
+        if row is None:
+            return
+        await db.delete(row)
+        await db.commit()

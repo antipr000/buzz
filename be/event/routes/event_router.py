@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response, status
+from typing import Annotated
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking.schemas.booking_schemas import (
@@ -36,9 +38,11 @@ async def discover_events(
     cursor: str | None = Query(None, description="Pagination cursor"),
     limit: int = Query(20, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     cards, next_cursor, has_more, user_location = await EventService.discover(
         db,
+        user_id=user.id,
         lat=lat,
         lng=lng,
         radius_km=radius,
@@ -111,6 +115,19 @@ async def save_event(
         await SavedEventService.save(db, user_id=user.id, event_id=body.event_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@event_router.delete(
+    "/saved/{event_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def unsave_event(
+    event_id: Annotated[str, Path(min_length=1, max_length=255)],
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    await SavedEventService.unsave(db, user_id=user.id, event_id=event_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

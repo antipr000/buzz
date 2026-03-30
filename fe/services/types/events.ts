@@ -23,6 +23,7 @@ export type EventCard = {
   organizer: OrganizerOut;
   event_cover: string | null;
   participants: number;
+  is_saved: boolean;
 };
 
 export type PaginationOut = {

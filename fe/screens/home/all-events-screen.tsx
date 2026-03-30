@@ -4,7 +4,7 @@ import { useInfiniteDiscoverEvents } from "@/hooks/api";
 import { readUserLocation, type StoredUserLocation } from "@/lib/user-location";
 import { toFeaturedDiscoverProps } from "@/screens/home/discoverAdapters";
 import { Image } from "expo-image";
-import { Link, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -107,11 +107,7 @@ export default function AllEventsScreen() {
             data={events}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <Link href={`/event/${item.id}`} asChild>
-                <TouchableOpacity activeOpacity={0.8}>
-                  <FeaturedEventCard {...toFeaturedDiscoverProps(item)} />
-                </TouchableOpacity>
-              </Link>
+              <FeaturedEventCard {...toFeaturedDiscoverProps(item)} />
             )}
             contentContainerStyle={{ paddingTop: 16, paddingBottom: 24 }}
             showsVerticalScrollIndicator={false}

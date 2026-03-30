@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date, time
 from typing import Annotated
 
-from pydantic import BeforeValidator
+from pydantic import BeforeValidator, ConfigDict, Field
 
 from core.schemas.schema_model import SchemaModel
 from event.models.event import EventCategory
@@ -45,6 +45,7 @@ class EventCard(SchemaModel):
     organizer: OrganizerOut
     event_cover: str | None
     participants: int
+    is_saved: bool = False
 
 
 class PaginationOut(SchemaModel):
@@ -77,7 +78,9 @@ class CreateEventResponse(SchemaModel):
 
 
 class SaveEventBody(SchemaModel):
-    event_id: str
+    model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
+
+    event_id: str = Field(min_length=1, max_length=255)
 
 
 class SavedListResponse(SchemaModel):

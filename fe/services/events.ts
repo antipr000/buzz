@@ -1,6 +1,16 @@
 import { apiClient } from "@/lib/api-client";
 import type { DiscoverResponse } from "@/services/types/events";
 
+export async function saveEvent(eventId: string): Promise<void> {
+  await apiClient.post("/events/save", { event_id: eventId });
+}
+
+export async function unsaveEvent(eventId: string): Promise<void> {
+  await apiClient.delete(
+    `/events/saved/${encodeURIComponent(eventId)}`
+  );
+}
+
 export type DiscoverRequestParams = {
   lat: number;
   lng: number;

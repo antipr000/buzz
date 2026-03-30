@@ -116,7 +116,7 @@ export default function CreateEventScreen() {
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={{ gap: 10 }}
+                        contentContainerClassName="flex-row flex-nowrap items-center gap-2.5"
                     >
                         {CATEGORIES.map((category) => {
                             const isSelected = selectedCategory === category;
@@ -126,14 +126,16 @@ export default function CreateEventScreen() {
                                 <TouchableOpacity
                                     key={category}
                                     onPress={() => setSelectedCategory(category)}
-                                    className={`flex-row items-center gap-[6px] px-4 py-2 rounded-full border border-primary ${isSelected ? 'bg-primary' : 'bg-transparent'
+                                    className={`shrink-0 flex-row items-center gap-1.5 rounded-full border border-primary px-4 py-2 ${isSelected ? 'bg-primary' : 'bg-transparent'
                                         }`}
                                 >
-                                    <Image
-                                        source={asset}
-                                        style={{ width: 10, height: 10 }}
-                                        contentFit="contain"
-                                    />
+                                    <View className="size-4 shrink-0 items-center justify-center">
+                                        <Image
+                                            source={asset}
+                                            style={{ width: 16, height: 16 }}
+                                            contentFit="contain"
+                                        />
+                                    </View>
                                     <Text className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-primary'}`}>
                                         {category}
                                     </Text>
