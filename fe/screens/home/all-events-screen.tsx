@@ -42,7 +42,6 @@ export default function AllEventsScreen() {
     () => (data?.pages ?? []).flatMap((p) => p.trending_events),
     [data]
   );
-  console.log(data)
 
   const hydrating = stored === undefined;
   const noLocation = stored === null;
@@ -55,13 +54,13 @@ export default function AllEventsScreen() {
           <View className="flex-row justify-end mb-2">
             <TouchableOpacity
               onPress={() => router.back()}
+              activeOpacity={0.7}
               className="flex-row items-center gap-1"
             >
               <Image
                 source={require("@/assets/images/arrow_back.svg")}
                 style={{ width: 8, height: 8 }}
                 contentFit="contain"
-                className="rounded-full"
               />
               <Text className="text-secondary-foreground text-xs font-medium">
                 Back Home
