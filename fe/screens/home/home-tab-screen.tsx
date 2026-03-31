@@ -13,6 +13,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native'
@@ -44,7 +45,7 @@ const EventCard = ({
 }: HomeTrendingCardProps) => (
   <Card className='relative mr-4 h-[230px] w-[160px] shrink-0 overflow-hidden rounded-2xl border-0 bg-transparent p-0 justify-end gap-0'>
     <View className='absolute inset-0 overflow-hidden rounded-2xl'>
-      <Image source={bg} className='size-full' contentFit='cover' />
+      <Image source={bg} style={StyleSheet.absoluteFillObject} contentFit='cover' />
     </View>
     <View className='pointer-events-none absolute inset-0 overflow-hidden rounded-2xl opacity-40'>
       <LinearGradient

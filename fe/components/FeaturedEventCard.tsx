@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { Heart } from 'lucide-react-native'
 import React, { useEffect, useState } from 'react'
-import { Alert, Pressable, View } from 'react-native'
+import { Alert, Pressable, StyleSheet, View } from 'react-native'
 
 const AVATAR_IMAGES = [
     require('@/assets/images/common/img1.jpg'),
@@ -103,7 +103,7 @@ export default function FeaturedEventCard({
                 <Image
                     source={bg}
                     pointerEvents='none'
-                    className='absolute inset-0 size-full'
+                    style={StyleSheet.absoluteFillObject}
                     contentFit='cover'
                 />
                 <LinearGradient
