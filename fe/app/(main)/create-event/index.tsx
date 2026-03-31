@@ -1,10 +1,11 @@
-import { View, ScrollView, TouchableOpacity } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { ArrowLeft, ImageIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { CreateEventDateTimeRow } from '@/components/CreateEventDateTimeRow';
 import { LocationField, type PickedLocation } from '@/components/LocationField';
@@ -17,9 +18,13 @@ import {
   EVENT_CATEGORY_LABELS,
   type EventCategoryLabel,
 } from '@/constants/eventCategories';
+import { queryKeys } from '@/lib/query-keys';
+import { createEvent } from '@/services/events';
+import type { CreateEventBody } from '@/services/types/events';
 
 import {
   type CreateEventFormState,
+  buildCreateEventBody,
   isCreateEventFormSubmittable,
 } from './payload';
 
@@ -27,6 +32,7 @@ const CATEGORIES: EventCategoryLabel[] = [...EVENT_CATEGORY_LABELS];
 
 export default function CreateEventScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -50,6 +56,29 @@ export default function CreateEventScreen() {
   );
 
   const canSubmit = isCreateEventFormSubmittable(form, pickedLocation);
+
+  const createMutation = useMutation({
+    mutationFn: (body: CreateEventBody) => createEvent(body),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.events.all, 'discover'],
+      });
+      router.push({
+        pathname: '/event-created',
+        params: { id: data.id },
+      });
+    },
+    onError: () => {
+      Alert.alert('Could not create event', 'Please try again.');
+    },
+  });
+
+  const onSubmitCreate = () => {
+    if (!pickedLocation || createMutation.isPending) return;
+    const body = buildCreateEventBody(form, pickedLocation);
+    if (!body) return;
+    createMutation.mutate(body);
+  };
 
   const pickImage = async () => {
     try {
@@ -223,14 +252,15 @@ export default function CreateEventScreen() {
             />
           </View>
         </View>
-        {/* Footer Button — Phase 2: POST /events/create */}
         <View className="p-4  items-center">
           <Button
             className="bg-primary px-10  rounded-xl"
-            disabled={!canSubmit}
-            onPress={() => router.push('/event-created')}
+            disabled={!canSubmit || createMutation.isPending}
+            onPress={onSubmitCreate}
           >
-            <Text className="text-white text-sm font-bold ">Create Event</Text>
+            <Text className="text-white text-sm font-bold ">
+              {createMutation.isPending ? 'Creating…' : 'Create Event'}
+            </Text>
           </Button>
         </View>
       </ScrollView>

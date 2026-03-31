@@ -73,6 +73,9 @@ export function LocationField({ onLocationChange, placeholder }: LocationFieldPr
         hasCommittedPickRef.current = true;
         onLocationChange(picked);
         textRef.current = place.structuredFormat.mainText.text;
+      } else {
+        hasCommittedPickRef.current = false;
+        onLocationChange(null);
       }
     },
     [onLocationChange],
