@@ -46,7 +46,8 @@
         {
           "locationWhenInUsePermission": "We use your location to show events happening around you."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

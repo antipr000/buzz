@@ -41,3 +41,22 @@ export type SavedListResponse = {
   saved_events: EventCard[];
   pagination: PaginationOut;
 };
+
+/** POST /events/create body (snake_case), matches be/event/schemas/event_schemas.py */
+export type CreateEventBody = {
+  event_cover?: string | null;
+  title: string;
+  description: string;
+  category: string;
+  date: string;
+  time: string;
+  location: string;
+  price: number;
+  latitude: number;
+  longitude: number;
+  language?: string | null;
+};
+
+export type CreateEventResponse = {
+  id: string;
+};

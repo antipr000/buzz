@@ -16,6 +16,9 @@ type LocationFieldProps = {
   placeholder?: string;
 };
 
+
+// TODO: Before release — lock down EXPO_PUBLIC key in GCP (Android/iOS app restrictions, APIs = Places New only), budgets/alerts; proxy only if key must stay off-device.
+
 function pickFromPlace(place: Place): PickedLocation | null {
   const d = place.details;
   if (!d || typeof d !== 'object') return null;
