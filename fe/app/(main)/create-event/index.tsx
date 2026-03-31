@@ -19,7 +19,7 @@ import {
   type EventCategoryLabel,
 } from '@/constants/eventCategories';
 import { queryKeys } from '@/lib/query-keys';
-import { createEvent } from '@/services/events';
+import { createEvent, uploadEventCover } from '@/services/events';
 import type { CreateEventBody } from '@/services/types/events';
 
 import {
@@ -34,7 +34,11 @@ export default function CreateEventScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
-  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [coverAsset, setCoverAsset] = useState<{
+    uri: string;
+    mimeType?: string | null;
+  } | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<EventCategoryLabel | null>(null);
@@ -55,7 +59,11 @@ export default function CreateEventScreen() {
     [title, description, selectedCategory, priceText, eventDate, eventTime]
   );
 
-  const canSubmit = isCreateEventFormSubmittable(form, pickedLocation);
+  const canSubmit = isCreateEventFormSubmittable(
+    form,
+    pickedLocation,
+    coverAsset !== null
+  );
 
   const createMutation = useMutation({
     mutationFn: (body: CreateEventBody) => createEvent(body),
@@ -68,16 +76,34 @@ export default function CreateEventScreen() {
         params: { id: data.id },
       });
     },
-    onError: () => {
-      Alert.alert('Could not create event', 'Please try again.');
-    },
   });
 
-  const onSubmitCreate = () => {
-    if (!pickedLocation || createMutation.isPending) return;
-    const body = buildCreateEventBody(form, pickedLocation);
-    if (!body) return;
-    createMutation.mutate(body);
+  const isBusy = createMutation.isPending || isUploadingCover;
+
+  const onSubmitCreate = async () => {
+    if (!pickedLocation || !coverAsset || isBusy) return;
+    if (!buildCreateEventBody(form, pickedLocation)) return;
+
+    try {
+      setIsUploadingCover(true);
+      let publicUrl: string;
+      try {
+        const { public_url } = await uploadEventCover(
+          coverAsset.uri,
+          coverAsset.mimeType ?? null
+        );
+        publicUrl = public_url;
+      } finally {
+        setIsUploadingCover(false);
+      }
+      const body = buildCreateEventBody(form, pickedLocation, {
+        eventCoverUrl: publicUrl,
+      });
+      if (!body) return;
+      await createMutation.mutateAsync(body);
+    } catch {
+      Alert.alert('Could not create event', 'Please try again.');
+    }
   };
 
   const pickImage = async () => {
@@ -98,7 +124,8 @@ export default function CreateEventScreen() {
       console.log('ImagePicker Result:', JSON.stringify(result, null, 2));
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        setCoverImage(result.assets[0].uri);
+        const a = result.assets[0];
+        setCoverAsset({ uri: a.uri, mimeType: a.mimeType });
       } else {
         console.log('Image selection was canceled or no assets returned.');
       }
@@ -130,22 +157,26 @@ export default function CreateEventScreen() {
       >
         {/* Event Cover */}
         <View className="gap-1">
-          <Text className="font-medium text-foreground text-xs">Event Cover</Text>
+          <Text className="font-medium text-foreground text-xs">
+            Event Cover <Text className="text-destructive">*</Text>
+          </Text>
           <TouchableOpacity
             onPress={pickImage}
             activeOpacity={0.8}
             className="h-48 w-full rounded-2xl border-2 border-dashed border-primary/20 bg-[rgba(240,239,255,1)] items-center justify-center overflow-hidden"
           >
-            {coverImage ? (
+            {coverAsset ? (
               <Image
-                source={{ uri: coverImage }}
+                source={{ uri: coverAsset.uri }}
                 style={{ width: '100%', height: '100%', borderRadius: 16 }}
                 contentFit="cover"
               />
             ) : (
               <View className="items-center gap-2">
                 <ImageIcon size={18} color="rgba(79, 70, 229, 0.5)" />
-                <Text className="text-[rgba(15,23,42,0.7)] text-xs">Tap to upload cover image</Text>
+                <Text className="text-[rgba(15,23,42,0.7)] text-xs">
+                  Tap to add a cover image (required)
+                </Text>
               </View>
             )}
           </TouchableOpacity>
@@ -255,11 +286,17 @@ export default function CreateEventScreen() {
         <View className="p-4  items-center">
           <Button
             className="bg-primary px-10  rounded-xl"
-            disabled={!canSubmit || createMutation.isPending}
-            onPress={onSubmitCreate}
+            disabled={!canSubmit || isBusy}
+            onPress={() => {
+              void onSubmitCreate();
+            }}
           >
             <Text className="text-white text-sm font-bold ">
-              {createMutation.isPending ? 'Creating…' : 'Create Event'}
+              {isUploadingCover
+                ? 'Uploading…'
+                : createMutation.isPending
+                  ? 'Creating…'
+                  : 'Create Event'}
             </Text>
           </Button>
         </View>

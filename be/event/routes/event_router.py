@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, Response, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, Response, UploadFile, status
+from google.api_core import exceptions as google_api_exceptions
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking.schemas.booking_schemas import (
@@ -14,10 +16,12 @@ from booking.schemas.booking_schemas import (
 from booking.services.booking_service import BookingService
 from core.auth import get_current_user
 from core.database import get_db
+from core.storage.gcs_event_cover import upload_event_cover_image
 from event.schemas.event_schemas import (
     CreateEventBody,
     CreateEventResponse,
     DiscoverResponse,
+    EventCoverUploadResponse,
     PaginationOut,
     SaveEventBody,
     SavedListResponse,
@@ -69,6 +73,35 @@ async def create_event(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     return CreateEventResponse(id=ev.id)
+
+
+@event_router.post("/cover", response_model=EventCoverUploadResponse)
+async def upload_event_cover(
+    file: UploadFile = File(...),
+    user: User = Depends(get_current_user),
+):
+    content_type = (file.content_type or "").strip()
+    if not content_type:
+        raise HTTPException(
+            status_code=400,
+            detail="Missing Content-Type on the file part; send an image type (e.g. image/jpeg).",
+        )
+    data = await file.read()
+    try:
+        public_url = await asyncio.to_thread(
+            upload_event_cover_image,
+            user_id=user.id,
+            content_type=content_type,
+            data=data,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except google_api_exceptions.GoogleAPIError as e:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not store image. Try again later.",
+        ) from e
+    return EventCoverUploadResponse(public_url=public_url)
 
 
 @event_router.post("/purchase", response_model=PurchaseResponse)

@@ -36,6 +36,18 @@ class Config(BaseSettings):
     db_max_overflow: int = Field(default=10, alias="DB_MAX_OVERFLOW")
     db_pool_recycle: int = Field(default=1800, alias="DB_POOL_RECYCLE")
 
+    # GCS — project ID where the bucket lives (required for storage.Client() with user ADC)
+    google_cloud_project: str = Field(default="", alias="GOOGLE_CLOUD_PROJECT")
+
+    # GCS event cover images (Phase 1+); empty bucket disables uploads until configured
+    gcs_event_covers_bucket: str = Field(default="", alias="GCS_EVENT_COVERS_BUCKET")
+    gcs_event_cover_max_bytes: int = Field(
+        default=5_242_880,
+        alias="GCS_EVENT_COVER_MAX_BYTES",
+        ge=1,
+        le=50_000_000,
+    )
+
     @property
     def db_url(self) -> str:
         return f"{self.db_engine}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"

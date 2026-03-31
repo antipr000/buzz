@@ -1,6 +1,7 @@
 /**
  * Colocated with the create-event route: form → `POST /events/create` helpers.
  * Shared by this screen, `CreateEventDateTimeRow` (iOS/Android), and the API call.
+ * Submit rules include a required event cover (`isCreateEventFormSubmittable` `hasEventCover`).
  *
  * API date/time use the device’s local calendar and clock (IST for typical
  * Indian users). Display uses `en-IN` for consistent India-first copy.
@@ -64,7 +65,8 @@ export function parsePriceInt(text: string): number | null {
 
 export function buildCreateEventBody(
   form: CreateEventFormState,
-  location: PickedLocation
+  location: PickedLocation,
+  options?: { eventCoverUrl?: string | null }
 ): CreateEventBody | null {
   const title = form.title.trim();
   const description = form.description.trim();
@@ -73,7 +75,7 @@ export function buildCreateEventBody(
   if (price === null) return null;
 
   return {
-    event_cover: null,
+    event_cover: options?.eventCoverUrl ?? null,
     title,
     description,
     category: form.category.toLowerCase(),
@@ -87,10 +89,12 @@ export function buildCreateEventBody(
   };
 }
 
+/** `hasEventCover` — create flow requires a picked cover image before submit. */
 export function isCreateEventFormSubmittable(
   form: CreateEventFormState,
-  location: PickedLocation | null
+  location: PickedLocation | null,
+  hasEventCover: boolean
 ): boolean {
-  if (!location) return false;
+  if (!location || !hasEventCover) return false;
   return buildCreateEventBody(form, location) !== null;
 }

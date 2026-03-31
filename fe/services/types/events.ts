@@ -60,3 +60,8 @@ export type CreateEventBody = {
 export type CreateEventResponse = {
   id: string;
 };
+
+/** POST /events/cover response */
+export type EventCoverUploadResponse = {
+  public_url: string;
+};

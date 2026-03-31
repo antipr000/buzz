@@ -3,6 +3,7 @@ import type {
   CreateEventBody,
   CreateEventResponse,
   DiscoverResponse,
+  EventCoverUploadResponse,
   SavedListResponse,
 } from "@/services/types/events";
 
@@ -67,6 +68,48 @@ export async function createEvent(
   const { data } = await apiClient.post<CreateEventResponse>(
     "/events/create",
     body
+  );
+  return data;
+}
+
+const COVER_FILENAME: Partial<Record<string, string>> = {
+  "image/png": "cover.png",
+  "image/webp": "cover.webp",
+  "image/jpeg": "cover.jpg",
+  "image/jpg": "cover.jpg",
+};
+
+function resolveContentType(
+  uri: string,
+  mimeType: string | null | undefined
+): string {
+  const m = mimeType?.trim();
+  if (m) return m;
+  // Fallback to file extension
+  const u = uri.toLowerCase();
+  if (u.endsWith(".png")) return "image/png";
+  if (u.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
+/** Multipart upload of a local image URI (React Native). Requires auth. */
+export async function uploadEventCover(
+  uri: string,
+  mimeType: string | null | undefined
+): Promise<EventCoverUploadResponse> {
+  const type = resolveContentType(uri, mimeType);
+  const name = COVER_FILENAME[type] ?? "cover.jpg";
+  const form = new FormData();
+  form.append("file", { uri, type, name } as unknown as Blob);  // converts it in to a file object maybe
+
+  // RN + axios: default transform can break multipart; see axios#4885
+  const { data } = await apiClient.post<EventCoverUploadResponse>(
+    "/events/cover",
+    form,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+      transformRequest: (payload) => payload,  
+    }
   );
   return data;
 }

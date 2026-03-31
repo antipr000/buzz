@@ -77,6 +77,10 @@ class CreateEventResponse(SchemaModel):
     id: str
 
 
+class EventCoverUploadResponse(SchemaModel):
+    public_url: str
+
+
 class SaveEventBody(SchemaModel):
     model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
 
