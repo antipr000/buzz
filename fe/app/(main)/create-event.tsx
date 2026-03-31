@@ -6,6 +6,7 @@ import { Image } from 'expo-image';
 import { ArrowLeft, ImageIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LocationField, type PickedLocation } from '@/components/LocationField';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ export default function CreateEventScreen() {
     const insets = useSafeAreaInsets();
     const [coverImage, setCoverImage] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [pickedLocation, setPickedLocation] = useState<PickedLocation | null>(null);
 
     const pickImage = async () => {
         try {
@@ -66,8 +68,11 @@ export default function CreateEventScreen() {
 
             <ScrollView
                 contentContainerClassName="p-5 pb-10 gap-5"
+                contentContainerStyle={{ paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
                 automaticallyAdjustKeyboardInsets={true}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
             >
                 {/* Event Cover */}
                 <View className="gap-1">
@@ -192,10 +197,7 @@ export default function CreateEventScreen() {
                                 contentFit="contain"
                             />
                         </View>
-                        <Input
-                            placeholder="Where is your amazing event taking place?"
-                            className="pl-9 border-0 bg-[rgba(240,239,255,1)] text-xs"
-                        />
+                        <LocationField onLocationChange={setPickedLocation} />
                     </View>
                 </View>
 
@@ -221,6 +223,7 @@ export default function CreateEventScreen() {
                 <View className="p-4  items-center">
                     <Button
                         className="bg-primary px-10  rounded-xl"
+                        disabled={!pickedLocation}
                         onPress={() => router.push('/event-created')}
                     >
                         <Text className="text-white text-sm font-bold ">Create Event</Text>
