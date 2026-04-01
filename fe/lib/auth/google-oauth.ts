@@ -1,8 +1,8 @@
-import { createSessionFromUrl, getAuthRedirectUri } from "@/lib/auth-redirect";
-import { getSupabase } from "@/lib/supabase";
+import { createSessionFromUrl, getAuthRedirectUri } from "./auth-redirect";
+import { getSupabase } from "./supabase";
 import * as WebBrowser from "expo-web-browser";
 
-export { createSessionFromUrl, getAuthRedirectUri } from "@/lib/auth-redirect";
+export { createSessionFromUrl, getAuthRedirectUri } from "./auth-redirect";
 
 export type GoogleSignInResult =
   | { status: "success" }

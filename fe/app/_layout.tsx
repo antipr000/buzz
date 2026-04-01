@@ -12,7 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 
-import { queryClient } from "@/lib/query-client";
+import { queryClient } from "@/lib/query/query-client";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryClientProvider } from "@tanstack/react-query";
 

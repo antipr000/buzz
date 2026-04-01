@@ -5,7 +5,7 @@ import { EVENT_CATEGORY_ICONS, EVENT_CATEGORY_LABELS } from '@/constants/eventCa
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import { useDiscoverEvents } from '@/hooks/api'
-import { readUserLocation, type StoredUserLocation } from '@/lib/user-location'
+import { readUserLocation, type StoredUserLocation } from '@/lib/location/user-location'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Link } from 'expo-router'

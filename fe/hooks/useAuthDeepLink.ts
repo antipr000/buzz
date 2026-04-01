@@ -1,5 +1,5 @@
-import { createSessionFromUrl } from "@/lib/auth-redirect";
-import { getSupabase } from "@/lib/supabase";
+import { createSessionFromUrl } from "@/lib/auth/auth-redirect";
+import { getSupabase } from "@/lib/auth/supabase";
 import * as Linking from "expo-linking";
 import { useEffect } from "react";
 

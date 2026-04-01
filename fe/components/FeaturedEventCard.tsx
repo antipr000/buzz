@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Text } from '@/components/ui/text'
-import { queryKeys } from '@/lib/query-keys'
+import { queryKeys } from '@/lib/query/query-keys'
 import { saveEvent, unsaveEvent } from '@/services/events'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Image, ImageSource } from 'expo-image'

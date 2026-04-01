@@ -18,7 +18,7 @@ import {
   EVENT_CATEGORY_LABELS,
   type EventCategoryLabel,
 } from '@/constants/eventCategories';
-import { queryKeys } from '@/lib/query-keys';
+import { queryKeys } from '@/lib/query/query-keys';
 import { createEvent, uploadEventCover } from '@/services/events';
 import type { CreateEventBody } from '@/services/types/events';
 

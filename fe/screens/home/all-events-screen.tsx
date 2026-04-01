@@ -1,7 +1,7 @@
 import FeaturedEventCard from "@/components/FeaturedEventCard";
 import { Text } from "@/components/ui/text";
 import { useInfiniteDiscoverEvents } from "@/hooks/api";
-import { readUserLocation, type StoredUserLocation } from "@/lib/user-location";
+import { readUserLocation, type StoredUserLocation } from "@/lib/location/user-location";
 import { toFeaturedDiscoverProps } from "@/screens/home/discoverAdapters";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";

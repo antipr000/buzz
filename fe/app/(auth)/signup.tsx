@@ -1,9 +1,9 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { getAuthRedirectUri } from "@/lib/auth-redirect";
-import { signInWithGoogle } from "@/lib/google-oauth";
-import { getSupabase } from "@/lib/supabase";
+import { getAuthRedirectUri } from "@/lib/auth/auth-redirect";
+import { signInWithGoogle } from "@/lib/auth/google-oauth";
+import { getSupabase } from "@/lib/auth/supabase";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";

@@ -1,4 +1,4 @@
-import { queryKeys } from "@/lib/query-keys";
+import { queryKeys } from "@/lib/query/query-keys";
 import { getSavedEvents } from "@/services/events";
 import type { SavedListResponse } from "@/services/types/events";
 import { useInfiniteQuery } from "@tanstack/react-query";

@@ -1,5 +1,5 @@
 import { DISCOVER_RADIUS_KM } from "@/constants/discover";
-import { queryKeys } from "@/lib/query-keys";
+import { queryKeys } from "@/lib/query/query-keys";
 import { getDiscoverEvents } from "@/services/events";
 import { useQuery } from "@tanstack/react-query";
 

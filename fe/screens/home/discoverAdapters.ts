@@ -8,7 +8,7 @@ import {
 import {
   displayEventDescription,
   displayEventTitle,
-} from "@/lib/display-event-title";
+} from "@/lib/events/display-event-title";
 import type { EventCard } from "@/services/types/events";
 import type { ImageSource } from "expo-image";
 

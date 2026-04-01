@@ -3,7 +3,7 @@ import { Text } from "@/components/ui/text";
 import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { Link, router } from "expo-router";
-import { persistUserLocation } from "@/lib/user-location";
+import { persistUserLocation } from "@/lib/location/user-location";
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";

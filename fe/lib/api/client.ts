@@ -1,6 +1,6 @@
 import axios from "axios";
 
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/auth/supabase";
 
 const baseURL =
   process.env.EXPO_PUBLIC_API_URL ?? "http://127.0.0.1:8000/api/v1";

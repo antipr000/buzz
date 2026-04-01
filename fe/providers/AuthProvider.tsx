@@ -1,5 +1,5 @@
 import { useAuthDeepLink } from "@/hooks/useAuthDeepLink";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/auth/supabase";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   createContext,
