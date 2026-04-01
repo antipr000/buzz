@@ -31,7 +31,7 @@ const F = {
   location: require("@/assets/images/events/food/location.svg"),
 };
 
-const DETAIL_ICONS: Record<
+export const DETAIL_ICONS: Record<
   EventCategoryLabel,
   { calendar: ImageSource; time: ImageSource; location: ImageSource }
 > = {
@@ -62,7 +62,7 @@ function localHeroBackground(label: EventCategoryLabel): ImageSource {
 }
 
 /** Prefer API `event_cover` when set; otherwise category hero asset. */
-function eventCardBackground(
+export function eventCardBackground(
   card: EventCard,
   label: EventCategoryLabel
 ): ImageSource {
@@ -75,7 +75,7 @@ function formatPrice(amount: number): string {
   return String(amount);
 }
 
-function formatLongDate(isoDate: string): string {
+export function formatLongDate(isoDate: string): string {
   const d = new Date(isoDate.includes("T") ? isoDate : `${isoDate}T12:00:00`);
   if (Number.isNaN(d.getTime())) return isoDate;
   return d.toLocaleDateString(undefined, {
@@ -86,7 +86,7 @@ function formatLongDate(isoDate: string): string {
   });
 }
 
-function formatTimeOfDay(isoTime: string): string {
+export function formatTimeOfDay(isoTime: string): string {
   const m = isoTime.match(/^(\d{1,2}):(\d{2})/);
   if (!m) return isoTime;
   const dt = new Date(2000, 0, 1, parseInt(m[1], 10), parseInt(m[2], 10));

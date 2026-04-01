@@ -1,74 +1,190 @@
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 import { ChevronDown, ChevronUp } from 'lucide-react-native'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Text } from '@/components/ui/text'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
-import { EVENT_CATEGORY_ICONS } from '@/constants/eventCategories'
+import { EVENT_CATEGORY_ICONS, eventCategoryFromApiValue } from '@/constants/eventCategories'
+import type { TicketTierValue } from '@/constants/ticketTiers'
+import { useEventDetail } from '@/hooks/api/useEventDetail'
+import {
+    DETAIL_ICONS,
+    eventCardBackground,
+    formatLongDate,
+    formatTimeOfDay,
+} from '@/screens/home/discoverAdapters'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
+import {
+    displayEventDescription,
+    displayEventTitle,
+} from '@/lib/events/display-event-title'
+import { openNativeMaps } from '@/lib/maps/openNativeMaps'
 import { useLocalSearchParams, useRouter, Link } from 'expo-router'
-import React, { useState } from 'react'
-import { ScrollView, TouchableOpacity, View } from 'react-native'
+import React, { useMemo, useState } from 'react'
+import { ActivityIndicator, Alert, ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+const FALLBACK_ORGANIZER_LOGO = require('@/assets/images/home/logo1.svg')
+
+const EVENT_DETAIL_LOAD_ERROR =
+    'Could not load this event. Please try again.'
+
 export default function EventDetails() {
-    const { id } = useLocalSearchParams()
+    const { id: rawId } = useLocalSearchParams<{ id: string | string[] }>()
     const router = useRouter()
+    const eventId = typeof rawId === 'string' ? rawId : rawId?.[0]
+    const trimmedId = eventId?.trim() || undefined
 
-    // Find the event (In a real app, you'd fetch it based on `id` from backend or context)
-    // For UI testing, we'll hardcode the featured event values that match the design.
-    const event = {
-        id: id,
-        category: 'Music',
-        categoryIcon: EVENT_CATEGORY_ICONS.Music,
-        title: 'Hoop Music Festival',
-        description: 'The biggest electronic music festival of the year featuring world class DJs and immersive light shows.',
-        date: 'Thu, Jan 15, 2026',
-        time: '8 PM',
-        location: 'Central Park Arena',
-        bg: require('@/assets/images/home/bg_music.png'),
-        eventColor: CATEGORY_COLORS.Music,
-        price: '750', // Base price
-        organizer: 'Pulse Events',
-        organizerLogo: require('@/assets/images/home/logo1.svg'),
-        isPopular: true,
-    }
+    const { data, isPending, isError, refetch } = useEventDetail(trimmedId)
 
-    const [ticketCounts, setTicketCounts] = useState<Record<string, number>>({ Standard: 1 })
+    const [ticketCounts, setTicketCounts] = useState<Record<string, number>>({})
     const [openTickets, setOpenTickets] = useState<Record<string, boolean>>({})
 
-    const toggleTicketOpen = (type: string) => {
-        setOpenTickets(prev => ({ ...prev, [type]: !prev[type] }))
+    const toggleTicketOpen = (tier: string) => {
+        setOpenTickets((prev) => ({ ...prev, [tier]: !prev[tier] }))
     }
 
-    const TICKET_TYPES = [
-        { type: 'Standard', price: 750 },
-        { type: 'Premium', price: 1500 },
-        { type: 'VIP', price: 5000 },
-    ];
+    const view = useMemo(() => {
+        if (!data) return null
+        const label = eventCategoryFromApiValue(data.category)
+        const detailIcons = DETAIL_ICONS[label]
+        return {
+            event: {
+                id: data.id,
+                category: label,
+                categoryIcon: EVENT_CATEGORY_ICONS[label],
+                title: displayEventTitle(data.title),
+                description: displayEventDescription(data.description),
+                date: formatLongDate(data.date),
+                time: formatTimeOfDay(data.time),
+                location: data.location,
+                bg: eventCardBackground(data, label),
+                eventColor: CATEGORY_COLORS[label],
+                fromPriceLabel:
+                    data.price === 0 ? 'Free' : `From ₹${data.price} onwards`,
+                organizer: data.organizer.name,
+                organizerLogo: data.organizer.logo?.trim()
+                    ? { uri: data.organizer.logo.trim() }
+                    : FALLBACK_ORGANIZER_LOGO,
+                isPopular: data.is_popular,
+                latitude: data.latitude,
+                longitude: data.longitude,
+            },
+            detailIcons,
+            ticketTiers: data.ticket_tiers,
+        }
+    }, [data])
 
-    const handleIncrement = (type: string) => {
-        setTicketCounts(prev => {
-            const currentTotal = Object.values(prev).reduce((a, b) => a + b, 0);
-            if (currentTotal >= 10) return prev; // Max 10 tickets
-            return { ...prev, [type]: (prev[type] || 0) + 1 };
-        });
-    };
+    const event = view?.event
+    const detailIcons = view?.detailIcons
+    const ticketTiers = view?.ticketTiers ?? []
 
-    const handleDecrement = (type: string) => {
-        setTicketCounts(prev => {
-            const currentCount = prev[type] || 0;
-            if (currentCount <= 0) return prev;
-            const newCounts = { ...prev, [type]: currentCount - 1 };
-            if (newCounts[type] === 0) {
-                delete newCounts[type];
+    const handleIncrement = (tier: TicketTierValue) => {
+        setTicketCounts((prev) => {
+            const currentTotal = Object.values(prev).reduce((a, b) => a + b, 0)
+            if (currentTotal >= 10) return prev
+            return { ...prev, [tier]: (prev[tier] || 0) + 1 }
+        })
+    }
+
+    const handleDecrement = (tier: TicketTierValue) => {
+        setTicketCounts((prev) => {
+            const currentCount = prev[tier] || 0
+            if (currentCount <= 0) return prev
+            const newCounts = { ...prev, [tier]: currentCount - 1 }
+            if (newCounts[tier] === 0) {
+                delete newCounts[tier]
             }
-            return newCounts;
-        });
-    };
+            return newCounts
+        })
+    }
 
-    const totalPrice = TICKET_TYPES.reduce((sum, ticket) => sum + ticket.price * (ticketCounts[ticket.type] || 0), 0);
+    const totalPrice = ticketTiers.reduce(
+        (sum, row) => sum + row.price * (ticketCounts[row.tier as TicketTierValue] || 0),
+        0
+    )
+
+    const backHeader = (
+        <SafeAreaView edges={['top']}>
+            <View className="flex-row items-center justify-between px-6 pt-2">
+                <TouchableOpacity
+                    onPress={() => router.back()}
+                    activeOpacity={0.8}
+                    className="w-8 h-8 rounded-full bg-white items-center justify-center shadow-sm"
+                >
+                    <Image
+                        source={require('@/assets/images/events/detailed/arrow_back.svg')}
+                        style={{ width: 24, height: 24, marginRight: 2 }}
+                        contentFit="contain"
+                    />
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
+    )
+
+    if (!trimmedId) {
+        return (
+            <View className="flex-1 bg-background">
+                {backHeader}
+                <View className="flex-1 px-6 justify-center">
+                    <Text className="text-center text-secondary-foreground text-sm">
+                        Missing event link.
+                    </Text>
+                </View>
+            </View>
+        )
+    }
+
+    if (isPending) {
+        return (
+            <View className="flex-1 bg-background">
+                {backHeader}
+                <View className="flex-1 justify-center items-center">
+                    <ActivityIndicator size="large" />
+                </View>
+            </View>
+        )
+    }
+
+    if (isError) {
+        return (
+            <View className="flex-1 bg-background">
+                {backHeader}
+                <View className="flex-1 px-6 justify-center gap-4">
+                    <Text className="text-center text-secondary-foreground text-sm">
+                        {EVENT_DETAIL_LOAD_ERROR}
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => refetch()}
+                        activeOpacity={0.8}
+                        className="self-center bg-primary px-6 h-10 rounded-lg items-center justify-center"
+                    >
+                        <Text className="text-primary-foreground text-sm font-semibold">Try again</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        )
+    }
+
+    if (!event || !detailIcons) {
+        return (
+            <View className="flex-1 bg-background">
+                {backHeader}
+                <View className="flex-1 px-6 justify-center gap-4">
+                    <Text className="text-center text-secondary-foreground text-sm">
+                        {EVENT_DETAIL_LOAD_ERROR}
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => refetch()}
+                        activeOpacity={0.8}
+                        className="self-center bg-primary px-6 h-10 rounded-lg items-center justify-center"
+                    >
+                        <Text className="text-primary-foreground text-sm font-semibold">Try again</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        )
+    }
 
     return (
         <View className="flex-1 bg-background">
@@ -88,6 +204,8 @@ export default function EventDetails() {
                             <TouchableOpacity onPress={() => router.back()} activeOpacity={0.8} className="w-8 h-8 rounded-full bg-white items-center justify-center shadow-sm">
                                 <Image source={require('@/assets/images/events/detailed/arrow_back.svg')} style={{ width: 24, height: 24, marginRight: 2 }} contentFit="contain" />
                             </TouchableOpacity>
+
+                            {/* TODO: Add share functionality */}
                             <TouchableOpacity activeOpacity={0.8} className="w-8 h-8 rounded-full bg-white items-center justify-center shadow-sm">
                                 <Image source={require('@/assets/images/events/detailed/share.svg')} style={{ width: 24, height: 24 }} contentFit="contain" />
                             </TouchableOpacity>
@@ -111,7 +229,7 @@ export default function EventDetails() {
                             )}
                         </View>
                         <Text className="text-[12px] font-semibold text-primary">
-                            From ₹750 onwards
+                            {event.fromPriceLabel}
                         </Text>
                     </View>
 
@@ -122,16 +240,16 @@ export default function EventDetails() {
                     <View className="flex-row flex-wrap items-center gap-y-1 ">
                         <View className="flex-row items-center gap-3">
                             <View className="flex-row items-center gap-1.5">
-                                <Image source={require('@/assets/images/events/music/calender.svg')} style={{ width: 13, height: 13 }} contentFit="contain" />
+                                <Image source={detailIcons.calendar} style={{ width: 13, height: 13 }} contentFit="contain" />
                                 <Text className="text-secondary-foreground font-medium text-[10px]">{event.date}</Text>
                             </View>
                             <View className="flex-row items-center gap-1.5">
-                                <Image source={require('@/assets/images/events/music/time.svg')} style={{ width: 13, height: 13 }} contentFit="contain" />
+                                <Image source={detailIcons.time} style={{ width: 13, height: 13 }} contentFit="contain" />
                                 <Text className="text-secondary-foreground font-medium text-[10px]">{event.time}</Text>
                             </View>
                         </View>
                         <View className="flex-row items-center gap-1.5 w-full mt-1">
-                            <Image source={require('@/assets/images/events/music/location.svg')} style={{ width: 13, height: 13 }} contentFit="contain" />
+                            <Image source={detailIcons.location} style={{ width: 13, height: 13 }} contentFit="contain" />
                             <Text className="text-secondary-foreground font-medium text-[10px]">{event.location}</Text>
                         </View>
                     </View>
@@ -153,29 +271,30 @@ export default function EventDetails() {
 
                         {/* Ticket Cards */}
                         <View className="gap-3">
-                            {TICKET_TYPES.map((ticket) => {
-                                const count = ticketCounts[ticket.type] || 0;
-                                const isOpen = !!openTickets[ticket.type];
+                            {ticketTiers.map((row) => {
+                                const tier = row.tier as TicketTierValue
+                                const count = ticketCounts[tier] || 0
+                                const isOpen = !!openTickets[tier]
                                 return (
-                                    <View key={ticket.type} className="bg-white rounded-xl shadow-xs border border-[rgba(79,70,229,0.03)] overflow-hidden">
+                                    <View key={tier} className="bg-white rounded-xl shadow-xs border border-[rgba(79,70,229,0.03)] overflow-hidden">
                                         <View className="flex-row items-center justify-between p-2.5 ">
                                             <View>
-                                                <Text className="text-[12px]  text-secondary">{ticket.type}</Text>
-                                                <Text className="text-[12px] font-semibold text-secondary mt-0.5 mb-1">₹{ticket.price}</Text>
+                                                <Text className="text-[12px]  text-secondary">{row.tier}</Text>
+                                                <Text className="text-[12px] font-semibold text-secondary mt-0.5 mb-1">₹{row.price}</Text>
                                             </View>
                                             {count > 0 ? (
                                                 <View className="flex-row items-center border border-primary rounded-md h-7 w-[70px] justify-between overflow-hidden">
-                                                    <TouchableOpacity onPress={() => handleDecrement(ticket.type)} className="w-[30px] h-full items-center justify-center">
+                                                    <TouchableOpacity onPress={() => handleDecrement(tier)} className="w-[30px] h-full items-center justify-center">
                                                         <Text className="text-primary text-[14px] font-medium">-</Text>
                                                     </TouchableOpacity>
                                                     <Text className="text-primary text-[12px] font-medium flex-1 text-center">{count}</Text>
-                                                    <TouchableOpacity onPress={() => handleIncrement(ticket.type)} className="w-[30px] h-full items-center justify-center">
+                                                    <TouchableOpacity onPress={() => handleIncrement(tier)} className="w-[30px] h-full items-center justify-center">
                                                         <Text className="text-primary text-[14px] font-medium">+</Text>
                                                     </TouchableOpacity>
                                                 </View>
                                             ) : (
                                                 <TouchableOpacity
-                                                    onPress={() => handleIncrement(ticket.type)}
+                                                    onPress={() => handleIncrement(tier)}
                                                     className=" h-7 w-[70px] rounded-md border border-primary flex-row items-center justify-center"
                                                 >
                                                     <Text className="text-[12px] font-medium text-primary">Add</Text>
@@ -183,7 +302,7 @@ export default function EventDetails() {
                                             )}
                                         </View>
 
-                                        <Collapsible open={isOpen} onOpenChange={() => toggleTicketOpen(ticket.type)}>
+                                        <Collapsible open={isOpen} onOpenChange={() => toggleTicketOpen(tier)}>
                                             <CollapsibleTrigger asChild>
                                                 <TouchableOpacity className="px-2.5 pb-2.5 flex-row items-center gap-2" activeOpacity={0.7}>
                                                     <Text className="text-[10px] text-[rgba(228,5,5,0.7)] font-medium">{isOpen ? 'Show less' : 'Know more'}</Text>
@@ -222,12 +341,27 @@ export default function EventDetails() {
                                 <Text className="text-[12px] font-semibold text-secondary-foreground">{event.organizer}</Text>
                             </View>
                         </View>
-                        <View className="w-[147px] h-[102px] rounded-lg overflow-hidden relative bg-white">
+                        <TouchableOpacity
+                            activeOpacity={0.85}
+                            onPress={() => {
+                                openNativeMaps({
+                                    latitude: event.latitude,
+                                    longitude: event.longitude,
+                                    placeLabel: event.location,
+                                }).catch(() => {
+                                    Alert.alert(
+                                        'Maps',
+                                        'Could not open maps on this device.'
+                                    )
+                                })
+                            }}
+                            className="w-[147px] h-[102px] rounded-lg overflow-hidden relative bg-white"
+                        >
                             <Image source={require('@/assets/images/events/detailed/159381c7db74a67c9fa011d60fc14cbaad891992.png')} style={{ width: '100%', height: '70%' }} contentFit="cover" />
                             <View className="absolute bottom-px w-full items-center">
                                 <Text className="text-[10px] font-medium text-primary px-3 py-1 rounded-full">Open in maps</Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
                 <View className=" w-full  px-6 py-4 flex-row items-center justify-between  pb-8">
