@@ -4,9 +4,9 @@ import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
 import { ChevronRight } from 'lucide-react-native'
 import { Link } from 'expo-router'
-import { SignOutDialog } from '@/components/SignOutDialog'
-import { DeleteAccountDialog } from '@/components/DeleteAccountDialog'
-import PageLayout from '@/components/PageLayout'
+import { SignOutDialog } from '@/components/account/SignOutDialog'
+import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog'
+import PageLayout from '@/components/layout/PageLayout'
 
 const Settings = () => {
     const [whatsappEnabled, setWhatsappEnabled] = useState(false);

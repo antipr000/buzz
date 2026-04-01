@@ -3,7 +3,7 @@ import "../global.css";
 
 import { useState } from "react";
 import * as SplashScreen from 'expo-splash-screen';
-import AnimatedSplashScreen from '@/components/AnimatedSplashScreen';
+import AnimatedSplashScreen from '@/components/splash/AnimatedSplashScreen';
 import { ThemeProvider } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';

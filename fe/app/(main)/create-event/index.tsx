@@ -7,8 +7,8 @@ import { ArrowLeft, ImageIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { CreateEventDateTimeRow } from '@/components/CreateEventDateTimeRow';
-import { LocationField, type PickedLocation } from '@/components/LocationField';
+import { CreateEventDateTimeRow } from '@/components/create-event/CreateEventDateTimeRow';
+import { LocationField, type PickedLocation } from '@/components/create-event/LocationField';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';

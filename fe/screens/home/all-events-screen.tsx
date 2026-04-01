@@ -1,4 +1,4 @@
-import FeaturedEventCard from "@/components/FeaturedEventCard";
+import FeaturedEventCard from "@/components/events/FeaturedEventCard";
 import { Text } from "@/components/ui/text";
 import { useInfiniteDiscoverEvents } from "@/hooks/api";
 import { readUserLocation, type StoredUserLocation } from "@/lib/location/user-location";

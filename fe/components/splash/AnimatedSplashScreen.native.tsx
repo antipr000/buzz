@@ -15,7 +15,7 @@ export default function AnimatedSplashScreen({ onAnimationFinish }: Props) {
 
     // Load .lottie file
     useEffect(() => {
-        Asset.fromModule(require('../assets/images/splash.lottie'))
+        Asset.fromModule(require('../../assets/images/splash.lottie'))
             .downloadAsync()
             .then(asset => setSource(asset.localUri ?? null));
     }, []);
@@ -46,7 +46,7 @@ export default function AnimatedSplashScreen({ onAnimationFinish }: Props) {
             {showIcon && (
                 <View style={styles.iconContainer}>
                     <Image
-                        source={require('../assets/images/icon.svg')}
+                        source={require('../../assets/images/icon.svg')}
                         style={styles.icon}
                         contentFit="contain"
                     />

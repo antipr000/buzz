@@ -3,7 +3,7 @@ import React from 'react'
 import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
 import { Search } from 'lucide-react-native'
-import PageLayout from '@/components/PageLayout'
+import PageLayout from '@/components/layout/PageLayout'
 
 const Location = () => {
     const popularCities = [

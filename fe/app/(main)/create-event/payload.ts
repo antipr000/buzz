@@ -6,7 +6,7 @@
  * API date/time use the device’s local calendar and clock (IST for typical
  * Indian users). Display uses `en-IN` for consistent India-first copy.
  */
-import type { PickedLocation } from '@/components/LocationField';
+import type { PickedLocation } from '@/components/create-event/LocationField';
 import type { EventCategoryLabel } from '@/constants/eventCategories';
 import type { CreateEventBody } from '@/services/types/events';
 

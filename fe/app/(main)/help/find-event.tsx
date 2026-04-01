@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft } from 'lucide-react-native'
 import { router } from 'expo-router'
-import BackButton from '@/components/BackButton'
+import BackButton from '@/components/layout/BackButton'
 
 const FindEventDetails = () => {
     const [inputValue, setInputValue] = useState('')

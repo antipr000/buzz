@@ -2,8 +2,8 @@ import { TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { Text } from '@/components/ui/text'
 import { Button } from '@/components/ui/button'
-import AddressForm from '@/components/AddressForm'
-import PageLayout from '@/components/PageLayout'
+import AddressForm from '@/components/address/AddressForm'
+import PageLayout from '@/components/layout/PageLayout'
 import { useRouter } from 'expo-router'
 
 const AddAddress = () => {

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Image } from 'expo-image'
 import { ChevronLeft, PlusCircle } from 'lucide-react-native'
 import { useRouter, Link } from 'expo-router'
-import AddressForm from '@/components/AddressForm'
+import AddressForm from '@/components/address/AddressForm'
 
 const AddressDetails = () => {
     const router = useRouter();

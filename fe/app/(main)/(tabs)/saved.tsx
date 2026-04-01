@@ -1,4 +1,4 @@
-import FeaturedEventCard from '@/components/FeaturedEventCard'
+import FeaturedEventCard from '@/components/events/FeaturedEventCard'
 import { Text } from '@/components/ui/text'
 import { useInfiniteSavedEvents } from '@/hooks/api'
 import { toFeaturedDiscoverProps } from '@/screens/home/discoverAdapters'

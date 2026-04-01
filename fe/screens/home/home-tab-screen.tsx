@@ -1,4 +1,4 @@
-import FeaturedEventCard from '@/components/FeaturedEventCard'
+import FeaturedEventCard from '@/components/events/FeaturedEventCard'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { EVENT_CATEGORY_ICONS, EVENT_CATEGORY_LABELS } from '@/constants/eventCategories'

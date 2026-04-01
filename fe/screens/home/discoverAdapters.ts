@@ -1,4 +1,4 @@
-import type { FeaturedEventCardProps } from "@/components/FeaturedEventCard";
+import type { FeaturedEventCardProps } from "@/components/events/FeaturedEventCard";
 import { CATEGORY_COLORS } from "@/constants/categoryColors";
 import {
   EVENT_CATEGORY_ICONS,

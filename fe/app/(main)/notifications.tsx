@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { Text } from '@/components/ui/text'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Image } from 'expo-image'
-import PageLayout from '@/components/PageLayout'
+import PageLayout from '@/components/layout/PageLayout'
 
 const Notifications = () => {
     const [activeTab, setActiveTab] = useState('events')

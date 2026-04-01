@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Image } from 'expo-image'
 import { router, Link } from 'expo-router'
 import { ChevronRight } from 'lucide-react-native'
-import PageLayout from '@/components/PageLayout'
+import PageLayout from '@/components/layout/PageLayout'
 
 const EditProfile = () => {
     const [identifyType, setIdentifyType] = useState<string | null>(null);

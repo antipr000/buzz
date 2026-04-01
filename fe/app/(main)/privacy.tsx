@@ -1,6 +1,6 @@
 import React from 'react'
 import { Text } from '@/components/ui/text'
-import PageLayout from '@/components/PageLayout'
+import PageLayout from '@/components/layout/PageLayout'
 
 const PrivacyPolicy = () => {
     return (

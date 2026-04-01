@@ -2,9 +2,9 @@ import { TouchableOpacity, ScrollView } from 'react-native'
 import React, { useState } from 'react'
 import { Text } from '@/components/ui/text'
 import { ChevronDown, ChevronUp } from 'lucide-react-native'
-import HelpContact from '@/components/HelpContact'
+import HelpContact from './HelpContact'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
-import PageLayout from '@/components/PageLayout'
+import PageLayout from '@/components/layout/PageLayout'
 
 interface FaqItem {
     question: string;

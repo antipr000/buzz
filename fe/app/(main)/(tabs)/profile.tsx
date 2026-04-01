@@ -6,7 +6,7 @@ import { Image } from 'expo-image'
 import { Card } from '@/components/ui/card'
 import { ChevronRight } from 'lucide-react-native'
 import { Link, Href } from 'expo-router'
-import { SignOutDialog } from '@/components/SignOutDialog'
+import { SignOutDialog } from '@/components/account/SignOutDialog'
 
 const STATS = [
   {

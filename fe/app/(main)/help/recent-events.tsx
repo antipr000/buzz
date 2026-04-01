@@ -3,8 +3,8 @@ import React from 'react'
 import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
 import { Separator } from '@/components/ui/separator'
-import HelpContact from '@/components/HelpContact'
-import PageLayout from '@/components/PageLayout'
+import HelpContact from '@/components/help/HelpContact'
+import PageLayout from '@/components/layout/PageLayout'
 
 const RecentEvents = () => {
     return (

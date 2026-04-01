@@ -1,7 +1,7 @@
 import { View } from 'react-native'
 import React from 'react'
 import { Text } from '@/components/ui/text'
-import HelpPageTemplate from '@/components/HelpPageTemplate'
+import HelpPageTemplate from '@/components/help/HelpPageTemplate'
 
 const faqs = [
     {

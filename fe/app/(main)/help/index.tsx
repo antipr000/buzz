@@ -4,7 +4,7 @@ import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
 import { Card } from '@/components/ui/card'
 import { Link } from 'expo-router'
-import PageLayout from '@/components/PageLayout'
+import PageLayout from '@/components/layout/PageLayout'
 
 const HelpCentre = () => {
     return (
