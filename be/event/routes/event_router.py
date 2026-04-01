@@ -22,6 +22,7 @@ from event.schemas.event_schemas import (
     CreateEventResponse,
     DiscoverResponse,
     EventCoverUploadResponse,
+    EventDetailOut,
     PaginationOut,
     SaveEventBody,
     SavedListResponse,
@@ -174,3 +175,15 @@ async def list_my_bookings(
         db, user_id=user.id, body=body
     )
     return BookingListResponse(data=data)
+
+
+@event_router.get("/{event_id}", response_model=EventDetailOut)
+async def get_event(
+    event_id: Annotated[str, Path(min_length=1, max_length=255)],
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    card = await EventService.get_by_id(db, user_id=user.id, event_id=event_id)
+    if card is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    return card

@@ -16,9 +16,12 @@ from event.models.event import Event, EventCategory
 from event.schemas.event_schemas import (
     CreateEventBody,
     EventCard,
+    EventDetailOut,
     OrganizerOut,
+    TicketTierPriceOut,
     category_api_value,
 )
+from ticket.tier_pricing import all_tier_prices
 from profile.models.profile import Profile
 from saved_event.models.saved_event import SavedEvent
 from ticket.models.ticket import Ticket
@@ -67,7 +70,7 @@ async def _participant_counts(db: AsyncSession, event_ids: list[str]) -> dict[st
     return {eid: int(cnt) for eid, cnt in rows}
 
 
-def _to_event_card(event: Event, participants: int) -> EventCard:
+def _to_event_card(event: Event, participants: int, *, is_saved: bool) -> EventCard:
     org = event.organizer
     user = org.user
     return EventCard(
@@ -84,6 +87,9 @@ def _to_event_card(event: Event, participants: int) -> EventCard:
         organizer=OrganizerOut(name=user.full_name, logo=org.profile_image),
         event_cover=event.event_cover,
         participants=participants,
+        is_saved=is_saved,
+        latitude=event.latitude,
+        longitude=event.longitude,
     )
 
 
@@ -153,9 +159,7 @@ class EventService:
         counts = await _participant_counts(db, ids)
         saved_ids = await _saved_event_ids_for_user(db, user_id, ids)
         cards = [
-            _to_event_card(e, counts.get(e.id, 0)).model_copy(
-                update={"is_saved": e.id in saved_ids}
-            )
+            _to_event_card(e, counts.get(e.id, 0), is_saved=e.id in saved_ids)
             for e in events
         ]
 
@@ -173,6 +177,34 @@ class EventService:
 
         user_location = f"{lat:.4f},{lng:.4f}"
         return cards, next_cursor, has_more, user_location
+
+    @staticmethod
+    async def get_by_id(
+        db: AsyncSession,
+        *,
+        user_id: uuid.UUID,
+        event_id: str,
+    ) -> EventDetailOut | None:
+        """Return a single event with tier prices, or None if not found."""
+        stmt = (
+            select(Event)
+            .options(joinedload(Event.organizer).joinedload(Profile.user))
+            .where(Event.id == event_id)
+        )
+        result = await db.execute(stmt)
+        event = result.scalars().unique().one_or_none()
+        if event is None:
+            return None
+        counts = await _participant_counts(db, [event_id])
+        saved_ids = await _saved_event_ids_for_user(db, user_id, [event_id])
+        card = _to_event_card(
+            event, counts.get(event_id, 0), is_saved=event_id in saved_ids
+        )
+        tiers = [
+            TicketTierPriceOut(tier=t.value, price=p)
+            for t, p in all_tier_prices(event.price)
+        ]
+        return EventDetailOut(**card.model_dump(), ticket_tiers=tiers)
 
     @staticmethod
     async def create(

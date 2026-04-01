@@ -4,6 +4,7 @@ import type {
   CreateEventResponse,
   DiscoverResponse,
   EventCoverUploadResponse,
+  EventDetailOut,
   SavedListResponse,
 } from "@/services/types/events";
 
@@ -59,6 +60,16 @@ export async function getSavedEvents(
       limit: params.limit,
     },
   });
+  return data;
+}
+
+/** GET /events/{eventId} — requires auth. */
+export async function getEventById(
+  eventId: string
+): Promise<EventDetailOut> {
+  const { data } = await apiClient.get<EventDetailOut>(
+    `/events/${encodeURIComponent(eventId)}`
+  );
   return data;
 }
 

@@ -9,31 +9,10 @@ from sqlalchemy.orm import joinedload
 
 from common.pagination import SavedCursor, decode_saved_cursor, encode_saved_cursor
 from event.models.event import Event
-from event.schemas.event_schemas import EventCard, OrganizerOut, category_api_value
-from event.services.event_service import _participant_counts
+from event.schemas.event_schemas import EventCard
+from event.services.event_service import _participant_counts, _to_event_card
 from profile.models.profile import Profile
 from saved_event.models.saved_event import SavedEvent
-
-
-def _to_card(event: Event, participants: int) -> EventCard:
-    org = event.organizer
-    user = org.user
-    return EventCard(
-        id=event.id,
-        category=category_api_value(event.category),
-        title=event.title,
-        description=event.description,
-        date=event.event_date,
-        time=event.event_time,
-        location=event.location,
-        price=event.price,
-        is_featured=event.is_featured,
-        is_popular=event.is_popular,
-        organizer=OrganizerOut(name=user.full_name, logo=org.profile_image),
-        event_cover=event.event_cover,
-        participants=participants,
-        is_saved=True,
-    )
 
 
 class SavedEventService:
@@ -78,7 +57,9 @@ class SavedEventService:
         events = [r.event for r in rows]
         ids = [e.id for e in events]
         counts = await _participant_counts(db, ids)
-        cards = [_to_card(e, counts.get(e.id, 0)) for e in events]
+        cards = [
+            _to_event_card(e, counts.get(e.id, 0), is_saved=True) for e in events
+        ]
 
         next_cursor: str | None = None
         if has_more and rows:

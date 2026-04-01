@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 from pydantic import ValidationError
 
-from booking.services.booking_service import _tier_price_ok
+from ticket.tier_pricing import tier_line_price_ok
 from common.pagination import (
     DiscoverCursor,
     decode_discover_cursor,
@@ -52,10 +52,10 @@ def test_saved_cursor_roundtrip() -> None:
 
 
 def test_tier_price_ok() -> None:
-    assert _tier_price_ok(TicketTier.STANDARD, 100, 100) is True
-    assert _tier_price_ok(TicketTier.PREMIUM, 100, 150) is True
-    assert _tier_price_ok(TicketTier.VIP, 100, 200) is True
-    assert _tier_price_ok(TicketTier.STANDARD, 100, 99) is False
+    assert tier_line_price_ok(TicketTier.STANDARD, 100, 100) is True
+    assert tier_line_price_ok(TicketTier.PREMIUM, 100, 150) is True
+    assert tier_line_price_ok(TicketTier.VIP, 100, 200) is True
+    assert tier_line_price_ok(TicketTier.STANDARD, 100, 99) is False
 
 
 def test_create_event_body_category_lowercase() -> None:

@@ -19,17 +19,11 @@ from booking.schemas.booking_schemas import (
 from event.models.event import Event
 from payment.models.payment import Payment, PaymentStatus
 from ticket.models.ticket import Ticket, TicketTier
+from ticket.tier_pricing import tier_line_price_ok
 
 
 def _combine_event_datetime(d: date, t: time) -> datetime:
     return datetime.combine(d, t, tzinfo=timezone.utc)
-
-
-def _tier_price_ok(tier: TicketTier, event_price: int, line_price: int) -> bool:
-    """MVP: Standard = base; Premium = 1.5x; VIP = 2x (rounded)."""
-    mult = {TicketTier.STANDARD: 1, TicketTier.PREMIUM: 1.5, TicketTier.VIP: 2}
-    expected = int(event_price * mult[tier])
-    return line_price == expected
 
 
 class BookingService:
@@ -47,7 +41,7 @@ class BookingService:
             raise ValueError("Event is not upcoming")
 
         for line in body.tickets:
-            if not _tier_price_ok(line.ticket_tier, ev.price, line.price):
+            if not tier_line_price_ok(line.ticket_tier, ev.price, line.price):
                 raise ValueError("Ticket price does not match tier pricing for this event")
 
         total = sum(line.price * line.quantity for line in body.tickets)

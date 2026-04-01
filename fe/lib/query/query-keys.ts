@@ -42,8 +42,9 @@ export const queryKeys = {
     bookings: (body: Record<string, unknown>) =>
       [...queryKeys.events.all, "bookings", body] as const,
 
+    /** Prefix for GET /events/{id} keys */
     details: () => [...queryKeys.events.all, "detail"] as const,
-    /** Reserved for a future GET-by-id or hydrated card */
+    /** GET /events/{id} */
     detail: (id: string) => [...queryKeys.events.details(), id] as const,
   },
 } as const;

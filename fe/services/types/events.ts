@@ -24,6 +24,18 @@ export type EventCard = {
   event_cover: string | null;
   participants: number;
   is_saved: boolean;
+  latitude: number | null;
+  longitude: number | null;
+};
+
+/** GET /events/{id} — extends card with tier prices and purchase hints */
+export type TicketTierPriceOut = {
+  tier: string;
+  price: number;
+};
+
+export type EventDetailOut = EventCard & {
+  ticket_tiers: TicketTierPriceOut[];
 };
 
 export type PaginationOut = {

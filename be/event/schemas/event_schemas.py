@@ -46,6 +46,21 @@ class EventCard(SchemaModel):
     event_cover: str | None
     participants: int
     is_saved: bool = False
+    latitude: float | None = None
+    longitude: float | None = None
+
+
+class TicketTierPriceOut(SchemaModel):
+    """Display / purchase: tier label matches TicketTier value (e.g. Standard)."""
+
+    tier: str
+    price: int
+
+
+class EventDetailOut(EventCard):
+    """GET /events/{id}: card fields plus tier prices from Event.price (see ticket.tier_pricing)."""
+
+    ticket_tiers: list[TicketTierPriceOut]
 
 
 class PaginationOut(SchemaModel):
