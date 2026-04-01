@@ -8,3 +8,8 @@ export type {
   OrganizerOut,
   PaginationOut,
 } from "@/services/types/events";
+export type {
+  ProfileStatsResponse,
+  StatsOut,
+  UserBriefOut,
+} from "@/services/types/profile";

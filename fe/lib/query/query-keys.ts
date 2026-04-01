@@ -1,5 +1,5 @@
 /**
- * Query keys for TanStack Query — events only for now (matches be/event/routes).
+ * Query keys for TanStack Query — aligned with backend routers under `/api/v1`.
  */
 
 /** Primitive tuple for stable GET /events/discover cache identity */
@@ -46,5 +46,11 @@ export const queryKeys = {
     details: () => [...queryKeys.events.all, "detail"] as const,
     /** GET /events/{id} */
     detail: (id: string) => [...queryKeys.events.details(), id] as const,
+  },
+
+  profile: {
+    all: ["profile"] as const,
+    /** GET /user/profile/stats */
+    stats: () => [...queryKeys.profile.all, "stats"] as const,
   },
 } as const;

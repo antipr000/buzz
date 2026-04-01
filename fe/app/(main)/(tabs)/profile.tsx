@@ -1,32 +1,46 @@
-import { StyleSheet, View, TouchableOpacity, ScrollView } from 'react-native'
-import React from 'react'
+import { View, TouchableOpacity, ScrollView, ActivityIndicator, RefreshControl } from 'react-native'
+import React, { useMemo } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui/text'
-import { Image } from 'expo-image'
+import { Image, type ImageSource } from 'expo-image'
 import { Card } from '@/components/ui/card'
 import { ChevronRight } from 'lucide-react-native'
 import { Link, Href } from 'expo-router'
 import { SignOutDialog } from '@/components/account/SignOutDialog'
+import { useProfileStats } from '@/hooks/api'
+import type { StatsOut } from '@/services/types/profile'
 
-const STATS = [
+const AVATAR_SIZE = 30
+
+function firstLetterFromName(name: string): string {
+  const t = name.trim()
+  if (!t) return '?'
+  return t[0].toUpperCase()
+}
+
+const STAT_ROWS: {
+  icon: ImageSource
+  label: string
+  key: keyof StatsOut
+}[] = [
   {
     icon: require('@/assets/images/profile/calender.svg'),
-    count: '12',
-    label: 'Events attended'
+    label: 'Events attended',
+    key: 'events_attended',
   },
   {
     icon: require('@/assets/images/profile/heart.svg'),
-    count: '3',
-    label: 'Saved Events'
+    label: 'Saved Events',
+    key: 'saved_events',
   },
   {
     icon: require('@/assets/images/profile/pen.svg'),
-    count: '2',
-    label: 'Events created'
-  }
+    label: 'Events created',
+    key: 'events_created',
+  },
 ]
 
-const MENU_ITEMS: { icon: string; label: string; href: Href }[] = [
+const MENU_ITEMS: { icon: ImageSource; label: string; href: Href }[] = [
   {
     icon: require('@/assets/images/profile/bell.svg'),
     label: 'Notifications',
@@ -49,20 +63,89 @@ const MENU_ITEMS: { icon: string; label: string; href: Href }[] = [
   }
 ]
 
+function ProfileLoading() {
+  return (
+    <SafeAreaView className='flex-1 bg-background' edges={['top']}>
+      <View className='flex-1 items-center justify-center px-10'>
+        <ActivityIndicator className='text-primary' />
+      </View>
+    </SafeAreaView>
+  )
+}
+
 const Profile = () => {
+  const { data, isPending, isError, refetch, isRefetching } = useProfileStats()
+
+  const stats = useMemo(
+    () =>
+      data
+        ? STAT_ROWS.map((row) => ({
+            ...row,
+            count: String(data.stats[row.key]),
+          }))
+        : [],
+    [data]
+  )
+
+  if (isPending && !data) {
+    return <ProfileLoading />
+  }
+
+  // Query v5 can keep `data` after a failed refetch; avoid replacing the whole screen then.
+  if (isError && !data) {
+    return (
+      <SafeAreaView className='flex-1 bg-background' edges={['top']}>
+        <View className='flex-1 items-center justify-center px-10 gap-4'>
+          <Text className='text-primary text-sm text-center'>
+            Could not load profile.
+          </Text>
+          <TouchableOpacity
+            onPress={() => refetch()}
+            className='py-2.5 px-8 rounded-full border border-primary'
+          >
+            <Text className='text-primary font-semibold text-sm'>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  if (!data) {
+    return null
+  }
+
+  const { user } = data
+  const avatarUrl = user.profile_image?.trim()
+  const avatarFrameStyle = {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+  }
+
   return (
     <SafeAreaView className='flex-1 bg-background' edges={['top']}>
       {/* Header / Profile Info */}
       <View className='px-5 py-6 pb-4 bg-secondary flex-row items-center justify-between'>
         <View className='flex-row items-center gap-3'>
-          <Image
-            source={require('@/assets/images/profile/profile.jpg')}
-            style={{ width: 30, height: 30, borderRadius: 22 }}
-            contentFit='cover'
-          />
+          {avatarUrl ? (
+            <Image
+              source={{ uri: avatarUrl }}
+              style={avatarFrameStyle}
+              contentFit='cover'
+            />
+          ) : (
+            <View
+              style={avatarFrameStyle}
+              className='items-center justify-center bg-white'
+            >
+              <Text className='text-black font-semibold text-base leading-none'>
+                {firstLetterFromName(user.name)}
+              </Text>
+            </View>
+          )}
           <View>
-            <Text className='text-white font-semibold text-base mb-0.5'>Tayne Smith</Text>
-            <Text className='text-[rgba(249,250,251,0.7)] text-[10px]'>you@gmail.com</Text>
+            <Text className='text-white font-semibold text-base mb-0.5'>{user.name}</Text>
+            <Text className='text-[rgba(249,250,251,0.7)] text-[10px]'>{user.email}</Text>
           </View>
         </View>
         <Link href="/profile/edit" asChild>
@@ -72,11 +155,18 @@ const Profile = () => {
         </Link>
       </View>
 
-      <ScrollView className='flex-1' contentContainerStyle={{ padding: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className='flex-1'
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
+        }
+      >
 
         {/* Stats Row */}
         <View className='flex-row gap-1 mb-7'>
-          {STATS.map((stat, index) => (
+          {stats.map((stat, index) => (
             <Card key={index} className='flex-1 mx-1 gap-0 border border-primary items-center py-2.5 px-0 bg-transparent rounded-xl shadow-none'>
               <Image source={stat.icon} style={{ width: 15, height: 15, marginBottom: 8 }} contentFit='contain' />
               <Text className='text-primary font-semibold text-sm mb-1'>{stat.count}</Text>
@@ -115,5 +205,3 @@ const Profile = () => {
 }
 
 export default Profile
-
-const styles = StyleSheet.create({})

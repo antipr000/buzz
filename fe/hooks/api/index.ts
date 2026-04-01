@@ -5,3 +5,4 @@
 export { useDiscoverEvents, type UseDiscoverEventsArgs } from "./useDiscoverEvents";
 export { useInfiniteDiscoverEvents, type UseInfiniteDiscoverEventsArgs } from "./useInfiniteDiscoverEvents";
 export { useInfiniteSavedEvents, type UseInfiniteSavedEventsArgs } from "./useInfiniteSavedEvents";
+export { useProfileStats } from "./useProfileStats";
