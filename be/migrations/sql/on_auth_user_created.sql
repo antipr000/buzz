@@ -1,6 +1,9 @@
 -- Run this in Supabase Dashboard → SQL Editor after your public schema matches Alembic.
 -- Creates `public.users` + `public.profiles` whenever a row is inserted into `auth.users`
 -- so FastAPI only loads by JWT `sub` (no application-level sync).
+--
+-- After app PATCH profile: run `sync_public_profile_to_auth.sql` so `public.users.full_name`
+-- updates merge into auth.users raw_user_meta_data (name / full_name).
 
 create or replace function public.handle_new_user()
 returns trigger
