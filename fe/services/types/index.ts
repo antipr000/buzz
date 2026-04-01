@@ -9,6 +9,10 @@ export type {
   PaginationOut,
 } from "@/services/types/events";
 export type {
+  MaritalStatus,
+  ProfileIdentify,
+  ProfileMeResponse,
+  ProfilePatchPayload,
   ProfileStatsResponse,
   StatsOut,
   UserBriefOut,

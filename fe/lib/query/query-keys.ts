@@ -50,6 +50,8 @@ export const queryKeys = {
 
   profile: {
     all: ["profile"] as const,
+    /** GET /user/profile */
+    me: () => [...queryKeys.profile.all, "me"] as const,
     /** GET /user/profile/stats */
     stats: () => [...queryKeys.profile.all, "stats"] as const,
   },
