@@ -18,10 +18,24 @@ import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
 import { Image } from 'expo-image';
 import { router, Link } from 'expo-router';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, MoreVertical } from 'lucide-react-native';
 import PageLayout from '@/components/layout/PageLayout';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogHeader,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatDisplayDate } from '@/app/(main)/create-event/payload';
-import { usePatchProfile, useProfileMe } from '@/hooks/api';
+import { useAddresses, useDeleteAddress, usePatchProfile, useProfileMe } from '@/hooks/api';
+import type { AddressOut } from '@/services/types/address';
 import type { MaritalStatus, ProfileIdentify } from '@/services/types/profile';
 import {
   buildJoinedFullName,
@@ -32,6 +46,13 @@ import {
 
 const IDENTIFY_OPTIONS: ProfileIdentify[] = ['Man', 'Woman', 'Other'];
 const MARITAL_OPTIONS: MaritalStatus[] = ['Single', 'Married'];
+
+function savedAddressSummary(row: AddressOut): string {
+  return `${row.address_type} · ${row.city} · ${row.pin_code}`;
+}
+
+const DELETE_ADDRESS_DIALOG_SURFACE =
+  'w-[80vw] self-center gap-5 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white p-6 shadow-lg shadow-black/10';
 
 function ProfileBirthdayRow(props: {
   birthdayCleared: boolean;
@@ -113,6 +134,14 @@ const EditProfile = () => {
   const insets = useSafeAreaInsets();
   const { data, isPending, isError, refetch, isFetching } = useProfileMe();
   const patchMutation = usePatchProfile();
+  const {
+    data: savedAddresses,
+    isPending: addressesPending,
+    isError: addressesError,
+    refetch: refetchAddresses,
+    isFetching: addressesFetching,
+  } = useAddresses();
+  const deleteAddressMutation = useDeleteAddress();
 
   const initialRef = useRef<typeof data>(null);
   const [formReady, setFormReady] = useState(false);
@@ -123,6 +152,7 @@ const EditProfile = () => {
   const [birthdayCleared, setBirthdayCleared] = useState(true);
   const [identifyType, setIdentifyType] = useState<ProfileIdentify | null>(null);
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus | null>(null);
+  const [deleteAddressTarget, setDeleteAddressTarget] = useState<AddressOut | null>(null);
 
   useEffect(() => {
     if (!data || initialRef.current) return;
@@ -184,6 +214,10 @@ const EditProfile = () => {
     setMaritalStatus((prev) => (prev === type ? null : type));
   };
 
+  const onEditAddress = (id: string) => {
+    router.push({ pathname: '/profile/address', params: { addressId: id } });
+  };
+
   if (data ? !formReady : isPending) {
     return (
       <PageLayout title="Edit Profile" scrollEnabled={false}>
@@ -220,6 +254,7 @@ const EditProfile = () => {
   const avatarUri = data.profile_image?.trim();
 
   return (
+    <>
     <PageLayout title="Edit Profile" scrollEnabled={false} contentContainerStyle={{ padding: 0 }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -382,6 +417,72 @@ const EditProfile = () => {
             <Text className="mb-2 text-[12px] font-semibold text-secondary-foreground">
               Your saved addresses
             </Text>
+            {addressesPending ? (
+              <View className="mb-3 items-center py-3">
+                <ActivityIndicator size="small" color="#64748B" />
+              </View>
+            ) : addressesError ? (
+              <View className="mb-3 gap-2">
+                <Text className="text-[11px] text-[#64748B]">
+                  Could not load addresses. Try again in a moment.
+                </Text>
+                <TouchableOpacity
+                  onPress={() => void refetchAddresses()}
+                  disabled={addressesFetching}
+                  className="self-start rounded-md border border-[rgba(0,0,0,0.15)] px-3 py-1.5 active:bg-[rgba(0,0,0,0.04)]"
+                >
+                  <Text className="text-[11px] font-medium text-[#334155]">
+                    {addressesFetching ? 'Retrying…' : 'Retry'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : savedAddresses && savedAddresses.length > 0 ? (
+              <View className="mb-3 gap-2">
+                {savedAddresses.map((addr) => (
+                  <View
+                    key={addr.id}
+                    className="flex-row items-center rounded-md border border-[rgba(0,0,0,0.1)] pl-3 pr-1 py-2"
+                  >
+                    <View className="min-w-0 flex-1 pr-2">
+                      <Text
+                        className="text-[11px] text-secondary-foreground"
+                        numberOfLines={2}
+                      >
+                        {savedAddressSummary(addr)}
+                      </Text>
+                      {addr.address_line1 ? (
+                        <Text className="mt-0.5 text-[10px] text-[#64748B]" numberOfLines={1}>
+                          {addr.address_line1}
+                        </Text>
+                      ) : null}
+                    </View>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Pressable
+                          hitSlop={8}
+                          className="h-9 w-9 items-center justify-center rounded-md active:bg-[rgba(0,0,0,0.06)]"
+                          accessibilityLabel="Address actions"
+                        >
+                          <MoreVertical size={18} color="#334155" />
+                        </Pressable>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onPress={() => onEditAddress(addr.id)}>
+                          <Text className="text-sm text-popover-foreground">Edit</Text>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onPress={() => setDeleteAddressTarget(addr)}
+                          disabled={deleteAddressMutation.isPending}
+                        >
+                          <Text className="text-sm text-destructive">Delete</Text>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </View>
+                ))}
+              </View>
+            ) : null}
             <Link href="/profile/address" asChild>
               <TouchableOpacity
                 activeOpacity={0.7}
@@ -413,6 +514,63 @@ const EditProfile = () => {
         </TouchableOpacity>
       </View>
     </PageLayout>
+
+    <AlertDialog
+      open={deleteAddressTarget !== null}
+      onOpenChange={(open) => {
+        if (!open) setDeleteAddressTarget(null);
+      }}
+    >
+      {deleteAddressTarget ? (
+        <AlertDialogContent className={DELETE_ADDRESS_DIALOG_SURFACE}>
+          <AlertDialogHeader className="items-center gap-1">
+            <Text className="text-center text-[13px] font-semibold text-[#0F172A]">
+              Delete address?
+            </Text>
+            <Text
+              className="text-center text-[11px] leading-[16px] text-[rgba(15,23,42,0.65)]"
+              numberOfLines={3}
+            >
+              {savedAddressSummary(deleteAddressTarget)}
+              {deleteAddressTarget.address_line1
+                ? `\n${deleteAddressTarget.address_line1}`
+                : ''}
+            </Text>
+          </AlertDialogHeader>
+          <View className="w-full flex-col items-center gap-2 px-2">
+            <AlertDialogCancel
+              className='w-full'
+              disabled={deleteAddressMutation.isPending}
+            >
+              <Text className="text-center text-[12px] font-medium text-[#334155]">Cancel</Text>
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className={
+               "bg-red-500 w-full"
+              }
+              disabled={deleteAddressMutation.isPending}
+              onPress={() => {
+                const row = deleteAddressTarget;
+                if (!row) return;
+                void (async () => {
+                  try {
+                    await deleteAddressMutation.mutateAsync(row.id);
+                    setDeleteAddressTarget(null);
+                  } catch {
+                    Alert.alert('Could not delete', 'Please try again.');
+                  }
+                })();
+              }}
+            >
+              <Text className="text-center text-[12px] font-semibold text-white">
+                {deleteAddressMutation.isPending ? 'Deleting…' : 'Delete'}
+              </Text>
+            </AlertDialogAction>
+          </View>
+        </AlertDialogContent>
+      ) : null}
+    </AlertDialog>
+    </>
   );
 };
 
