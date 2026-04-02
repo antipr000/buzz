@@ -16,6 +16,8 @@ export type AddressFormFieldsProps = {
   onPinChange: (text: string) => void;
   pinLookup: PincodeLookupState;
   saving: boolean;
+  /** Use 0 when the parent ScrollView already applies horizontal padding (e.g. event checkout). */
+  contentHorizontalPadding?: number;
 };
 
 /**
@@ -27,6 +29,7 @@ export function AddressFormFields({
   onPinChange,
   pinLookup,
   saving,
+  contentHorizontalPadding = 16,
 }: AddressFormFieldsProps) {
   const pinHint = pinLookupHint(pinLookup);
   const showPinOk = isCompleteIndiaPin(form.pinCode) && pinLookup.status === "ok";
@@ -35,7 +38,12 @@ export function AddressFormFields({
     <ScrollView
       showsVerticalScrollIndicator={false}
       className=""
-      contentContainerStyle={{ padding: 16, paddingTop: 0, paddingBottom: 100 }}
+      contentContainerStyle={{
+        paddingTop: 0,
+        paddingBottom: 100,
+        paddingLeft: contentHorizontalPadding,
+        paddingRight: contentHorizontalPadding,
+      }}
     >
       <View className="bg-white rounded-md border border-[rgba(0,0,0,0.1)] p-4">
         <Text className="text-[rgba(15,23,42,0.7)] font-semibold text-[11px] mb-4">

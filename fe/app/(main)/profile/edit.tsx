@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { formatDisplayDate } from '@/app/(main)/create-event/payload';
+import { savedAddressSummary } from '@/components/address/savedAddressSummary';
 import { useAddresses, useDeleteAddress, usePatchProfile, useProfileMe } from '@/hooks/api';
 import type { AddressOut } from '@/services/types/address';
 import type { MaritalStatus, ProfileIdentify } from '@/services/types/profile';
@@ -46,10 +47,6 @@ import {
 
 const IDENTIFY_OPTIONS: ProfileIdentify[] = ['Man', 'Woman', 'Other'];
 const MARITAL_OPTIONS: MaritalStatus[] = ['Single', 'Married'];
-
-function savedAddressSummary(row: AddressOut): string {
-  return `${row.address_type} · ${row.city} · ${row.pin_code}`;
-}
 
 const DELETE_ADDRESS_DIALOG_SURFACE =
   'w-[80vw] self-center gap-5 rounded-xl border border-[rgba(0,0,0,0.08)] bg-white p-6 shadow-lg shadow-black/10';

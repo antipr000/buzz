@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text'
 import { CATEGORY_COLORS } from '@/constants/categoryColors'
 import { EVENT_CATEGORY_ICONS, eventCategoryFromApiValue } from '@/constants/eventCategories'
 import type { TicketTierValue } from '@/constants/ticketTiers'
+import type { PurchaseTicketLine } from '@/services/types/booking'
 import { useEventDetail } from '@/hooks/api/useEventDetail'
 import {
     DETAIL_ICONS,
@@ -19,7 +20,7 @@ import {
     displayEventTitle,
 } from '@/lib/events/display-event-title'
 import { openNativeMaps } from '@/lib/maps/openNativeMaps'
-import { useLocalSearchParams, useRouter, Link } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useMemo, useState } from 'react'
 import { ActivityIndicator, Alert, ScrollView, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -103,6 +104,38 @@ export default function EventDetails() {
         (sum, row) => sum + row.price * (ticketCounts[row.tier as TicketTierValue] || 0),
         0
     )
+
+    const proceedToAddress = () => {
+        if (!event) return
+        if (totalPrice <= 0) {
+            Alert.alert('Select tickets', 'Add at least one ticket to continue.')
+            return
+        }
+        const lines: PurchaseTicketLine[] = ticketTiers
+            .map((row) => {
+                const tier = row.tier as TicketTierValue
+                const quantity = ticketCounts[tier] ?? 0
+                if (quantity <= 0) return null
+                return {
+                    ticket_tier: tier,
+                    price: row.price,
+                    quantity,
+                }
+            })
+            .filter((line): line is PurchaseTicketLine => line !== null)
+        if (lines.length === 0) {
+            Alert.alert('Select tickets', 'Add at least one ticket to continue.')
+            return
+        }
+        router.push({
+            pathname: '/event/address',
+            params: {
+                eventId: event.id,
+                tickets: JSON.stringify(lines),
+                eventTitle: event.title,
+            },
+        })
+    }
 
     const backHeader = (
         <SafeAreaView edges={['top']}>
@@ -371,11 +404,13 @@ export default function EventDetails() {
                     </View>
 
                     
-                    <Link href="/event/address" asChild>
-                        <TouchableOpacity activeOpacity={0.7} className="bg-primary px-8  h-10 rounded-lg items-center justify-center">
-                            <Text className="text-primary-foreground text-[14px] font-bold">Proceed</Text>
-                        </TouchableOpacity>
-                    </Link>
+                    <TouchableOpacity
+                        activeOpacity={0.7}
+                        onPress={proceedToAddress}
+                        className="bg-primary px-8  h-10 rounded-lg items-center justify-center"
+                    >
+                        <Text className="text-primary-foreground text-[14px] font-bold">Proceed</Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
 

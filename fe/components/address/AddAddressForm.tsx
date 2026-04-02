@@ -15,21 +15,35 @@ import { AddressSaveFooter } from "@/components/address/AddressSaveFooter";
 type AddAddressFormProps = {
   /** Profile screen: show Save bar and POST + router.back(). Event/checkout: omit (fields only). */
   withSaveFooter?: boolean;
+  /** Checkout: parent reads live state (e.g. Proceed, clear saved selection). */
+  onFormChange?: (form: AddressFormState) => void;
+  /** Set to 0 when parent already pads horizontally (e.g. checkout `ScrollView`). */
+  contentHorizontalPadding?: number;
 };
 
 /**
  * New address: prefill mobile/email from profile, PIN lookup can fill city/state.
  * With `withSaveFooter`, Save → POST /user/addresses, then go back.
  */
-export default function AddAddressForm({ withSaveFooter = false }: AddAddressFormProps) {
+export default function AddAddressForm({
+  withSaveFooter = false,
+  onFormChange,
+  contentHorizontalPadding = 16,
+}: AddAddressFormProps) {
   const router = useRouter();
   const { data: profile } = useProfileMe();
   const hydratedProfileId = useRef<string | null>(null);
+  const onFormChangeRef = useRef(onFormChange);
+  onFormChangeRef.current = onFormChange;
 
   const [form, setForm] = useState<AddressFormState>(emptyAddressForm);
   const update = useCallback((partial: Partial<AddressFormState>) => {
     setForm((prev) => ({ ...prev, ...partial }));
   }, []);
+
+  useEffect(() => {
+    onFormChangeRef.current?.(form);
+  }, [form]);
 
   const pinLookup = useIndiaPincodeLookup(form.pinCode);
   const createMutation = useCreateAddress();
@@ -79,6 +93,7 @@ export default function AddAddressForm({ withSaveFooter = false }: AddAddressFor
           onPinChange={onPinChange}
           pinLookup={pinLookup}
           saving={withSaveFooter && saving}
+          contentHorizontalPadding={contentHorizontalPadding}
         />
       </View>
       {withSaveFooter ? (
