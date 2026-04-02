@@ -13,3 +13,4 @@ export { useInfiniteSavedEvents, type UseInfiniteSavedEventsArgs } from "./useIn
 export { usePatchProfile } from "./usePatchProfile";
 export { useProfileMe } from "./useProfileMe";
 export { useProfileStats } from "./useProfileStats";
+export { usePurchaseTickets } from "./usePurchaseTickets";

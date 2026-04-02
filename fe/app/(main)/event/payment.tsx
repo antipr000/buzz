@@ -1,19 +1,26 @@
 import { View, ScrollView, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import React, { useState } from 'react'
+import React from 'react'
 import { Text } from '@/components/ui/text'
 import { Image, ImageSource } from 'expo-image'
 import { ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { useRouter } from 'expo-router'
+import type { PurchasePaymentMethod } from '@/constants/paymentMethods'
 
-const PAYMENT_OPTIONS: { id: string; label: string; icon: ImageSource }[] = [
-    { id: 'upi', label: 'UPI (Pay via any App)', icon: require('@/assets/images/payments/upi.svg') },
-    { id: 'card', label: 'Credit/Debit Card', icon: require('@/assets/images/payments/card.svg') },
-    { id: 'pay_later', label: 'Pay Later', icon: require('@/assets/images/payments/pay_later.svg') },
-    { id: 'wallets', label: 'Wallets', icon: require('@/assets/images/payments/wallets.svg') },
-    { id: 'emi', label: 'EMI', icon: require('@/assets/images/payments/emi.svg') },
-    { id: 'net_banking', label: 'Net Banking', icon: require('@/assets/images/payments/net_banking.svg') },
-    { id: 'cod', label: 'Cash on Delivery', icon: require('@/assets/images/payments/cod.svg') },
+/** Stable row id for React; `method` is the API `payment_method` string. */
+const PAYMENT_OPTIONS: {
+    id: string
+    method: PurchasePaymentMethod
+    label: string
+    icon: ImageSource
+}[] = [
+    { id: 'upi', method: 'upi', label: 'UPI (Pay via any App)', icon: require('@/assets/images/payments/upi.svg') },
+    { id: 'card', method: 'credit_debit_card', label: 'Credit/Debit Card', icon: require('@/assets/images/payments/card.svg') },
+    { id: 'pay_later', method: 'pay_later', label: 'Pay Later', icon: require('@/assets/images/payments/pay_later.svg') },
+    { id: 'wallets', method: 'wallets', label: 'Wallets', icon: require('@/assets/images/payments/wallets.svg') },
+    { id: 'emi', method: 'emi', label: 'EMI', icon: require('@/assets/images/payments/emi.svg') },
+    { id: 'net_banking', method: 'net_banking', label: 'Net Banking', icon: require('@/assets/images/payments/net_banking.svg') },
+    { id: 'cod', method: 'cash_on_delivery', label: 'Cash on Delivery', icon: require('@/assets/images/payments/cod.svg') },
 ];
 
 const Payment = () => {
