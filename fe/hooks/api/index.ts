@@ -5,6 +5,7 @@
 export { useAddress } from "./useAddress";
 export { useAddresses } from "./useAddresses";
 export { useCreateAddress } from "./useCreateAddress";
+export { useDeleteAddress } from "./useDeleteAddress";
 export { usePatchAddress } from "./usePatchAddress";
 export { useDiscoverEvents, type UseDiscoverEventsArgs } from "./useDiscoverEvents";
 export { useInfiniteDiscoverEvents, type UseInfiniteDiscoverEventsArgs } from "./useInfiniteDiscoverEvents";

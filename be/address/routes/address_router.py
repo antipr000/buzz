@@ -65,3 +65,20 @@ async def patch_address(
         if str(e) == "Address not found":
             raise HTTPException(status_code=404, detail=str(e)) from e
         raise
+
+
+@address_router.delete(
+    "/addresses/{address_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_address(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+    address_id: str = Path(..., min_length=1),
+):
+    try:
+        await AddressService.delete_for_user(db, user_id=user.id, address_id=address_id)
+    except ValueError as e:
+        if str(e) == "Address not found":
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        raise

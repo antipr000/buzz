@@ -45,3 +45,10 @@ export async function patchAddress(
   );
   return data;
 }
+
+/** DELETE /user/addresses/{addressId} — 204 No Content; requires auth. */
+export async function deleteAddress(addressId: string): Promise<void> {
+  await apiClient.delete(
+    `/user/addresses/${encodeURIComponent(addressId)}`
+  );
+}

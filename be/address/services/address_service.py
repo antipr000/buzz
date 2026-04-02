@@ -115,3 +115,16 @@ class AddressService:
         await db.commit()
         await db.refresh(row)
         return _to_out(row)
+
+    @staticmethod
+    async def delete_for_user(
+        db: AsyncSession,
+        *,
+        user_id: uuid.UUID,
+        address_id: str,
+    ) -> None:
+        row = await db.get(Address, address_id)
+        if row is None or row.user_id != user_id:
+            raise ValueError("Address not found")
+        await db.delete(row)
+        await db.commit()
