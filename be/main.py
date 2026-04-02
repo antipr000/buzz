@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from core.config import config
 from core.schemas.common import HealthResponse, MessageResponse
 import models  # noqa: F401 — side-effect: load every mapped class so relationships resolve
+from address.routes.address_router import address_router
 from event.routes.event_router import event_router
 from payment.routes.payment_router import payment_router
 from profile.routes.profile_router import profile_router
@@ -34,6 +35,7 @@ app.include_router(user_router, prefix="/api/v1")
 app.include_router(event_router, prefix="/api/v1")
 app.include_router(payment_router, prefix="/api/v1")
 app.include_router(profile_router, prefix="/api/v1")
+app.include_router(address_router, prefix="/api/v1")
 
 @app.get("/", response_model=MessageResponse)
 async def root():

@@ -1,23 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated
+from pydantic import Field
 
-from pydantic import BeforeValidator, Field
-
-from address.models.address import AddressType
+from address.schemas.validators import AddressTypeInput
 from core.schemas.schema_model import SchemaModel
 from payment.models.payment import PaymentMethod
 from ticket.models.ticket import TicketTier
-
-
-def _parse_address_type(v: object) -> AddressType:
-    if isinstance(v, AddressType):
-        return v
-    if isinstance(v, str):
-        m = {"home": AddressType.HOME, "work": AddressType.WORK, "other": AddressType.OTHER}
-        return m.get(v.strip().lower(), AddressType.OTHER)
-    raise ValueError("Invalid address type")
 
 
 class AddressIn(SchemaModel):
@@ -32,7 +21,7 @@ class AddressIn(SchemaModel):
     city: str
     state: str
     country: str
-    address_type: Annotated[AddressType, BeforeValidator(_parse_address_type)]
+    address_type: AddressTypeInput
 
 
 class TicketLineIn(SchemaModel):

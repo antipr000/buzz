@@ -55,4 +55,12 @@ export const queryKeys = {
     /** GET /user/profile/stats */
     stats: () => [...queryKeys.profile.all, "stats"] as const,
   },
+
+  /** GET/PATCH /user/addresses — same `/user` prefix as profile. */
+  addresses: {
+    all: ["user", "addresses"] as const,
+    list: () => [...queryKeys.addresses.all, "list"] as const,
+    /** `null` when the hook is disabled (no id yet). */
+    detail: (id: string | null) => [...queryKeys.addresses.all, "detail", id] as const,
+  },
 } as const;
