@@ -3,15 +3,24 @@ import {
     ScrollView,
     TouchableOpacity,
     ActivityIndicator,
+    Alert,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Text } from '@/components/ui/text'
-import { ChevronLeft, PlusCircle } from 'lucide-react-native'
-import { useLocalSearchParams, useRouter, Link } from 'expo-router'
+import { ChevronLeft } from 'lucide-react-native'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import AddressForm from '@/components/address/AddressForm'
 import { savedAddressSummary } from '@/components/address/savedAddressSummary'
+import { addressOutToPurchasePayload } from '@/components/address/addressOutToPurchase'
 import { useAddresses } from '@/hooks/api'
+import {
+    addressFormSatisfiesPurchase,
+    buildValidatedPayload,
+    emptyAddressForm,
+    type AddressFormState,
+} from '@/components/address/addressFormModel'
+import type { PurchaseAddressIn } from '@/services/types/booking'
 
 function firstParamString(v: string | string[] | undefined): string | undefined {
     if (v === undefined) return undefined
@@ -19,6 +28,8 @@ function firstParamString(v: string | string[] | undefined): string | undefined 
     const t = s?.trim()
     return t || undefined
 }
+
+type CheckoutAddressMode = 'saved' | 'new'
 
 const AddressDetails = () => {
     const router = useRouter()
@@ -28,6 +39,8 @@ const AddressDetails = () => {
         eventTitle?: string | string[]
     }>()
     const eventTitle = firstParamString(params.eventTitle) ?? 'Delivery address'
+    const eventId = firstParamString(params.eventId)
+    const ticketsJson = firstParamString(params.tickets)
 
     const {
         data: savedAddresses,
@@ -37,12 +50,92 @@ const AddressDetails = () => {
         isFetching: addressesFetching,
     } = useAddresses()
 
+    const [checkoutForm, setCheckoutForm] = useState<AddressFormState>(() => emptyAddressForm())
+    const [addressMode, setAddressMode] = useState<CheckoutAddressMode>('new')
     const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null)
+
+    const onCheckoutFormChange = useCallback((form: AddressFormState) => {
+        setCheckoutForm(form)
+    }, [])
+
+    const selectedSavedRow = useMemo(
+        () => savedAddresses?.find((a) => a.id === selectedSavedId) ?? null,
+        [savedAddresses, selectedSavedId]
+    )
+
+    useEffect(() => {
+        if (addressMode !== 'saved' || !selectedSavedId) return
+        if (selectedSavedRow !== null) return
+        setAddressMode('new')
+        setSelectedSavedId(null)
+        setCheckoutForm(emptyAddressForm())
+    }, [addressMode, selectedSavedId, selectedSavedRow])
 
     const hasSavedAddresses =
         !addressesPending &&
         !addressesError &&
         Boolean(savedAddresses && savedAddresses.length > 0)
+
+    const usingSavedAddress =
+        addressMode === 'saved' &&
+        selectedSavedId !== null &&
+        selectedSavedRow !== null
+
+    const checkoutParamsOk = Boolean(eventId && ticketsJson)
+
+    const canProceed =
+        checkoutParamsOk &&
+        (addressMode === 'saved'
+            ? Boolean(selectedSavedRow)
+            : addressFormSatisfiesPurchase(checkoutForm))
+
+    const onPressSavedRow = (id: string) => {
+        if (selectedSavedId === id && addressMode === 'saved') {
+            setSelectedSavedId(null)
+            setAddressMode('new')
+            setCheckoutForm(emptyAddressForm())
+            return
+        }
+        setSelectedSavedId(id)
+        setAddressMode('saved')
+    }
+
+    const proceedToPayment = () => {
+        if (!eventId || !ticketsJson) {
+            Alert.alert('Missing details', 'Go back and choose tickets again.')
+            router.back()
+            return
+        }
+        try {
+            const parsed = JSON.parse(ticketsJson) as unknown
+            if (!Array.isArray(parsed) || parsed.length === 0) {
+                throw new Error('invalid')
+            }
+        } catch {
+            Alert.alert('Invalid checkout', 'Go back and choose tickets again.')
+            router.back()
+            return
+        }
+
+        let addressPayload: PurchaseAddressIn
+        if (addressMode === 'saved') {
+            addressPayload = addressOutToPurchasePayload(selectedSavedRow!)
+        } else {
+            const body = buildValidatedPayload(checkoutForm)
+            if (!body) return
+            addressPayload = body
+        }
+
+        router.push({
+            pathname: '/event/payment',
+            params: {
+                eventId,
+                tickets: ticketsJson,
+                eventTitle: firstParamString(params.eventTitle) ?? '',
+                address: JSON.stringify(addressPayload),
+            },
+        })
+    }
 
     return (
         <SafeAreaView edges={['top']} className='flex-1 bg-white'>
@@ -63,21 +156,8 @@ const AddressDetails = () => {
                 contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 120 }}
                 keyboardShouldPersistTaps="handled"
             >
-                <TouchableOpacity activeOpacity={0.7} className='bg-white rounded-md border border-[rgba(0,0,0,0.1)] p-3 flex-row items-center justify-between mb-4'>
-                    <Text className='text-secondary-foreground font-medium text-[11px]'>Add New Address</Text>
-                    <PlusCircle size={16} color="#334155" />
-                </TouchableOpacity>
-
                 {/*
                 Pin code eligibility (home delivery) — restore when product needs it.
-                <View className='bg-white rounded-md border border-[rgba(0,0,0,0.1)] p-4 mb-4'>
-                    <Text className='text-[rgba(15,23,42,0.7)] font-medium text-[11px] mb-3'>Check Pin code eligibility for new address</Text>
-                    <View className='border border-[rgba(0,0,0,0.2)] rounded-md h-8 px-3 flex-row items-center justify-between mb-2'>
-                        <Input ... />
-                        <Image ... />
-                    </View>
-                    <Text className='text-[rgba(36,168,3,0.7)] text-[11px] font-medium'>Home Delivery is available for your pin code</Text>
-                </View>
                 */}
 
                 <View className="mb-4">
@@ -106,16 +186,13 @@ const AddressDetails = () => {
                     ) : savedAddresses && savedAddresses.length > 0 ? (
                         <View className="mb-3 gap-2">
                             {savedAddresses.map((addr) => {
-                                const selected = selectedSavedId === addr.id
+                                const selected =
+                                    addressMode === 'saved' && selectedSavedId === addr.id
                                 return (
                                     <TouchableOpacity
                                         key={addr.id}
                                         activeOpacity={0.85}
-                                        onPress={() =>
-                                            setSelectedSavedId((prev) =>
-                                                prev === addr.id ? null : addr.id
-                                            )
-                                        }
+                                        onPress={() => onPressSavedRow(addr.id)}
                                         className={`rounded-md border pl-3 pr-3 py-2 ${selected
                                             ? 'border-primary border-2 bg-[rgba(126,34,206,0.04)]'
                                             : 'border-[rgba(0,0,0,0.1)] bg-white'
@@ -139,25 +216,69 @@ const AddressDetails = () => {
                     ) : null}
                 </View>
 
-                {hasSavedAddresses ? (
-                    <View className="my-0 flex-row items-center gap-3">
+                {hasSavedAddresses && !usingSavedAddress ? (
+                    <View className="my-5 flex-row items-center gap-3">
                         <View className="h-px flex-1 bg-[rgba(0,0,0,0.12)]" />
                         <Text className="px-2 text-[11px] font-medium uppercase tracking-wider text-[#64748B]">
-                            or
+                            or enter below
                         </Text>
                         <View className="h-px flex-1 bg-[rgba(0,0,0,0.12)]" />
                     </View>
                 ) : null}
 
-                <AddressForm contentHorizontalPadding={0} />
+                {usingSavedAddress && selectedSavedRow ? (
+                    <View className="mb-4 rounded-md border border-primary/30 bg-[rgba(126,34,206,0.06)] px-3 py-3">
+                        <Text className="mb-1 text-[11px] font-semibold text-secondary-foreground">
+                            Selected address
+                        </Text>
+                        <Text className="text-[11px] text-secondary-foreground" numberOfLines={2}>
+                            {savedAddressSummary(selectedSavedRow)}
+                        </Text>
+                        {selectedSavedRow.address_line1 ? (
+                            <Text
+                                className="mt-0.5 text-[10px] text-[#64748B]"
+                                numberOfLines={2}
+                            >
+                                {selectedSavedRow.address_line1}
+                            </Text>
+                        ) : null}
+                        <TouchableOpacity
+                            onPress={() => onPressSavedRow(selectedSavedRow.id)}
+                            activeOpacity={0.7}
+                            className="mt-2 self-start"
+                        >
+                            <Text className="text-[11px] font-medium text-primary">
+                                Choose a different or new address
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <>
+                        <Text className="mb-2 text-[12px] font-semibold text-secondary-foreground">
+                            Delivery address
+                        </Text>
+                        <AddressForm
+                            contentHorizontalPadding={0}
+                            onFormChange={onCheckoutFormChange}
+                        />
+                    </>
+                )}
             </ScrollView>
 
             <View className='absolute bottom-0 w-full bg-white px-5 py-4 border-t border-[rgba(0,0,0,0.05)] pt-4 pb-8'>
-                <Link href="/event/payment" asChild>
-                    <TouchableOpacity activeOpacity={0.8} className='bg-primary w-full h-12 rounded-lg items-center justify-center'>
-                        <Text className='text-white font-bold text-[14px]'>Proceed</Text>
-                    </TouchableOpacity>
-                </Link>
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    disabled={!canProceed}
+                    onPress={proceedToPayment}
+                    className={`bg-primary w-full h-12 rounded-lg items-center justify-center ${!canProceed ? 'opacity-45' : ''}`}
+                >
+                    <Text className='text-white font-bold text-[14px]'>Proceed</Text>
+                </TouchableOpacity>
+                {!checkoutParamsOk ? (
+                    <Text className="mt-2 text-center text-[10px] text-[#64748B]">
+                        Missing event or ticket selection — go back to the event page.
+                    </Text>
+                ) : null}
             </View>
         </SafeAreaView>
     )

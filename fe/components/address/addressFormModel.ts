@@ -70,10 +70,14 @@ function parsePinCode(pin: string): number | null {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export type AddressFormBuildResult =
+  | { ok: true; payload: AddressCreatePayload }
+  | { ok: false; alertTitle: string; alertMessage: string };
+
 /**
- * Validates `form`, shows `Alert` for the first problem, and returns an API payload or `null`.
+ * Validates `form` without showing UI — use for enabling buttons, etc.
  */
-export function buildValidatedPayload(form: AddressFormState): AddressCreatePayload | null {
+export function evaluateAddressForm(form: AddressFormState): AddressFormBuildResult {
   const {
     pinCode: pinStr,
     firstName,
@@ -91,51 +95,75 @@ export function buildValidatedPayload(form: AddressFormState): AddressCreatePayl
 
   const pinNum = parsePinCode(pinStr);
   if (!firstName.trim()) {
-    Alert.alert("Missing field", "Please enter first name.");
-    return null;
+    return { ok: false, alertTitle: "Missing field", alertMessage: "Please enter first name." };
   }
   if (!lastName.trim()) {
-    Alert.alert("Missing field", "Please enter last name.");
-    return null;
+    return { ok: false, alertTitle: "Missing field", alertMessage: "Please enter last name." };
   }
   if (!mobile.trim()) {
-    Alert.alert("Missing field", "Please enter mobile number.");
-    return null;
+    return { ok: false, alertTitle: "Missing field", alertMessage: "Please enter mobile number." };
   }
   const em = email.trim();
   if (!em || !EMAIL_RE.test(em)) {
-    Alert.alert("Invalid email", "Please enter a valid email address.");
-    return null;
+    return {
+      ok: false,
+      alertTitle: "Invalid email",
+      alertMessage: "Please enter a valid email address.",
+    };
   }
   if (!addressLine1.trim()) {
-    Alert.alert("Missing field", "Please enter address line 1.");
-    return null;
+    return { ok: false, alertTitle: "Missing field", alertMessage: "Please enter address line 1." };
   }
   if (pinNum === null) {
-    Alert.alert("Invalid PIN", "Please enter a valid 6-digit PIN code.");
-    return null;
+    return {
+      ok: false,
+      alertTitle: "Invalid PIN",
+      alertMessage: "Please enter a valid 6-digit PIN code.",
+    };
   }
   if (!city.trim() || !state.trim() || !country.trim()) {
-    Alert.alert("Missing field", "Please enter city, state, or country.");
-    return null;
+    return {
+      ok: false,
+      alertTitle: "Missing field",
+      alertMessage: "Please enter city, state, or country.",
+    };
   }
 
   const line2 = addressLine2.trim();
   const lm = landmark.trim();
   return {
-    first_name: firstName.trim(),
-    last_name: lastName.trim(),
-    mobile_number: mobile.trim(),
-    email_id: em,
-    pin_code: pinNum,
-    address_line1: addressLine1.trim(),
-    address_line2: line2 ? line2 : null,
-    landmark: lm ? lm : null,
-    city: city.trim(),
-    state: state.trim(),
-    country: country.trim(),
-    address_type: addressType.toLowerCase(),
+    ok: true,
+    payload: {
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      mobile_number: mobile.trim(),
+      email_id: em,
+      pin_code: pinNum,
+      address_line1: addressLine1.trim(),
+      address_line2: line2 ? line2 : null,
+      landmark: lm ? lm : null,
+      city: city.trim(),
+      state: state.trim(),
+      country: country.trim(),
+      address_type: addressType.toLowerCase(),
+    },
   };
+}
+
+export function addressFormSatisfiesPurchase(form: AddressFormState): boolean {
+  return evaluateAddressForm(form).ok;
+}
+
+/**
+ * Validates `form`, shows `Alert` for the first problem, and returns an API payload or `null`.
+ */
+export function buildValidatedPayload(form: AddressFormState): AddressCreatePayload | null {
+  const r = evaluateAddressForm(form);
+  if (!r.ok) {
+    Alert.alert(r.alertTitle, r.alertMessage);
+    return null;
+  }
+  return r.payload;
 }
 
 export function pinLookupHint(lookup: PincodeLookupState): string | null {
