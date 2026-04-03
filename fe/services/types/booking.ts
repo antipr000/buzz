@@ -35,3 +35,35 @@ export type PurchaseResponse = {
   amount: number;
   payment_status: string;
 };
+
+/**
+ * POST /events/bookings — aligned with `be/booking/schemas/booking_schemas.py`.
+ * Datetimes are ISO strings in JSON.
+ */
+
+/** `TicketLineOut` */
+export type BookingTicketLineOut = {
+  ticket_tier: string;
+  price: number;
+  quantity: number;
+  seats: string[];
+};
+
+/** `BookingListItem` */
+export type BookingListItem = {
+  id: string;
+  event_id: string;
+  booking_date: string;
+  title: string;
+  language: string | null;
+  date: string;
+  location: string;
+  tickets: BookingTicketLineOut[];
+  event_image: string | null;
+  status: string;
+};
+
+/** `BookingListResponse` */
+export type BookingListResponse = {
+  data: BookingListItem[];
+};

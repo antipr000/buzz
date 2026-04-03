@@ -3,6 +3,7 @@
  */
 
 export { useAddress } from "./useAddress";
+export { useBookings } from "./useBookings";
 export { useAddresses } from "./useAddresses";
 export { useCreateAddress } from "./useCreateAddress";
 export { useDeleteAddress } from "./useDeleteAddress";

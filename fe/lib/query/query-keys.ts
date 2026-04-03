@@ -38,9 +38,8 @@ export const queryKeys = {
     saved: (p: SavedQueryKeyInput) =>
       [...queryKeys.events.all, "saved", p.limit] as const,
 
-    /** POST /events/bookings — include body filters when you use them */
-    bookings: (body: Record<string, unknown>) =>
-      [...queryKeys.events.all, "bookings", body] as const,
+    /** POST /events/bookings — user’s booking list. */
+    bookings: () => [...queryKeys.events.all, "bookings"] as const,
 
     /** Prefix for GET /events/{id} keys */
     details: () => [...queryKeys.events.all, "detail"] as const,
