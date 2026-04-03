@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/text'
 import { Image, ImageSource } from 'expo-image'
 import { ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { firstParamString } from '@/lib/expo-router/params'
 import type { PurchasePaymentMethod } from '@/constants/paymentMethods'
 import { usePurchaseTickets } from '@/hooks/api'
 import type { PurchaseAddressIn, PurchaseBody, PurchaseTicketLine } from '@/services/types/booking'
@@ -25,11 +26,6 @@ const PAYMENT_OPTIONS: {
     { id: 'cod', method: 'cash_on_delivery', label: 'Cash on Delivery', icon: require('@/assets/images/payments/cod.svg') },
 ];
 
-function firstParamString(v: string | string[] | undefined): string | undefined {
-    if (v == null) return undefined;
-    return Array.isArray(v) ? v[0] : v;
-}
-
 /** Route params are strings; previous screens send either addressId (saved) or address JSON (new). */
 function checkoutFromParams(params: {
     eventId?: string | string[];
@@ -37,9 +33,9 @@ function checkoutFromParams(params: {
     addressId?: string | string[];
     address?: string | string[];
 }): CheckoutState {
-    const eventId = firstParamString(params.eventId)?.trim();
+    const eventId = firstParamString(params.eventId);
     const ticketsJson = firstParamString(params.tickets);
-    const addressId = firstParamString(params.addressId)?.trim();
+    const addressId = firstParamString(params.addressId);
     const addressJson = firstParamString(params.address);
     if (!eventId || !ticketsJson) return { ok: false };
     if (!addressId && !addressJson) return { ok: false };

@@ -19,13 +19,7 @@ import {
     emptyAddressForm,
     type AddressFormState,
 } from '@/components/address/addressFormModel'
-
-function firstParamString(v: string | string[] | undefined): string | undefined {
-    if (v === undefined) return undefined
-    const s = typeof v === 'string' ? v : v[0]
-    const t = s?.trim()
-    return t || undefined
-}
+import { firstParamString } from '@/lib/expo-router/params'
 
 type CheckoutAddressMode = 'saved' | 'new'
 

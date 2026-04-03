@@ -2,7 +2,13 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Text } from '@/components/ui/text'
 import { useBookings } from '@/hooks/api'
-import type { BookingListItem, BookingTicketLineOut } from '@/services/types/booking'
+import {
+    formatBookingDoneAt,
+    formatEventWhen,
+    formatTicketLines,
+    getBookingStatusPresentation,
+} from '@/lib/bookings/display'
+import type { BookingListItem } from '@/services/types/booking'
 import { isAxiosError } from 'axios'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
@@ -23,81 +29,6 @@ function isUnauthorizedError(error: unknown): boolean {
     if (!isAxiosError(error)) return false
     const s = error.response?.status
     return s === 401 || s === 403
-}
-
-function formatBookingDoneAt(iso: string): string {
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return iso
-    return d.toLocaleString(undefined, {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        second: '2-digit',
-    })
-}
-
-function formatEventWhen(iso: string): string {
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return iso
-    const datePart = d.toLocaleDateString(undefined, {
-        weekday: 'short',
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    })
-    const timePart = d.toLocaleTimeString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-    })
-    return `${datePart} | ${timePart}`
-}
-
-function formatTicketLines(tickets: BookingTicketLineOut[]): string {
-    return tickets
-        .map((line) => {
-            const seats = line.seats.map((s) => s.trim()).filter(Boolean)
-            const seatPart = seats.length ? ` - ${seats.join(', ')}` : ''
-            const n = line.quantity
-            const unit = n === 1 ? 'Ticket' : 'Tickets'
-            return `${n} ${unit}: ${line.ticket_tier}${seatPart}`
-        })
-        .join('\n')
-}
-
-function getBookingStatusPresentation(status: string): {
-    label: string
-    message: string
-    badgeClassName: string
-} {
-    const u = status.trim().toUpperCase()
-    switch (u) {
-        case 'UPCOMING':
-            return {
-                label: 'UPCOMING',
-                message: 'Your e-ticket is ready. See you at the event!',
-                badgeClassName: 'bg-[rgba(59,130,246,1)]',
-            }
-        case 'ATTENDED':
-            return {
-                label: 'ATTENDED',
-                message: 'Hope you had an amazing time!',
-                badgeClassName: 'bg-[rgba(145,145,145,1)]',
-            }
-        case 'CANCELLED':
-            return {
-                label: 'CANCELLED',
-                message: 'This booking was cancelled.',
-                badgeClassName: 'bg-[rgba(239,68,68,1)]',
-            }
-        default:
-            return {
-                label: u || status,
-                message: '',
-                badgeClassName: 'bg-[rgba(145,145,145,1)]',
-            }
-    }
 }
 
 const Events = () => {
