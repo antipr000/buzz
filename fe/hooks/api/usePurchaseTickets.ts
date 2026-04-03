@@ -13,6 +13,8 @@ export function usePurchaseTickets() {
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.events.all, "bookings"],
       });
+      /** New checkout addresses are created on the server during purchase (not via useCreateAddress). */
+      queryClient.invalidateQueries({ queryKey: queryKeys.addresses.all });
     },
   });
 }
