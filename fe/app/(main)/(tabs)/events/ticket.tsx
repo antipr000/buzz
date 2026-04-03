@@ -12,7 +12,10 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native'
+import QRCode from 'react-native-qrcode-svg'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+const QR_SIZE = 168
 
 const Ticket = () => {
     const router = useRouter()
@@ -166,11 +169,14 @@ const Ticket = () => {
 
                     <View className='bg-white w-full max-w-[400px] self-center rounded-xl overflow-hidden border border-[rgba(0,0,0,0.06)]'>
                         <View className='items-center pt-8 pb-6 px-4'>
-                            <Image
-                                source={require('@/assets/images/qr.svg')}
-                                style={{ width: 90, height: 90 }}
-                                contentFit='contain'
-                            />
+                            <View className='rounded-xl bg-white p-2'>
+                                <QRCode
+                                    value={booking.id}
+                                    size={QR_SIZE}
+                                    color='rgb(15,23,42)'
+                                    backgroundColor='#ffffff'
+                                />
+                            </View>
                             <Text className='text-[rgba(15,23,42,0.6)] font-medium text-xs tracking-wider mt-5'>
                                 BOOKING ID
                             </Text>
