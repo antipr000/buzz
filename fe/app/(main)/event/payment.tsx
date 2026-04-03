@@ -1,11 +1,13 @@
-import { View, ScrollView, TouchableOpacity } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import React from 'react'
+import { View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import React, { useMemo, useState } from 'react'
 import { Text } from '@/components/ui/text'
 import { Image, ImageSource } from 'expo-image'
 import { ChevronLeft, ChevronRight } from 'lucide-react-native'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import type { PurchasePaymentMethod } from '@/constants/paymentMethods'
+import { usePurchaseTickets } from '@/hooks/api'
+import type { PurchaseAddressIn, PurchaseBody, PurchaseTicketLine } from '@/services/types/booking'
 
 /** Stable row id for React; `method` is the API `payment_method` string. */
 const PAYMENT_OPTIONS: {
@@ -23,66 +25,190 @@ const PAYMENT_OPTIONS: {
     { id: 'cod', method: 'cash_on_delivery', label: 'Cash on Delivery', icon: require('@/assets/images/payments/cod.svg') },
 ];
 
+function firstParamString(v: string | string[] | undefined): string | undefined {
+    if (v == null) return undefined;
+    return Array.isArray(v) ? v[0] : v;
+}
+
+/** Route params are strings; previous screens send JSON we shaped for `PurchaseBody`. */
+function checkoutFromParams(params: {
+    eventId?: string | string[];
+    tickets?: string | string[];
+    address?: string | string[];
+}): CheckoutState {
+    const eventId = firstParamString(params.eventId)?.trim();
+    const ticketsJson = firstParamString(params.tickets);
+    const addressJson = firstParamString(params.address);
+    if (!eventId || !ticketsJson || !addressJson) return { ok: false };
+    try {
+        const tickets = JSON.parse(ticketsJson) as PurchaseTicketLine[];
+        const address = JSON.parse(addressJson) as PurchaseAddressIn;
+        if (!Array.isArray(tickets) || tickets.length === 0) return { ok: false };
+        return { ok: true, eventId, tickets, address };
+    } catch {
+        return { ok: false };
+    }
+}
+
+type CheckoutReady = {
+    ok: true;
+    eventId: string;
+    tickets: PurchaseTicketLine[];
+    address: PurchaseAddressIn;
+};
+
+type CheckoutState = CheckoutReady | { ok: false };
+
+function useCheckoutFromParams(): CheckoutState {
+    const params = useLocalSearchParams<{
+        eventId?: string | string[];
+        tickets?: string | string[];
+        address?: string | string[];
+    }>();
+    return useMemo(() => checkoutFromParams(params), [params.eventId, params.tickets, params.address]);
+}
+
 const Payment = () => {
     const router = useRouter();
-// TODO: See if we can use the layout
+    const insets = useSafeAreaInsets();
+    const checkout = useCheckoutFromParams();
+    const purchase = usePurchaseTickets();
+    const [selectedMethod, setSelectedMethod] = useState<PurchasePaymentMethod | null>(null);
+
+    const submitPurchase = (method: PurchasePaymentMethod) => {
+        if (!checkout.ok || purchase.isPending) return;
+        const body: PurchaseBody = {
+            event_id: checkout.eventId,
+            tickets: checkout.tickets,
+            address: checkout.address,
+            payment_method: method,
+        };
+        purchase.mutate(body, {
+            onSuccess: (data) => {
+                Alert.alert(
+                    'Booking created',
+                    `Reference: ${data.booking_id}. Payment is pending (${data.payment_status}).`,
+                    [{ text: 'OK', onPress: () => router.replace('/(main)/(tabs)/events') }],
+                );
+            },
+            onError: (err) => {
+                Alert.alert(
+                    'Could not complete purchase',
+                    err instanceof Error ? err.message : 'Please try again.',
+                );
+            },
+        });
+    };
+
+    const canProceed = selectedMethod != null && !purchase.isPending;
+
+    /** One source of truth with footer: pt-4 (16) + Proceed h-10 (40) + bottom inset */
+    const footerBottomInset = Math.max(insets.bottom, 16);
+    const scrollPaddingBottom = 16 + 40 + footerBottomInset;
+
+    if (!checkout.ok) {
+        return (
+            <SafeAreaView edges={['top']} className="flex-1 bg-white">
+                <View className="flex-row items-center px-5 py-5 pb-4">
+                    <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} className="hitSlop-10">
+                        <ChevronLeft size={20} color="rgba(29,27,32,1)" />
+                    </TouchableOpacity>
+                    <Text className="font-bold text-sm text-secondary-foreground ml-4">Payment</Text>
+                </View>
+                <View className="flex-1 px-5 justify-center items-center">
+                    <Text className="text-center text-secondary-foreground text-sm mb-4">
+                        Missing checkout data or bad JSON. Go back and continue from the event.
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => router.back()}
+                        activeOpacity={0.8}
+                        className="bg-primary px-6 py-3 rounded-lg"
+                    >
+                        <Text className="text-white font-semibold text-sm">Go back</Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
-        <SafeAreaView edges={['top']} className='flex-1 '>
-            {/* Header */}
-            <View className='flex-row items-center px-5 py-5 pb-4 '>
-                <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} className='hitSlop-10'>
+        <SafeAreaView edges={['top']} className="flex-1 ">
+            <View className="flex-row items-center px-5 py-5 pb-4 ">
+                <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} className="hitSlop-10">
                     <ChevronLeft size={20} color="rgba(29,27,32,1)" />
                 </TouchableOpacity>
-                <Text className='font-bold text-sm text-secondary-foreground ml-4'>Payment</Text>
+                <Text className="font-bold text-sm text-secondary-foreground ml-4">Payment</Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+            <View className="flex-1 relative">
+                {purchase.isPending ? (
+                    <View
+                        className="absolute inset-0 z-10 bg-white/60 items-center justify-center"
+                        pointerEvents="auto"
+                    >
+                        <ActivityIndicator size="large" color="rgba(79,70,229,1)" />
+                    </View>
+                ) : null}
 
-                {/* Offers Section */}
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: scrollPaddingBottom }}
+                >
+
                 <TouchableOpacity
                     activeOpacity={0.7}
-                    className='bg-white flex-row items-center justify-between px-5 py-4 border-b border-[rgba(0,0,0,0.05)] shadow-sm'
+                    className="bg-white flex-row items-center justify-between px-5 py-4 border-b border-[rgba(0,0,0,0.05)] shadow-sm"
                 >
-                    <Text className='font-bold text-[12px] text-secondary-foreground'>Coupons & Bank Offers</Text>
-                    <View className='flex-row items-center'>
-                        <Text className='font-semibold text-[11px] text-primary mr-1'>All offers</Text>
+                    <Text className="font-bold text-[12px] text-secondary-foreground">Coupons & Bank Offers</Text>
+                    <View className="flex-row items-center">
+                        <Text className="font-semibold text-[11px] text-primary mr-1">All offers</Text>
                         <ChevronRight size={14} color="#7E22CE" />
                     </View>
                 </TouchableOpacity>
 
-                {/* Section Title */}
-                <View className='px-5 py-5 pb-3'>
-                    <Text className='font-bold text-xs text-[rgba(15,23,42,0.7)] tracking-wider'>PAYMENT OPTIONS</Text>
+                <View className="px-5 py-5 pb-3">
+                    <Text className="font-bold text-xs text-[rgba(15,23,42,0.7)] tracking-wider">PAYMENT OPTIONS</Text>
                 </View>
 
-                {/* Payment Options List */}
-                <View className='bg-white '>
-                    {PAYMENT_OPTIONS.map((option, index) => (
-                        <TouchableOpacity
-                            key={option.id}
-                            activeOpacity={0.7}
-                            className={`flex-row items-center px-5 py-4 ${index !== PAYMENT_OPTIONS.length - 1 ? 'border-b border-[rgba(0,0,0,0.1)]' : ''
-                                }`}
-                        >
-                            <View className='w-6 items-center justify-center mr-3'>
-                                <Image source={option.icon} style={{ width: 18, height: 18 }} contentFit='contain' />
-                            </View>
-                            <Text className='font-semibold text-[12px] text-secondary-foreground'>{option.label}</Text>
-                        </TouchableOpacity>
-                    ))}
+                <View className="bg-white ">
+                    {PAYMENT_OPTIONS.map((option, index) => {
+                        const selected = selectedMethod === option.method;
+                        return (
+                            <TouchableOpacity
+                                key={option.id}
+                                activeOpacity={0.7}
+                                disabled={purchase.isPending}
+                                onPress={() => setSelectedMethod(option.method)}
+                                className={`flex-row items-center px-5 py-4 ${selected ? 'bg-[rgba(79,70,229,0.08)]' : ''
+                                    } ${index !== PAYMENT_OPTIONS.length - 1 ? 'border-b border-[rgba(0,0,0,0.1)]' : ''}`}
+                            >
+                                <View className="w-6 items-center justify-center mr-3">
+                                    <Image source={option.icon} style={{ width: 18, height: 18 }} contentFit="contain" />
+                                </View>
+                                <Text className="font-semibold text-[12px] text-secondary-foreground flex-1">{option.label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
-            </ScrollView>
+                </ScrollView>
 
-            {/* Bottom Proceed Button */}
-            <View className='absolute bottom-0 w-full bg-white px-5 py-4 border-t border-[rgba(0,0,0,0.05)] pt-4 pb-8 shadow-sm'>
-                <TouchableOpacity activeOpacity={0.8} className='bg-primary w-full h-10 rounded-lg items-center justify-center'>
-                    <Text className='text-white font-semibold text-sm'>Proceed</Text>
-                </TouchableOpacity>
+                <View
+                    className="absolute bottom-0 w-full bg-white px-5 py-4 border-t border-[rgba(0,0,0,0.05)] pt-4 shadow-sm"
+                    style={{ paddingBottom: footerBottomInset }}
+                >
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        disabled={!canProceed}
+                        onPress={() => selectedMethod && submitPurchase(selectedMethod)}
+                        className={`w-full h-10 rounded-lg items-center justify-center bg-primary ${canProceed ? 'opacity-100' : 'opacity-40'}`}
+                    >
+                        <Text className="text-white font-semibold text-sm">Proceed</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-
         </SafeAreaView>
-    )
-}
+    );
+};
 
 export default Payment;
