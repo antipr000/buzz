@@ -33,7 +33,8 @@ class TicketLineIn(SchemaModel):
 class PurchaseBody(SchemaModel):
     event_id: str
     tickets: list[TicketLineIn]
-    address: AddressIn
+    address_id: str | None = None
+    address: AddressIn | None = None
     payment_method: PaymentMethod
 
 

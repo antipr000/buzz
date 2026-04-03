@@ -48,25 +48,31 @@ class BookingService:
         if total <= 0:
             raise ValueError("Invalid ticket total")
 
-        addr_in = body.address
-
-        addr = Address(
-            user_id=user_id,
-            address_type=addr_in.address_type,
-            first_name=addr_in.first_name,
-            last_name=addr_in.last_name,
-            mobile_number=addr_in.mobile_number,
-            email=addr_in.email_id,
-            address_line1=addr_in.address_line1,
-            address_line2=addr_in.address_line2,
-            landmark=addr_in.landmark,
-            city=addr_in.city,
-            state=addr_in.state,
-            country=addr_in.country,
-            pin_code=addr_in.pin_code,
-        )
-        db.add(addr)
-        await db.flush()
+        if body.address_id is not None:
+            addr = await db.get(Address, body.address_id)
+            if addr is None or addr.user_id != user_id:
+                raise ValueError("Address not found")
+        else:
+            addr_in = body.address
+            if addr_in is None:
+                raise ValueError("address is required when address_id is not sent")
+            addr = Address(
+                user_id=user_id,
+                address_type=addr_in.address_type,
+                first_name=addr_in.first_name,
+                last_name=addr_in.last_name,
+                mobile_number=addr_in.mobile_number,
+                email=addr_in.email_id,
+                address_line1=addr_in.address_line1,
+                address_line2=addr_in.address_line2,
+                landmark=addr_in.landmark,
+                city=addr_in.city,
+                state=addr_in.state,
+                country=addr_in.country,
+                pin_code=addr_in.pin_code,
+            )
+            db.add(addr)
+            await db.flush()
 
         booking = Booking(
             user_id=user_id,

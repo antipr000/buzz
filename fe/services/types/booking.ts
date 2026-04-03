@@ -18,13 +18,15 @@ export type PurchaseTicketLine = {
 /** `AddressIn` — same field set as saved-address create payload */
 export type PurchaseAddressIn = AddressCreatePayload;
 
-/** `PurchaseBody` */
+/** `PurchaseBody` — send exactly one of `address_id` (saved) or `address` (new). */
 export type PurchaseBody = {
   event_id: string;
   tickets: PurchaseTicketLine[];
-  address: PurchaseAddressIn;
   payment_method: PurchasePaymentMethod;
-};
+} & (
+  | { address_id: string; address?: never }
+  | { address: PurchaseAddressIn; address_id?: never }
+);
 
 /** `PurchaseResponse` */
 export type PurchaseResponse = {

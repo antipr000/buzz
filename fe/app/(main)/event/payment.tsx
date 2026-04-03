@@ -30,20 +30,24 @@ function firstParamString(v: string | string[] | undefined): string | undefined 
     return Array.isArray(v) ? v[0] : v;
 }
 
-/** Route params are strings; previous screens send JSON we shaped for `PurchaseBody`. */
+/** Route params are strings; previous screens send either addressId (saved) or address JSON (new). */
 function checkoutFromParams(params: {
     eventId?: string | string[];
     tickets?: string | string[];
+    addressId?: string | string[];
     address?: string | string[];
 }): CheckoutState {
     const eventId = firstParamString(params.eventId)?.trim();
     const ticketsJson = firstParamString(params.tickets);
+    const addressId = firstParamString(params.addressId)?.trim();
     const addressJson = firstParamString(params.address);
-    if (!eventId || !ticketsJson || !addressJson) return { ok: false };
+    if (!eventId || !ticketsJson) return { ok: false };
+    if (!addressId && !addressJson) return { ok: false };
     try {
         const tickets = JSON.parse(ticketsJson) as PurchaseTicketLine[];
-        const address = JSON.parse(addressJson) as PurchaseAddressIn;
         if (!Array.isArray(tickets) || tickets.length === 0) return { ok: false };
+        if (addressId) return { ok: true, eventId, tickets, addressId };
+        const address = JSON.parse(addressJson!) as PurchaseAddressIn;
         return { ok: true, eventId, tickets, address };
     } catch {
         return { ok: false };
@@ -54,8 +58,10 @@ type CheckoutReady = {
     ok: true;
     eventId: string;
     tickets: PurchaseTicketLine[];
-    address: PurchaseAddressIn;
-};
+} & (
+    | { addressId: string; address?: never }
+    | { address: PurchaseAddressIn; addressId?: never }
+);
 
 type CheckoutState = CheckoutReady | { ok: false };
 
@@ -63,9 +69,13 @@ function useCheckoutFromParams(): CheckoutState {
     const params = useLocalSearchParams<{
         eventId?: string | string[];
         tickets?: string | string[];
+        addressId?: string | string[];
         address?: string | string[];
     }>();
-    return useMemo(() => checkoutFromParams(params), [params.eventId, params.tickets, params.address]);
+    return useMemo(
+        () => checkoutFromParams(params),
+        [params.eventId, params.tickets, params.addressId, params.address],
+    );
 }
 
 const Payment = () => {
@@ -77,12 +87,9 @@ const Payment = () => {
 
     const submitPurchase = (method: PurchasePaymentMethod) => {
         if (!checkout.ok || purchase.isPending) return;
-        const body: PurchaseBody = {
-            event_id: checkout.eventId,
-            tickets: checkout.tickets,
-            address: checkout.address,
-            payment_method: method,
-        };
+        const body: PurchaseBody = checkout.addressId
+            ? { event_id: checkout.eventId, tickets: checkout.tickets, address_id: checkout.addressId, payment_method: method }
+            : { event_id: checkout.eventId, tickets: checkout.tickets, address: checkout.address!, payment_method: method };
         purchase.mutate(body, {
             onSuccess: (data) => {
                 Alert.alert(

@@ -12,7 +12,6 @@ import { ChevronLeft } from 'lucide-react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import AddressForm from '@/components/address/AddressForm'
 import { savedAddressSummary } from '@/components/address/savedAddressSummary'
-import { addressOutToPurchasePayload } from '@/components/address/addressOutToPurchase'
 import { useAddresses } from '@/hooks/api'
 import {
     addressFormSatisfiesPurchase,
@@ -20,7 +19,6 @@ import {
     emptyAddressForm,
     type AddressFormState,
 } from '@/components/address/addressFormModel'
-import type { PurchaseAddressIn } from '@/services/types/booking'
 
 function firstParamString(v: string | string[] | undefined): string | undefined {
     if (v === undefined) return undefined
@@ -117,24 +115,30 @@ const AddressDetails = () => {
             return
         }
 
-        let addressPayload: PurchaseAddressIn
         if (addressMode === 'saved') {
-            addressPayload = addressOutToPurchasePayload(selectedSavedRow!)
+            if (!selectedSavedRow) return
+            router.push({
+                pathname: '/event/payment',
+                params: {
+                    eventId,
+                    tickets: ticketsJson,
+                    eventTitle: firstParamString(params.eventTitle) ?? '',
+                    addressId: selectedSavedRow.id,
+                },
+            })
         } else {
             const body = buildValidatedPayload(checkoutForm)
             if (!body) return
-            addressPayload = body
+            router.push({
+                pathname: '/event/payment',
+                params: {
+                    eventId,
+                    tickets: ticketsJson,
+                    eventTitle: firstParamString(params.eventTitle) ?? '',
+                    address: JSON.stringify(body),
+                },
+            })
         }
-
-        router.push({
-            pathname: '/event/payment',
-            params: {
-                eventId,
-                tickets: ticketsJson,
-                eventTitle: firstParamString(params.eventTitle) ?? '',
-                address: JSON.stringify(addressPayload),
-            },
-        })
     }
 
     return (
