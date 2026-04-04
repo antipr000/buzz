@@ -9,16 +9,29 @@ export type StoredUserLocation = {
   updatedAt: number;
 };
 
-export async function persistUserLocation(loc: LocationObject): Promise<void> {
-  const { latitude, longitude } = loc.coords;
+export async function persistUserLocationCoords(input: {
+  latitude: number;
+  longitude: number;
+  updatedAt?: number;
+}): Promise<void> {
+  const updatedAt = input.updatedAt ?? Date.now();
   await AsyncStorage.setItem(
     USER_LOCATION_KEY,
     JSON.stringify({
-      latitude,
-      longitude,
-      updatedAt: loc.timestamp,
+      latitude: input.latitude,
+      longitude: input.longitude,
+      updatedAt,
     } satisfies StoredUserLocation)
   );
+}
+
+export async function persistUserLocation(loc: LocationObject): Promise<void> {
+  const { latitude, longitude } = loc.coords;
+  await persistUserLocationCoords({
+    latitude,
+    longitude,
+    updatedAt: loc.timestamp,
+  });
 }
 
 export async function readUserLocation(): Promise<StoredUserLocation | null> {

@@ -1,75 +1,155 @@
-import { View, TouchableOpacity, TextInput } from 'react-native'
-import React from 'react'
-import { Text } from '@/components/ui/text'
-import { Image } from 'expo-image'
-import { Search } from 'lucide-react-native'
-import PageLayout from '@/components/layout/PageLayout'
+import PageLayout from '@/components/layout/PageLayout';
+import {
+  LocationField,
+  type PickedLocation,
+} from '@/components/create-event/LocationField';
+import { Text } from '@/components/ui/text';
+import { requestAndPersistCurrentLocation } from '@/lib/location/request-and-persist-current-location';
+import { persistUserLocationCoords } from '@/lib/location/user-location';
+import { Image } from 'expo-image';
+import { router } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const Location = () => {
-    const popularCities = [
-        { name: 'Bangalore', icon: require('@/assets/images/settings/location/bangalore.svg') },
-        { name: 'Mumbai', icon: require('@/assets/images/settings/location/mumbai.svg') },
-        { name: 'Hyderabad', icon: require('@/assets/images/settings/location/hyderabad.svg') },
-        { name: 'Ahmedabad', icon: require('@/assets/images/settings/location/ahemadabad.svg') },
-        { name: 'Delhi-NCR', icon: require('@/assets/images/settings/location/delhi.svg') },
-        { name: 'Pune', icon: require('@/assets/images/settings/location/pune.svg') },
-    ];
+  const [requestingGPS, setRequestingGPS] = useState(false);
 
-    const otherCities = [
-        'Kolkata', 'Pune', 'Gurugram', 'Chennai', 'Kochi'
-    ];
+  const popularCities = [
+    { name: 'Bangalore', icon: require('@/assets/images/settings/location/bangalore.svg') },
+    { name: 'Mumbai', icon: require('@/assets/images/settings/location/mumbai.svg') },
+    { name: 'Hyderabad', icon: require('@/assets/images/settings/location/hyderabad.svg') },
+    { name: 'Ahmedabad', icon: require('@/assets/images/settings/location/ahemadabad.svg') },
+    { name: 'Delhi-NCR', icon: require('@/assets/images/settings/location/delhi.svg') },
+    { name: 'Pune', icon: require('@/assets/images/settings/location/pune.svg') },
+  ];
 
-    return (
-        <PageLayout title="Location">
+  const otherCities = [
+    'Kolkata', 'Pune', 'Gurugram', 'Chennai', 'Kochi',
+  ];
 
-            {/* Auto Detect & Search */}
-            <View className=' px-5 py-4'>
-                <TouchableOpacity activeOpacity={0.7} className='flex-row items-center gap-2 mb-4'>
-                    <Image source={require('@/assets/images/settings/location/target.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
-                    <Text className='text-[rgba(255,13,13,1)] text-xs '>Auto Detect My Location</Text>
-                </TouchableOpacity>
+  const onAutoDetect = useCallback(async () => {
+    setRequestingGPS(true);
+    try {
+      const result = await requestAndPersistCurrentLocation();
+      if (result.ok) {
+        router.replace('/(main)/(tabs)');
+        return;
+      }
+      if (result.reason === 'denied') {
+        Alert.alert(
+          'Location access',
+          'Permission was denied. You can enable it in system settings or enter a location manually.',
+        );
+        return;
+      }
+      //{ ok: false, reason: "error" }
+      Alert.alert(
+        'Could not get location',
+        'Something went wrong reading your position. Try again or enter a location manually.',
+      );
+    } finally {
+      setRequestingGPS(false);
+    }
+  }, []);
 
-                <View className='flex-row items-center bg-white border border-[rgba(0,0,0,0.1)] rounded-md px-3 py-px'>
-                    <Search size={15} color="#000" />
-                    <TextInput
-                        placeholder="Search for your city"
-                        className='flex-1 ml-2 text-xs placeholder:text-[rgba(15,23,42,0.5)]'
-                        placeholderTextColor="rgba(15,23,42,0.5)"
-                    />
-                </View>
+  const onLocationChange = useCallback((picked: PickedLocation | null) => {
+    if (!picked) return;
+    persistUserLocationCoords({
+      latitude: picked.latitude,
+      longitude: picked.longitude,
+    })
+      .then(() => router.replace('/(main)/(tabs)'))
+      .catch((e) => {
+        console.warn('Persist location error', e);
+        Alert.alert(
+          'Could not save location',
+          'Something went wrong saving your choice. Try again.',
+        );
+      });
+  }, []);
+
+  return (
+    <PageLayout title="Location" keyboardShouldPersistTaps="handled">
+      {/* Auto Detect & Search */}
+      <View className="px-5 py-4">
+        <TouchableOpacity
+          activeOpacity={0.7}
+          className="mb-4 flex-row items-center gap-2"
+          onPress={onAutoDetect}
+          disabled={requestingGPS}
+        >
+          <Image
+            source={require('@/assets/images/settings/location/target.svg')}
+            style={{ width: 16, height: 16 }}
+            contentFit="contain"
+          />
+          {requestingGPS ? (
+            <ActivityIndicator size="small" color="rgba(255,13,13,1)" />
+          ) : null}
+          <Text
+            className={`text-xs text-[rgba(255,13,13,1)] ${requestingGPS ? 'opacity-70' : ''}`}
+          >
+            Auto Detect My Location
+          </Text>
+        </TouchableOpacity>
+
+        <View className="gap-1">
+          <Text className="text-xs font-semibold text-secondary-foreground">
+            Search
+          </Text>
+          <View className="relative justify-center">
+            <View className="pointer-events-none absolute left-3 z-10">
+              <Image
+                source={require('@/assets/images/create/location.svg')}
+                style={{ width: 12, height: 12 }}
+                contentFit="contain"
+              />
             </View>
+            <LocationField
+              onLocationChange={onLocationChange}
+              placeholder="Search for your city"
+            />
+          </View>
+        </View>
+      </View>
 
-            {/* Popular Cities */}
-            <View className=' px-5 py-4'>
-                <Text className='text-xs font-bold text-secondary-foreground'>POPULAR CITIES</Text>
+      {/* Popular Cities */}
+      <View className="px-5 py-4">
+        <Text className="text-xs font-bold text-secondary-foreground">
+          POPULAR CITIES
+        </Text>
+      </View>
+
+      <View className="flex-row flex-wrap bg-white px-5 py-6 gap-y-6">
+        {popularCities.map((city, index) => (
+          <TouchableOpacity key={index} activeOpacity={0.7} className="w-1/4 items-center">
+            <View className="mb-2 h-16 w-16 items-center justify-center rounded-full border border-[rgba(0,0,0,0.3)]">
+              <Image source={city.icon} style={{ width: 45, height: 45 }} contentFit="contain" />
             </View>
+            <Text className="text-center text-[12px] font-medium text-primary">{city.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-            <View className='bg-white px-5 py-6 flex-row flex-wrap gap-y-6'>
-                {popularCities.map((city, index) => (
-                    <TouchableOpacity key={index} activeOpacity={0.7} className='items-center w-1/4'>
-                        <View className='w-16 h-16 rounded-full border border-[rgba(0,0,0,0.3)] items-center justify-center mb-2'>
-                            <Image source={city.icon} style={{ width: 45, height: 45 }} contentFit="contain" />
-                        </View>
-                        <Text className='text-primary text-[12px] font-medium text-center'>{city.name}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
+      {/* Other Cities */}
+      <View className="px-5 py-4">
+        <Text className="text-xs font-bold text-secondary-foreground">OTHER CITIES</Text>
+      </View>
 
-            {/* Other Cities */}
-            <View className=' px-5 py-4'>
-                <Text className='text-xs font-bold text-secondary-foreground'>OTHER CITIES</Text>
-            </View>
-
-            <View className='bg-white px-5 py-3'>
-                {otherCities.map((city, index) => (
-                    <TouchableOpacity key={index} activeOpacity={0.7} className='py-4'>
-                        <Text className='text-secondary-foreground text-xs'>{city}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-        </PageLayout>
-    )
-}
+      <View className="bg-white px-5 py-3">
+        {otherCities.map((city, index) => (
+          <TouchableOpacity key={index} activeOpacity={0.7} className="py-4">
+            <Text className="text-xs text-secondary-foreground">{city}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </PageLayout>
+  );
+};
 
 export default Location;

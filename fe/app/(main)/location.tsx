@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Text } from "@/components/ui/text";
 import { Image } from "expo-image";
-import * as Location from "expo-location";
 import { Link, router } from "expo-router";
-import { persistUserLocation } from "@/lib/location/user-location";
+import { requestAndPersistCurrentLocation } from "@/lib/location/request-and-persist-current-location";
 import React, { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,21 +13,18 @@ export default function LocationAccessScreen() {
     const onAllowLocation = useCallback(async () => {
         setRequesting(true);
         try {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
+            const result = await requestAndPersistCurrentLocation();
+            if (result.ok) {
+                router.replace("/(main)/(tabs)");
+                return;
+            }
+            if (result.reason === "denied") {
                 Alert.alert(
                     "Location access",
                     "Permission was denied. You can enable it in system settings or enter a location manually."
                 );
                 return;
             }
-            const position = await Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Balanced,
-            });
-            await persistUserLocation(position);
-            router.replace("/(main)/(tabs)");
-        } catch (e) {
-            console.warn("Location error", e);
             Alert.alert(
                 "Could not get location",
                 "Something went wrong reading your position. Try again or enter a location manually."

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, ViewStyle } from 'react-native';
+import { View, ScrollView, ViewStyle, type ScrollViewProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
 import BackButton from './BackButton';
@@ -14,6 +14,7 @@ interface PageLayoutProps {
   className?: string;
   headerClassName?: string;
   scrollClassName?: string;
+  keyboardShouldPersistTaps?: ScrollViewProps['keyboardShouldPersistTaps'];
 }
 
 const PageLayout = ({
@@ -26,6 +27,7 @@ const PageLayout = ({
   className = '',
   headerClassName = '',
   scrollClassName = '',
+  keyboardShouldPersistTaps,
 }: PageLayoutProps) => {
   return (
     <SafeAreaView edges={['top']} className={`flex-1 bg-white ${className}`}>
@@ -44,6 +46,7 @@ const PageLayout = ({
           showsVerticalScrollIndicator={false}
           className={`flex-1 bg-background ${scrollClassName}`}
           contentContainerStyle={contentContainerStyle}
+          keyboardShouldPersistTaps={keyboardShouldPersistTaps}
         >
           {children}
         </ScrollView>
