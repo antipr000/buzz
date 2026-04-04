@@ -16,6 +16,11 @@ export type ProfileMeResponse = {
   profile_image: string | null;
 };
 
+/** POST /user/profile/avatar — matches `be/profile/schemas/detail.py`. */
+export type ProfileAvatarUploadResponse = {
+  public_url: string;
+};
+
 /** PATCH /user/profile body — only include keys you want to change; omit others (partial update). */
 export type ProfilePatchPayload = Partial<{
   full_name: string;

@@ -24,6 +24,10 @@ class ProfileMeResponse(SchemaModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class ProfileAvatarUploadResponse(SchemaModel):
+    public_url: str
+
+
 class ProfilePatchBody(SchemaModel):
     """Partial update: only keys present in the JSON body are applied. Omitted keys leave DB unchanged."""
 

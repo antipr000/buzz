@@ -48,6 +48,10 @@ class Config(BaseSettings):
         le=50_000_000,
     )
 
+    # GCS profile avatars (multipart upload); separate bucket from event covers. Objects should allow
+    # anonymous GET if the app stores public storage.googleapis.com URLs in profile_image.
+    gcs_profile_avatars_bucket: str = Field(default="", alias="GCS_PROFILE_AVATARS_BUCKET")
+
     @property
     def db_url(self) -> str:
         return f"{self.db_engine}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"

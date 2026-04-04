@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import type {
+  ProfileAvatarUploadResponse,
   ProfileMeResponse,
   ProfilePatchPayload,
   ProfileStatsResponse,
@@ -37,6 +38,46 @@ export async function patchProfileMe(
 export async function getProfileStats(): Promise<ProfileStatsResponse> {
   const { data } = await apiClient.get<ProfileStatsResponse>(
     `${profileRoot}/profile/stats`
+  );
+  return data;
+}
+
+const AVATAR_FILENAME: Partial<Record<string, string>> = {
+  "image/png": "avatar.png",
+  "image/webp": "avatar.webp",
+  "image/jpeg": "avatar.jpg",
+  "image/jpg": "avatar.jpg",
+};
+
+function resolveAvatarContentType(
+  uri: string,
+  mimeType: string | null | undefined
+): string {
+  const m = mimeType?.trim();
+  if (m) return m;
+  const u = uri.toLowerCase();
+  if (u.endsWith(".png")) return "image/png";
+  if (u.endsWith(".webp")) return "image/webp";
+  return "image/jpeg";
+}
+
+/** Multipart upload of a local image URI (React Native). Requires auth. */
+export async function uploadProfileAvatar(
+  uri: string,
+  mimeType: string | null | undefined
+): Promise<ProfileAvatarUploadResponse> {
+  const type = resolveAvatarContentType(uri, mimeType);
+  const name = AVATAR_FILENAME[type] ?? "avatar.jpg";
+  const form = new FormData();
+  form.append("file", { uri, type, name } as unknown as Blob);
+
+  const { data } = await apiClient.post<ProfileAvatarUploadResponse>(
+    `${profileRoot}/profile/avatar`,
+    form,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+      transformRequest: (payload) => payload,
+    }
   );
   return data;
 }
