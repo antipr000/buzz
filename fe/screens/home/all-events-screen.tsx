@@ -1,6 +1,8 @@
 import FeaturedEventCard from "@/components/events/FeaturedEventCard";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
 import { useInfiniteDiscoverEvents } from "@/hooks/api";
+import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { readUserLocation, type StoredUserLocation } from "@/lib/location/user-location";
 import { toFeaturedDiscoverProps } from "@/screens/home/discoverAdapters";
 import { useFocusEffect } from "@react-navigation/native";
@@ -18,6 +20,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function AllEventsScreen() {
   const router = useRouter();
   const [stored, setStored] = useState<StoredUserLocation | null | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useFocusEffect(
     useCallback(() => {
@@ -35,6 +38,9 @@ export default function AllEventsScreen() {
     }, [router])
   );
 
+  const debouncedSearch = useDebouncedValue(searchQuery, 400);
+  const discoverQ = debouncedSearch.trim() || undefined;
+
   const {
     data,
     isLoading,
@@ -45,6 +51,7 @@ export default function AllEventsScreen() {
   } = useInfiniteDiscoverEvents({
     lat: stored === undefined ? undefined : stored?.latitude,
     lng: stored === undefined ? undefined : stored?.longitude,
+    q: discoverQ,
   });
 
   const events = useMemo(
@@ -59,7 +66,7 @@ export default function AllEventsScreen() {
     <SafeAreaView className="flex-1 bg-surface">
       <View className="flex-1">
         {/* Header */}
-        <View className="px-5 py-3 bg-[rgba(238,237,255,1)]">
+        <View className="px-5 py-3 ">
           <View className="flex-row justify-end mb-2">
             <TouchableOpacity
               onPress={() => router.back()}
@@ -77,13 +84,17 @@ export default function AllEventsScreen() {
             </TouchableOpacity>
           </View>
 
-          <View className="flex-row items-center gap-2">
-            <Text className="text-secondary-foreground text-base font-bold tracking-tight">
-              Trending now - feel it, reel it
-            </Text>
+          <View className="mt-1 flex-row items-center gap-2 rounded-lg bg-surface px-3">
             <Image
-              source={require("@/assets/images/home/fire.gif")}
-              style={{ width: 30, height: 30, borderRadius: 999 }}
+              source={require("@/assets/images/home/search.svg")}
+              style={{ width: 14, height: 14 }}
+              contentFit="contain"
+            />
+            <Input
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search by events, activities, venues, artists..."
+              className="flex-1 text-xs border-0 font-medium placeholder:text-[rgba(15,23,42,0.5)] px-0"
             />
           </View>
         </View>
@@ -106,7 +117,9 @@ export default function AllEventsScreen() {
         ) : events.length === 0 ? (
           <View className="flex-1 items-center justify-center px-10">
             <Text className="text-primary text-sm text-center">
-              No events found nearby.
+              {discoverQ
+                ? "Nothing matches your search."
+                : "No events found nearby."}
             </Text>
           </View>
         ) : (

@@ -5,6 +5,7 @@ import { EVENT_CATEGORY_ICONS, EVENT_CATEGORY_LABELS } from '@/constants/eventCa
 import { Input } from '@/components/ui/input'
 import { Text } from '@/components/ui/text'
 import { useDiscoverEvents } from '@/hooks/api'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { readUserLocation, type StoredUserLocation } from '@/lib/location/user-location'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -153,11 +154,15 @@ export default function HomeTabScreen() {
     [selectedCategory]
   );
 
+  const debouncedSearch = useDebouncedValue(searchQuery, 400);
+  const discoverQ = debouncedSearch.trim() || undefined;
+
   const { data, isLoading, isError, error } = useDiscoverEvents({
     lat: stored === undefined ? undefined : stored?.latitude,
     lng: stored === undefined ? undefined : stored?.longitude,
     category: apiCategory,
     limit: 5,
+    q: discoverQ,
   });
 
   const trending = data?.trending_events ?? [];
@@ -208,7 +213,8 @@ export default function HomeTabScreen() {
           <View className='flex-row items-center gap-2 rounded-lg bg-surface px-3'>
             <Image
               source={require('@/assets/images/home/search.svg')}
-              className='size-[11px]'
+              style={{ width: 11, height: 11 }}
+              contentFit='contain'
             />
             <Input
               value={searchQuery}
