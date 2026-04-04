@@ -31,6 +31,36 @@ def _rank_tiny_expr():
     return cast(Event.is_featured, Integer) * 2 + cast(Event.is_popular, Integer)
 
 
+def sanitize_discover_search_text(user_fragment: str) -> str:
+    """Keep letters, digits (Unicode), and spaces. Tabs/newlines become spaces; runs collapse."""
+    normalized = (
+        user_fragment.replace("\r\n", " ")
+        .replace("\n", " ")
+        .replace("\r", " ")
+        .replace("\t", " ")
+    )
+    kept = "".join(c for c in normalized if c.isalnum() or c == " ")
+    return " ".join(kept.split())
+
+
+def _discover_text_search_predicate(q: str | None) -> Any | None:
+    """Return OR(title, description, location) ILIKE predicate, or None if no search."""
+    if q is None:
+        return None
+    raw = q.strip()
+    if not raw:
+        return None
+    needle = sanitize_discover_search_text(raw)
+    if not needle:
+        return None
+    pattern = f"%{needle}%"
+    return or_(
+        Event.title.ilike(pattern),
+        Event.description.ilike(pattern),
+        Event.location.ilike(pattern),
+    )
+
+
 def _haversine_km(lat: float, lng: float):
     """SQL expression for distance in km from (lat, lng) to Event.latitude/longitude."""
     rlat = func.radians(literal(lat))
@@ -107,6 +137,7 @@ class EventService:
         category: str | None,
         cursor_token: str | None,
         limit: int,
+        q: str | None = None,
     ) -> tuple[list[EventCard], str | None, bool, str | None]:
         """Return trending events within radius, paginated."""
         lim = min(max(limit, 1), EventService.MAX_LIMIT)
@@ -120,6 +151,9 @@ class EventService:
             dist <= literal(float(radius_km)),
             Event.event_date >= today,
         ]
+        text_pred = _discover_text_search_predicate(q)
+        if text_pred is not None:
+            filters.append(text_pred)
         if category and category.strip().lower() not in ("all", ""):
             cat_lower = category.strip().lower()
             try:

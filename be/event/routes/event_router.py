@@ -42,6 +42,11 @@ async def discover_events(
     category: str | None = Query(None, description="Category filter or All"),
     cursor: str | None = Query(None, description="Pagination cursor"),
     limit: int = Query(20, ge=1, le=50),
+    q: str | None = Query(
+        None,
+        max_length=120,
+        description="Optional text search (title, description, location)",
+    ),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -54,6 +59,7 @@ async def discover_events(
         category=category,
         cursor_token=cursor,
         limit=limit,
+        q=q,
     )
 
     return DiscoverResponse(

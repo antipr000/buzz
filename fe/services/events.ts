@@ -25,11 +25,14 @@ export type DiscoverRequestParams = {
   category?: string | null;
   cursor?: string | null;
   limit?: number;
+  /** Text search; empty/whitespace omitted from request */
+  q?: string | null;
 };
 
 export async function getDiscoverEvents(
   params: DiscoverRequestParams
 ): Promise<DiscoverResponse> {
+  const qTrimmed = params.q?.trim() || undefined;
   const { data } = await apiClient.get<DiscoverResponse>(
     "/events/discover",
     {
@@ -40,6 +43,7 @@ export async function getDiscoverEvents(
         category: params.category ?? undefined,
         cursor: params.cursor ?? undefined,
         limit: params.limit,
+        q: qTrimmed,
       },
     }
   );

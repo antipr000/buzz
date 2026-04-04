@@ -10,6 +10,7 @@ export type UseDiscoverEventsArgs = {
   category?: string | null;
   cursor?: string | null;
   limit?: number;
+  q?: string | null;
   /** Defaults to true when coordinates are present */
   enabled?: boolean;
 };
@@ -36,10 +37,12 @@ export function useDiscoverEvents({
   category,
   cursor,
   limit,
+  q,
   enabled: enabledProp = true,
 }: UseDiscoverEventsArgs) {
   const coords = resolveCoords(lat, lng);
   const enabled = coords !== null && enabledProp;
+  const qKey = q?.trim() || null;
 
   return useQuery({
     queryKey:
@@ -51,6 +54,7 @@ export function useDiscoverEvents({
             category: category ?? null,
             cursor: cursor ?? null,
             limit,
+            q: qKey,
           })
         : ([...queryKeys.events.all, "discover", "idle"] as const),
     queryFn: () =>
@@ -61,6 +65,7 @@ export function useDiscoverEvents({
         category,
         cursor,
         limit,
+        q: qKey,
       }),
     enabled,  // only enabled when we have coordinates
     // see other parameters in useQuery hook too

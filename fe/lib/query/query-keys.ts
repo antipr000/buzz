@@ -10,6 +10,8 @@ export type DiscoverQueryKeyInput = {
   category?: string | null;
   cursor?: string | null;
   limit?: number;
+  /** Normalized discover text search; null when absent */
+  q?: string | null;
 };
 
 /** Stable key for GET /events/saved infinite query (cursor is pageParam, not in key). */
@@ -32,6 +34,7 @@ export const queryKeys = {
         p.category ?? null,
         p.cursor ?? null,
         p.limit ?? 20,
+        p.q?.trim() || null,
       ] as const,
 
     /** GET /events/saved */

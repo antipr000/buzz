@@ -17,6 +17,7 @@ from common.pagination import (
 from core.schemas.schema_model import to_camel
 from event.models.event import EventCategory
 from event.schemas.event_schemas import CreateEventBody
+from event.services.event_service import sanitize_discover_search_text
 from ticket.models.ticket import TicketTier
 
 
@@ -24,6 +25,18 @@ def test_to_camel() -> None:
     assert to_camel("is_featured") == "isFeatured"
     assert to_camel("event_cover") == "eventCover"
     assert to_camel("booking_date") == "bookingDate"
+
+
+def test_sanitize_discover_search_text() -> None:
+    assert sanitize_discover_search_text("hello") == "hello"
+    assert sanitize_discover_search_text("100%") == "100"
+    assert sanitize_discover_search_text("a_b") == "ab"
+    assert sanitize_discover_search_text("x\\y") == "xy"
+    assert sanitize_discover_search_text("%%%") == ""
+    assert sanitize_discover_search_text("jazz night") == "jazz night"
+    assert sanitize_discover_search_text("café @ venue!") == "café venue"
+    assert sanitize_discover_search_text("hello\tworld") == "hello world"
+    assert sanitize_discover_search_text("hello\nworld") == "hello world"
 
 
 def test_discover_cursor_roundtrip() -> None:

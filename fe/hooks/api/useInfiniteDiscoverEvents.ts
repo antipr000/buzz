@@ -10,6 +10,7 @@ export type UseInfiniteDiscoverEventsArgs = {
   radius?: number;
   category?: string | null;
   limit?: number;
+  q?: string | null;
   enabled?: boolean;
 };
 
@@ -34,10 +35,12 @@ export function useInfiniteDiscoverEvents({
   radius = DISCOVER_RADIUS_KM,
   category,
   limit = 20,
+  q,
   enabled: enabledProp = true,
 }: UseInfiniteDiscoverEventsArgs) {
   const coords = resolveCoords(lat, lng);
   const enabled = coords !== null && enabledProp;
+  const qKey = q?.trim() || null;
 
   return useInfiniteQuery<DiscoverResponse, Error, import("@tanstack/react-query").InfiniteData<DiscoverResponse>, readonly unknown[], string | null>({
     queryKey: coords !== null
@@ -48,6 +51,7 @@ export function useInfiniteDiscoverEvents({
           category: category ?? null,
           cursor: null,
           limit,
+          q: qKey,
         })
       : ([...queryKeys.events.all, "discover", "idle"] as const),
     queryFn: ({ pageParam }) =>
@@ -58,6 +62,7 @@ export function useInfiniteDiscoverEvents({
         category,
         cursor: pageParam,
         limit,
+        q: qKey,
       }),
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) =>
