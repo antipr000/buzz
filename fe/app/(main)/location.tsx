@@ -84,7 +84,7 @@ export default function LocationAccessScreen() {
                         )}
                     </Button>
 
-                    <Link href="/(main)/(tabs)" asChild>
+                    <Link href="/settings/location" asChild>
                         <Button
                             variant="outline"
                             className="w-full bg-white border border-primary rounded-xl h-12"

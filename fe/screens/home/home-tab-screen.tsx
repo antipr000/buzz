@@ -8,8 +8,9 @@ import { useDiscoverEvents } from '@/hooks/api'
 import { readUserLocation, type StoredUserLocation } from '@/lib/location/user-location'
 import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
-import { Link } from 'expo-router'
-import React, { useEffect, useMemo, useState } from 'react'
+import { useFocusEffect } from '@react-navigation/native'
+import { Link, useRouter } from 'expo-router'
+import React, { useCallback, useMemo, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -123,20 +124,27 @@ function discoverErrorMessage(err: unknown): string {
 
 /** Home tab (Discover) — route file stays thin; UI lives here. */
 export default function HomeTabScreen() {
+  const router = useRouter();
   const [stored, setStored] = useState<StoredUserLocation | null | undefined>(
     undefined
   );
   const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
 
-  useEffect(() => {
-    let cancelled = false;
-    readUserLocation().then((loc) => {
-      if (!cancelled) setStored(loc);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      readUserLocation().then((loc) => {
+        if (cancelled) return;
+        setStored(loc);
+        if (loc === null) {
+          router.replace('/settings/location');
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [router])
+  );
 
   const apiCategory = useMemo(
     () =>
@@ -234,15 +242,8 @@ export default function HomeTabScreen() {
                 <ActivityIndicator />
               </View>
             ) : showNoLocation ? (
-              <View className="pl-2 pr-6 py-6 justify-center max-w-[280px]">
-                <Text className="text-primary text-xs mb-2">
-                  Allow location to see events near you.
-                </Text>
-                <Link href="/(main)/location" asChild>
-                  <TouchableOpacity>
-                    <Text className="text-primary text-xs font-semibold underline">Open location</Text>
-                  </TouchableOpacity>
-                </Link>
+              <View className="pl-6 pr-10 py-8 items-center justify-center">
+                <ActivityIndicator />
               </View>
             ) : showBlockingLoading ? (
               <View className="pl-6 pr-10 py-8 items-center justify-center">
@@ -300,10 +301,8 @@ export default function HomeTabScreen() {
               <ActivityIndicator />
             </View>
           ) : showNoLocation ? (
-            <View className="px-5 py-10">
-              <Text className="text-primary text-xs text-center">
-                Featured events appear after you share your location.
-              </Text>
+            <View className="px-5 py-12 items-center">
+              <ActivityIndicator />
             </View>
           ) : showBlockingLoading ? (
             <View className="px-5 py-12 items-center">

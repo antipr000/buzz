@@ -3,9 +3,10 @@ import { Text } from "@/components/ui/text";
 import { useInfiniteDiscoverEvents } from "@/hooks/api";
 import { readUserLocation, type StoredUserLocation } from "@/lib/location/user-location";
 import { toFeaturedDiscoverProps } from "@/screens/home/discoverAdapters";
+import { useFocusEffect } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,13 +19,21 @@ export default function AllEventsScreen() {
   const router = useRouter();
   const [stored, setStored] = useState<StoredUserLocation | null | undefined>(undefined);
 
-  useEffect(() => {
-    let cancelled = false;
-    readUserLocation().then((loc) => {
-      if (!cancelled) setStored(loc);
-    });
-    return () => { cancelled = true; };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      readUserLocation().then((loc) => {
+        if (cancelled) return;
+        setStored(loc);
+        if (loc === null) {
+          router.replace("/settings/location");
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [router])
+  );
 
   const {
     data,
@@ -85,10 +94,8 @@ export default function AllEventsScreen() {
             <ActivityIndicator />
           </View>
         ) : noLocation ? (
-          <View className="flex-1 items-center justify-center px-10">
-            <Text className="text-primary text-sm text-center">
-              Allow location access to see events near you.
-            </Text>
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-10">
