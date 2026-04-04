@@ -129,6 +129,7 @@ export default function HomeTabScreen() {
     undefined
   );
   const [selectedCategory, setSelectedCategory] = useState<string>('All Events');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -167,11 +168,13 @@ export default function HomeTabScreen() {
 
   const locationLabel =
     data?.user_location ??
-    (stored ? 'Near you' : stored === null ? 'Location not set' : '');
+    (stored ? '' : stored === null ? 'Location not set' : '');
 
   const locationHydrating = stored === undefined;
   const showBlockingLoading = stored != null && isLoading;
   const showNoLocation = stored === null;
+  const showTrendingCarousel =
+    selectedCategory === 'All Events' && searchQuery.trim() === '';
 
   return (
     <SafeAreaView className='flex-1 bg-background'>
@@ -208,62 +211,66 @@ export default function HomeTabScreen() {
               className='size-[11px]'
             />
             <Input
+              value={searchQuery}
+              onChangeText={setSearchQuery}
               placeholder='Search by events, activities, venues, artists...'
               className='flex-1  text-xs border-0 font-medium placeholder:text-[rgba(15,23,42,0.5)] px-0'
             />
           </View>
         </View>
 
-        <View className='mt-1.5 shrink-0'>
-          <View className='flex-row items-center justify-between px-5 mb-4'>
-            <View className='flex-row items-center gap-1'>
-              <Text className='text-[18px] font-bold text-primary'>
-                Trending now – Feel the Buzz
-              </Text>
-              <Image
-                source={require('@/assets/images/home/fire.gif')}
-                className='size-[30px]'
-              />
+        {showTrendingCarousel ? (
+          <View className='mt-1.5 shrink-0'>
+            <View className='flex-row items-center justify-between px-5 mb-4'>
+              <View className='flex-row items-center gap-1'>
+                <Text className='text-[18px] font-bold text-primary'>
+                  Trending now – Feel the Buzz
+                </Text>
+                <Image
+                  source={require('@/assets/images/home/fire.gif')}
+                  className='size-[30px]'
+                />
+              </View>
+              <Link href="/all" asChild>
+                <TouchableOpacity>
+                  <Text className='ml-2 text-primary text-xs font-medium translate-y-3'>See all</Text>
+                </TouchableOpacity>
+              </Link>
             </View>
-            <Link href="/all" asChild>
-              <TouchableOpacity>
-                <Text className='ml-2 text-primary text-xs font-medium translate-y-3'>See all</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
 
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerClassName='flex-row items-stretch px-5 py-2.5'
-          >
-            {locationHydrating ? (
-              <View className="pl-6 pr-10 py-8 items-center justify-center">
-                <ActivityIndicator />
-              </View>
-            ) : showNoLocation ? (
-              <View className="pl-6 pr-10 py-8 items-center justify-center">
-                <ActivityIndicator />
-              </View>
-            ) : showBlockingLoading ? (
-              <View className="pl-6 pr-10 py-8 items-center justify-center">
-                <ActivityIndicator />
-              </View>
-            ) : isError ? (
-              <View className="pl-2 pr-6 py-6 justify-center max-w-[280px]">
-                <Text className="text-primary text-xs">{discoverErrorMessage(error)}</Text>
-              </View>
-            ) : compactRows.length === 0 ? (
-              <View className="pl-2 pr-6 py-6 justify-center">
-                <Text className="text-primary text-xs">No events in this category yet.</Text>
-              </View>
-            ) : (
-              compactRows.map((event) => (
-                <EventCard key={event.id} {...event} />
-              ))
-            )}
-          </ScrollView>
-        </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerClassName='flex-row items-stretch px-5 py-2.5'
+            >
+              {locationHydrating ? (
+                <View className="pl-6 pr-10 py-8 items-center justify-center">
+                  <ActivityIndicator />
+                </View>
+              ) : showNoLocation ? (
+                <View className="pl-6 pr-10 py-8 items-center justify-center">
+                  <ActivityIndicator />
+                </View>
+              ) : showBlockingLoading ? (
+                <View className="pl-6 pr-10 py-8 items-center justify-center">
+                  <ActivityIndicator />
+                </View>
+              ) : isError ? (
+                <View className="pl-2 pr-6 py-6 justify-center max-w-[280px]">
+                  <Text className="text-primary text-xs">{discoverErrorMessage(error)}</Text>
+                </View>
+              ) : compactRows.length === 0 ? (
+                <View className="pl-2 pr-6 py-6 justify-center">
+                  <Text className="text-primary text-xs">No events in this category yet.</Text>
+                </View>
+              ) : (
+                compactRows.map((event) => (
+                  <EventCard key={event.id} {...event} />
+                ))
+              )}
+            </ScrollView>
+          </View>
+        ) : null}
 
         <View className='shrink-0'>
           <ScrollView
