@@ -119,7 +119,7 @@ export async function uploadEventCover(
     form,
     {
       headers: { "Content-Type": "multipart/form-data" },
-      transformRequest: (payload) => payload,  
+      transformRequest: (payload) => payload,
     }
   );
   return data;

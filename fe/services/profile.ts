@@ -71,6 +71,7 @@ export async function uploadProfileAvatar(
   const form = new FormData();
   form.append("file", { uri, type, name } as unknown as Blob);
 
+  // Expo Go + axios: keep multipart/form-data + transformRequest (axios#4885);
   const { data } = await apiClient.post<ProfileAvatarUploadResponse>(
     `${profileRoot}/profile/avatar`,
     form,

@@ -14,6 +14,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
 import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
 import { Image } from 'expo-image';
@@ -36,6 +37,7 @@ import {
 import { formatDisplayDate } from '@/app/(main)/create-event/payload';
 import { savedAddressSummary } from '@/components/address/savedAddressSummary';
 import { useAddresses, useDeleteAddress, usePatchProfile, useProfileMe } from '@/hooks/api';
+import { uploadProfileAvatar } from '@/services/profile';
 import type { AddressOut } from '@/services/types/address';
 import type { MaritalStatus, ProfileIdentify } from '@/services/types/profile';
 import {
@@ -150,6 +152,11 @@ const EditProfile = () => {
   const [identifyType, setIdentifyType] = useState<ProfileIdentify | null>(null);
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus | null>(null);
   const [deleteAddressTarget, setDeleteAddressTarget] = useState<AddressOut | null>(null);
+  const [pendingAvatar, setPendingAvatar] = useState<{
+    uri: string;
+    mimeType?: string | null;
+  } | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   useEffect(() => {
     if (!data || initialRef.current) return;
@@ -190,6 +197,22 @@ const EditProfile = () => {
       mobileNumber,
     });
 
+    if (pendingAvatar) {
+      try {
+        setIsUploadingAvatar(true);
+        const { public_url } = await uploadProfileAvatar(
+          pendingAvatar.uri,
+          pendingAvatar.mimeType ?? null
+        );
+        patch.profile_image = public_url;
+      } catch {
+        Alert.alert('Could not save', 'Photo upload failed. Please try again.');
+        return;
+      } finally {
+        setIsUploadingAvatar(false);
+      }
+    }
+
     if (Object.keys(patch).length === 0) {
       router.back();
       return;
@@ -214,6 +237,31 @@ const EditProfile = () => {
   const onEditAddress = (id: string) => {
     router.push({ pathname: '/profile/address', params: { addressId: id } });
   };
+
+  const pickProfilePhoto = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert(
+          'Permission required',
+          'Allow photo library access to change your profile photo.'
+        );
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        quality: 1,
+      });
+      if (!result.canceled && result.assets[0]) {
+        const a = result.assets[0];
+        setPendingAvatar({ uri: a.uri, mimeType: a.mimeType });
+      }
+    } catch {
+      Alert.alert('Could not open photos', 'Please try again.');
+    }
+  };
+
+  const isSaving = patchMutation.isPending || isUploadingAvatar;
 
   if (data ? !formReady : isPending) {
     return (
@@ -248,7 +296,8 @@ const EditProfile = () => {
     return null;
   }
 
-  const avatarUri = data.profile_image?.trim();
+  const serverAvatarUri = data.profile_image?.trim() ?? null;
+  const displayAvatarUri = pendingAvatar?.uri ?? serverAvatarUri;
 
   return (
     <>
@@ -258,9 +307,9 @@ const EditProfile = () => {
         contentContainerStyle={{ paddingBottom: 120 + insets.bottom }}
       >
         <View className="relative h-[117px] items-center justify-center overflow-hidden bg-primary">
-          {avatarUri ? (
+          {displayAvatarUri ? (
             <Image
-              source={{ uri: avatarUri }}
+              source={{ uri: displayAvatarUri }}
               style={[StyleSheet.absoluteFillObject, { opacity: 0.35 }]}
               contentFit="cover"
             />
@@ -272,7 +321,12 @@ const EditProfile = () => {
               contentPosition={{ top: -170, left: 30 }}
             />
           )}
-          <TouchableOpacity activeOpacity={0.8} className="items-center">
+          <TouchableOpacity
+            activeOpacity={0.8}
+            className="items-center"
+            onPress={pickProfilePhoto}
+            disabled={isSaving}
+          >
             <Image
               source={require('@/assets/images/edit/user.svg')}
               style={{ width: 40, height: 40, marginBottom: 4 }}
@@ -500,10 +554,10 @@ const EditProfile = () => {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={onSave}
-          disabled={patchMutation.isPending}
-          className={`h-[42px] w-full items-center justify-center rounded-lg bg-primary ${patchMutation.isPending ? 'opacity-60' : ''}`}
+          disabled={isSaving}
+          className={`h-[42px] w-full items-center justify-center rounded-lg bg-primary ${isSaving ? 'opacity-60' : ''}`}
         >
-          {patchMutation.isPending ? (
+          {isSaving ? (
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-[13px] font-semibold text-white">Save changes</Text>
