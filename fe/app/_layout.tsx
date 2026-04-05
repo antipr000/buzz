@@ -33,34 +33,32 @@ export default function RootLayout() {
 
   const [splashAnimationFinished, setSplashAnimationFinished] = useState(false);
 
-  if (!fontsLoaded || !splashAnimationFinished) {
-    return (
-      <AnimatedSplashScreen
-        onAnimationFinish={() => setSplashAnimationFinished(true)}
-      />
-    );
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-      <ThemeProvider value={NAV_THEME['light']}>
-        <Stack
-          screenOptions={{
-            headerShown: false
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(main)" />
-        </Stack>
-        <PortalHost />
-        <StatusBar
-          backgroundColor="transparent"
-          translucent={true}
-          style="auto"
-        />
-      </ThemeProvider>
+        {!fontsLoaded || !splashAnimationFinished ? (
+          <AnimatedSplashScreen
+            onAnimationFinish={() => setSplashAnimationFinished(true)}
+          />
+        ) : (
+          <ThemeProvider value={NAV_THEME['light']}>
+            <Stack
+              screenOptions={{
+                headerShown: false
+              }}
+            >
+              <Stack.Screen name="index" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(main)" />
+            </Stack>
+            <PortalHost />
+            <StatusBar
+              backgroundColor="transparent"
+              translucent={true}
+              style="auto"
+            />
+          </ThemeProvider>
+        )}
       </AuthProvider>
     </QueryClientProvider>
   );

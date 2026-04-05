@@ -3,20 +3,13 @@ import { Text } from "@/components/ui/text";
 import { Image } from "expo-image";
 import { Link, Redirect } from "expo-router";
 import React from "react";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/providers/AuthProvider";
 
 export default function WelcomeScreen() {
-    const { session, isLoading } = useAuth();
-    if (isLoading) {
-        return (
-            <View className="flex-1 bg-white items-center justify-center">
-                <ActivityIndicator size="large" color="black" />
-            </View>
-        );
-    }
+    const { session } = useAuth();
 
     if (session) {
         return <Redirect href="/location" />;
