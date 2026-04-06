@@ -7,6 +7,7 @@ import GooglePlacesTextInput, {
 
 export type PickedLocation = {
   readonly address: string;
+  readonly label: string;
   readonly latitude: number;
   readonly longitude: number;
 };
@@ -30,7 +31,13 @@ function pickFromPlace(place: Place): PickedLocation | null {
   const lat = loc?.latitude;
   const lng = loc?.longitude;
   if (!formattedAddress || typeof lat !== 'number' || typeof lng !== 'number') return null;
-  return { address: formattedAddress, latitude: lat, longitude: lng };
+
+  return {
+    address: formattedAddress,
+    label: formattedAddress,
+    latitude: lat,
+    longitude: lng,
+  };
 }
 
 /**

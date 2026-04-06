@@ -62,6 +62,7 @@ const Location = () => {
     persistUserLocationCoords({
       latitude: picked.latitude,
       longitude: picked.longitude,
+      label: picked.label,
     })
       .then(() => router.replace('/(main)/(tabs)'))
       .catch((e) => {
@@ -85,6 +86,7 @@ const Location = () => {
     persistUserLocationCoords({
       latitude: preset.latitude,
       longitude: preset.longitude,
+      label: `${cityName}, India`,
     })
       .then(() => router.replace('/(main)/(tabs)'))
       .catch((e) => {

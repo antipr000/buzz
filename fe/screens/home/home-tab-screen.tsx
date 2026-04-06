@@ -171,9 +171,7 @@ export default function HomeTabScreen() {
     [trending]
   );
 
-  const locationLabel =
-    data?.user_location ??
-    (stored ? '' : stored === null ? 'Location not set' : '');
+  const locationLabel = stored?.label ?? '';
 
   const locationHydrating = stored === undefined;
   const showBlockingLoading = stored != null && isLoading;
