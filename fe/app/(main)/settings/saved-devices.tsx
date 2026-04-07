@@ -152,7 +152,9 @@ export default function SavedDevices() {
             )}
           </View>
 
-          {currentKey != null && otherCount > 0 ? (
+          {devices.length >= 2 &&
+          currentKey != null &&
+          otherCount > 0 ? (
             <LogOutOtherDevicesDialog
               deviceKey={currentKey}
               onSuccess={() => {
@@ -168,17 +170,7 @@ export default function SavedDevices() {
                 </Text>
               </TouchableOpacity>
             </LogOutOtherDevicesDialog>
-          ) : (
-            <TouchableOpacity
-              activeOpacity={1}
-              disabled
-              className="mt-5 py-3 px-4 rounded-md border border-[rgba(0,0,0,0.08)] opacity-50 items-center"
-            >
-              <Text className="text-[rgba(255,43,23,1)] text-xs font-semibold">
-                Log out other devices
-              </Text>
-            </TouchableOpacity>
-          )}
+          ) : null}
         </>
       )}
     </PageLayout>
