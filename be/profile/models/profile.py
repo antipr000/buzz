@@ -5,7 +5,7 @@ import uuid
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, Enum, ForeignKey, String, Uuid
+from sqlalchemy import Boolean, Date, Enum, ForeignKey, String, Uuid, false
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import TimestampedModel
@@ -45,6 +45,12 @@ class Profile(TimestampedModel):
     )
     mobile_number: Mapped[str | None] = mapped_column(String(64), nullable=True)
     profile_image: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    whatsapp_notifications_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default=false(),
+    )
 
     user: Mapped[User] = relationship(back_populates="profile", lazy="raise")
     organized_events: Mapped[list[Event]] = relationship(

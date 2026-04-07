@@ -10,7 +10,14 @@ from user.models.user import User
 
 # Profile columns updated only when the corresponding key appears in `updates`.
 _PROFILE_PATCH_KEYS = frozenset(
-    {"birthday", "identify", "marital_status", "mobile_number", "profile_image"},
+    {
+        "birthday",
+        "identify",
+        "marital_status",
+        "mobile_number",
+        "profile_image",
+        "whatsapp_notifications_enabled",
+    },
 )
 
 
@@ -50,6 +57,33 @@ class ProfileMeService:
         else:
             profile = None
 
+        if updates.get("whatsapp_notifications_enabled") is True:
+            if profile is None:
+                profile = await db.get(Profile, user_id)
+                if profile is None:
+                    raise ValueError("Profile not found")
+            effective_mobile = (
+                updates["mobile_number"]
+                if "mobile_number" in updates
+                else profile.mobile_number
+            )
+            if effective_mobile is None or (
+                isinstance(effective_mobile, str) and not effective_mobile.strip()
+            ):
+                raise ValueError(
+                    "Add a mobile number before enabling WhatsApp notifications"
+                )
+
+        if "mobile_number" in updates:
+            new_mobile = updates["mobile_number"]
+            if new_mobile is None or (
+                isinstance(new_mobile, str) and not new_mobile.strip()
+            ):
+                updates["whatsapp_notifications_enabled"] = False
+                profile_keys = {
+                    k: v for k, v in updates.items() if k in _PROFILE_PATCH_KEYS
+                }
+
         if "full_name" in updates:
             fn = updates["full_name"]
             if fn is None or (isinstance(fn, str) and not fn.strip()):
@@ -76,4 +110,7 @@ class ProfileMeService:
             marital_status=profile.marital_status if profile else None,
             mobile_number=profile.mobile_number if profile else None,
             profile_image=profile.profile_image if profile else None,
+            whatsapp_notifications_enabled=(
+                profile.whatsapp_notifications_enabled if profile else False
+            ),
         )

@@ -20,6 +20,7 @@ class ProfileMeResponse(SchemaModel):
     marital_status: MaritalStatus | None = None
     mobile_number: str | None = None
     profile_image: str | None = None
+    whatsapp_notifications_enabled: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -37,5 +38,6 @@ class ProfilePatchBody(SchemaModel):
     marital_status: MaritalStatus | None = None
     mobile_number: str | None = Field(None, max_length=64)
     profile_image: str | None = Field(None, max_length=512)
+    whatsapp_notifications_enabled: bool | None = None
 
     model_config = ConfigDict(extra="forbid")
