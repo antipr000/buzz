@@ -19,6 +19,11 @@ export type SavedQueryKeyInput = {
   limit: number;
 };
 
+/** Stable key for GET /events/created infinite query (cursor is pageParam, not in key). */
+export type CreatedEventsQueryKeyInput = {
+  limit: number;
+};
+
 export const queryKeys = {
   events: {
     all: ["events"] as const,
@@ -40,6 +45,10 @@ export const queryKeys = {
     /** GET /events/saved */
     saved: (p: SavedQueryKeyInput) =>
       [...queryKeys.events.all, "saved", p.limit] as const,
+
+    /** GET /events/created */
+    created: (p: CreatedEventsQueryKeyInput) =>
+      [...queryKeys.events.all, "created", p.limit] as const,
 
     /** POST /events/bookings — user’s booking list. */
     bookings: () => [...queryKeys.events.all, "bookings"] as const,

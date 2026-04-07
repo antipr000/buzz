@@ -36,6 +36,8 @@ export type TicketTierPriceOut = {
 
 export type EventDetailOut = EventCard & {
   ticket_tiers: TicketTierPriceOut[];
+  /** GET /events/{id} — whether the current user is the organizer */
+  is_organizer: boolean;
 };
 
 export type PaginationOut = {
@@ -52,6 +54,18 @@ export type DiscoverResponse = {
 export type SavedListResponse = {
   saved_events: EventCard[];
   pagination: PaginationOut;
+};
+
+export type CreatedListResponse = {
+  created_events: EventCard[];
+  pagination: PaginationOut;
+};
+
+/** PATCH /events/{id} — snake_case JSON; send only fields to change */
+export type PatchEventBody = {
+  title?: string;
+  description?: string;
+  event_cover?: string;
 };
 
 /** POST /events/create body (snake_case), matches be/event/schemas/event_schemas.py */

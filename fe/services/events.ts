@@ -2,9 +2,11 @@ import { apiClient } from "@/lib/api/client";
 import type {
   CreateEventBody,
   CreateEventResponse,
+  CreatedListResponse,
   DiscoverResponse,
   EventCoverUploadResponse,
   EventDetailOut,
+  PatchEventBody,
   SavedListResponse,
 } from "@/services/types/events";
 
@@ -67,6 +69,23 @@ export async function getSavedEvents(
   return data;
 }
 
+export type CreatedEventsRequestParams = {
+  cursor?: string | null;
+  limit?: number;
+};
+
+export async function getCreatedEvents(
+  params: CreatedEventsRequestParams = {}
+): Promise<CreatedListResponse> {
+  const { data } = await apiClient.get<CreatedListResponse>("/events/created", {
+    params: {
+      cursor: params.cursor ?? undefined,
+      limit: params.limit,
+    },
+  });
+  return data;
+}
+
 /** GET /events/{eventId} — requires auth. */
 export async function getEventById(
   eventId: string
@@ -82,6 +101,18 @@ export async function createEvent(
 ): Promise<CreateEventResponse> {
   const { data } = await apiClient.post<CreateEventResponse>(
     "/events/create",
+    body
+  );
+  return data;
+}
+
+/** PATCH /events/{eventId} — organizer only; snake_case body */
+export async function patchEvent(
+  eventId: string,
+  body: PatchEventBody
+): Promise<EventDetailOut> {
+  const { data } = await apiClient.patch<EventDetailOut>(
+    `/events/${encodeURIComponent(eventId)}`,
     body
   );
   return data;

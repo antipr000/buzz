@@ -11,6 +11,10 @@ export { usePatchAddress } from "./usePatchAddress";
 export { useDiscoverEvents, type UseDiscoverEventsArgs } from "./useDiscoverEvents";
 export { useInfiniteDiscoverEvents, type UseInfiniteDiscoverEventsArgs } from "./useInfiniteDiscoverEvents";
 export { useInfiniteSavedEvents, type UseInfiniteSavedEventsArgs } from "./useInfiniteSavedEvents";
+export {
+  useInfiniteCreatedEvents,
+  type UseInfiniteCreatedEventsArgs,
+} from "./useInfiniteCreatedEvents";
 export { usePatchProfile } from "./usePatchProfile";
 export { usePatchWhatsAppNotifications } from "./usePatchWhatsAppNotifications";
 export { useProfileMe } from "./useProfileMe";
