@@ -46,12 +46,19 @@ def decode_discover_cursor(token: str) -> DiscoverCursor | None:
 
 
 @dataclass
-class SavedCursor:
+class EventListKeyset:
+    """Opaque keyset for event lists ordered by (created_at DESC, event_id DESC).
+
+    Same wire format wherever used: e.g. saved events (row `created_at` + `event_id`),
+    or GET /events/created (`Event.created_at` + `Event.id`). Clients should not reuse
+    a cursor across different endpoints.
+    """
+
     created_at: datetime
     event_id: str
 
 
-def encode_saved_cursor(c: SavedCursor) -> str:
+def encode_event_list_keyset(c: EventListKeyset) -> str:
     payload = {
         "ca": c.created_at.astimezone(timezone.utc).isoformat(),
         "eid": c.event_id,
@@ -60,7 +67,7 @@ def encode_saved_cursor(c: SavedCursor) -> str:
     return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
 
 
-def decode_saved_cursor(token: str) -> SavedCursor | None:
+def decode_event_list_keyset(token: str) -> EventListKeyset | None:
     if not token:
         return None
     pad = "=" * (-len(token) % 4)
@@ -70,6 +77,6 @@ def decode_saved_cursor(token: str) -> SavedCursor | None:
         dt = datetime.fromisoformat(payload["ca"].replace("Z", "+00:00"))
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-        return SavedCursor(created_at=dt, event_id=payload["eid"])
+        return EventListKeyset(created_at=dt, event_id=payload["eid"])
     except (KeyError, ValueError, json.JSONDecodeError):
         return None

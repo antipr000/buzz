@@ -7,7 +7,11 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from common.pagination import SavedCursor, decode_saved_cursor, encode_saved_cursor
+from common.pagination import (
+    EventListKeyset,
+    decode_event_list_keyset,
+    encode_event_list_keyset,
+)
 from event.models.event import Event
 from event.schemas.event_schemas import EventCard
 from event.services.event_service import _participant_counts, _to_event_card
@@ -30,7 +34,7 @@ class SavedEventService:
 
         base_filters: list[Any] = [SavedEvent.user_id == user_id]
 
-        cur = decode_saved_cursor(cursor_token) if cursor_token else None
+        cur = decode_event_list_keyset(cursor_token) if cursor_token else None
         if cur:
             ca = cur.created_at
             eid = cur.event_id
@@ -64,8 +68,8 @@ class SavedEventService:
         next_cursor: str | None = None
         if has_more and rows:
             last = rows[-1]
-            next_cursor = encode_saved_cursor(
-                SavedCursor(created_at=last.created_at, event_id=last.event_id)
+            next_cursor = encode_event_list_keyset(
+                EventListKeyset(created_at=last.created_at, event_id=last.event_id)
             )
 
         return cards, next_cursor, has_more

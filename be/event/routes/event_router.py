@@ -20,14 +20,16 @@ from core.storage.gcs_event_cover import upload_event_cover_image
 from event.schemas.event_schemas import (
     CreateEventBody,
     CreateEventResponse,
+    CreatedListResponse,
     DiscoverResponse,
     EventCoverUploadResponse,
     EventDetailOut,
     PaginationOut,
+    PatchEventBody,
     SaveEventBody,
     SavedListResponse,
 )
-from event.services.event_service import EventService
+from event.services.event_service import EventPatchForbidden, EventService
 from saved_event.services.saved_event_service import SavedEventService
 from user.models.user import User
 
@@ -145,6 +147,22 @@ async def list_saved_events(
     )
 
 
+@event_router.get("/created", response_model=CreatedListResponse)
+async def list_created_events(
+    cursor: str | None = Query(None),
+    limit: int = Query(20, ge=1, le=50),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    cards, next_cursor, has_more = await EventService.list_created_by_organizer(
+        db, user_id=user.id, cursor_token=cursor, limit=limit
+    )
+    return CreatedListResponse(
+        created_events=cards,
+        pagination=PaginationOut(next_cursor=next_cursor, has_more=has_more),
+    )
+
+
 @event_router.post("/save", status_code=status.HTTP_204_NO_CONTENT)
 async def save_event(
     body: SaveEventBody,
@@ -181,6 +199,52 @@ async def list_my_bookings(
         db, user_id=user.id, body=body
     )
     return BookingListResponse(data=data)
+
+
+@event_router.patch("/{event_id}", response_model=EventDetailOut)
+async def patch_event(
+    event_id: Annotated[str, Path(min_length=1, max_length=255)],
+    body: PatchEventBody,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    try:
+        out = await EventService.patch_owned(
+            db, user_id=user.id, event_id=event_id, body=body
+        )
+    except EventPatchForbidden:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not allowed to edit this event",
+        ) from None
+    except ValueError as e:
+        msg = str(e)
+        if msg == "no_fields":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Provide at least one of: title, description, event_cover",
+            ) from e
+        if msg in ("title_empty", "description_empty"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Title and description cannot be empty",
+            ) from e
+        if msg == "event_cover_invalid":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="event_cover must be a non-empty URL, or omit the field",
+            ) from e
+        if msg == "event_not_editable_past":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot update an event on or after its scheduled date",
+            ) from e
+        raise
+    if out is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Event not found"
+        )
+    return out
 
 
 @event_router.get("/{event_id}", response_model=EventDetailOut)

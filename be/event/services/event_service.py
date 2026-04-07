@@ -11,13 +11,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from booking.models.booking import Booking
-from common.pagination import DiscoverCursor, decode_discover_cursor, encode_discover_cursor
+from common.pagination import (
+    DiscoverCursor,
+    EventListKeyset,
+    decode_discover_cursor,
+    decode_event_list_keyset,
+    encode_discover_cursor,
+    encode_event_list_keyset,
+)
 from event.models.event import Event, EventCategory
 from event.schemas.event_schemas import (
     CreateEventBody,
     EventCard,
     EventDetailOut,
     OrganizerOut,
+    PatchEventBody,
     TicketTierPriceOut,
     category_api_value,
 )
@@ -25,6 +33,10 @@ from ticket.tier_pricing import all_tier_prices
 from profile.models.profile import Profile
 from saved_event.models.saved_event import SavedEvent
 from ticket.models.ticket import Ticket
+
+
+class EventPatchForbidden(Exception):
+    """Current user is not the event organizer."""
 
 
 def _rank_tiny_expr():
@@ -238,7 +250,113 @@ class EventService:
             TicketTierPriceOut(tier=t.value, price=p)
             for t, p in all_tier_prices(event.price)
         ]
-        return EventDetailOut(**card.model_dump(), ticket_tiers=tiers)
+        return EventDetailOut(
+            **card.model_dump(),
+            ticket_tiers=tiers,
+            is_organizer=(event.organizer_id == user_id),
+        )
+
+    @staticmethod
+    async def list_created_by_organizer(
+        db: AsyncSession,
+        *,
+        user_id: uuid.UUID,
+        cursor_token: str | None,
+        limit: int,
+    ) -> tuple[list[EventCard], str | None, bool]:
+        """Events created by the user (organizer), newest first, keyset paginated."""
+        lim = min(max(limit, 1), EventService.MAX_LIMIT)
+
+        base_filters: list[Any] = [Event.organizer_id == user_id]
+
+        cur = decode_event_list_keyset(cursor_token) if cursor_token else None
+        if cur:
+            ca = cur.created_at
+            eid = cur.event_id
+            base_filters.append(
+                or_(
+                    Event.created_at < ca,
+                    (Event.created_at == ca) & (Event.id < eid),
+                )
+            )
+
+        stmt = (
+            select(Event)
+            .options(joinedload(Event.organizer).joinedload(Profile.user))
+            .where(*base_filters)
+            .order_by(Event.created_at.desc(), Event.id.desc())
+            .limit(lim + 1)
+        )
+
+        events = list((await db.execute(stmt)).scalars().unique().all())
+        has_more = len(events) > lim
+        if has_more:
+            events = events[:lim]
+
+        ids = [e.id for e in events]
+        counts = await _participant_counts(db, ids)
+        saved_ids = await _saved_event_ids_for_user(db, user_id, ids)
+        cards = [
+            _to_event_card(e, counts.get(e.id, 0), is_saved=e.id in saved_ids)
+            for e in events
+        ]
+
+        next_cursor: str | None = None
+        if has_more and events:
+            last = events[-1]
+            next_cursor = encode_event_list_keyset(
+                EventListKeyset(created_at=last.created_at, event_id=last.id)
+            )
+
+        return cards, next_cursor, has_more
+
+    @staticmethod
+    async def patch_owned(
+        db: AsyncSession,
+        *,
+        user_id: uuid.UUID,
+        event_id: str,
+        body: PatchEventBody,
+    ) -> EventDetailOut | None:
+        """Apply partial update; None if event missing; EventPatchForbidden if not organizer."""
+        stmt = (
+            select(Event)
+            .options(joinedload(Event.organizer).joinedload(Profile.user))
+            .where(Event.id == event_id)
+        )
+        result = await db.execute(stmt)
+        event = result.scalars().unique().one_or_none()
+        if event is None:
+            return None
+        if event.organizer_id != user_id:
+            raise EventPatchForbidden()
+
+        if event.event_date <= date.today():  # date.today() based on server's timezone
+            raise ValueError("event_not_editable_past")
+
+        raw = body.model_dump(exclude_unset=True)
+        if not raw:
+            raise ValueError("no_fields")
+
+        if "title" in raw:
+            t = (raw["title"] or "").strip()
+            if not t:
+                raise ValueError("title_empty")
+            event.title = t
+        if "description" in raw:
+            d = (raw["description"] or "").strip()
+            if not d:
+                raise ValueError("description_empty")
+            event.description = d
+        if "event_cover" in raw:
+            c = raw["event_cover"]
+            url = None if c is None else c.strip()
+            if not url:
+                raise ValueError("event_cover_invalid")
+            event.event_cover = url
+
+        await db.commit()
+        return await EventService.get_by_id(db, user_id=user_id, event_id=event_id)
 
     @staticmethod
     async def create(

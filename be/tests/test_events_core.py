@@ -8,11 +8,11 @@ from pydantic import ValidationError
 from ticket.tier_pricing import tier_line_price_ok
 from common.pagination import (
     DiscoverCursor,
+    EventListKeyset,
     decode_discover_cursor,
+    decode_event_list_keyset,
     encode_discover_cursor,
-    SavedCursor,
-    decode_saved_cursor,
-    encode_saved_cursor,
+    encode_event_list_keyset,
 )
 from core.schemas.schema_model import to_camel
 from event.models.event import EventCategory
@@ -53,15 +53,16 @@ def test_discover_cursor_roundtrip() -> None:
     assert d.created_at.year == 2025
 
 
-def test_saved_cursor_roundtrip() -> None:
-    c = SavedCursor(
+def test_event_list_keyset_roundtrip() -> None:
+    c = EventListKeyset(
         created_at=datetime(2025, 2, 1, tzinfo=timezone.utc),
         event_id="evt_x",
     )
-    t = encode_saved_cursor(c)
-    d = decode_saved_cursor(t)
+    t = encode_event_list_keyset(c)
+    d = decode_event_list_keyset(t)
     assert d is not None
     assert d.event_id == "evt_x"
+    assert d.created_at.year == 2025
 
 
 def test_tier_price_ok() -> None:

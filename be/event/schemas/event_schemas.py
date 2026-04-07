@@ -61,6 +61,7 @@ class EventDetailOut(EventCard):
     """GET /events/{id}: card fields plus tier prices from Event.price (see ticket.tier_pricing)."""
 
     ticket_tiers: list[TicketTierPriceOut]
+    is_organizer: bool = False
 
 
 class PaginationOut(SchemaModel):
@@ -105,3 +106,18 @@ class SaveEventBody(SchemaModel):
 class SavedListResponse(SchemaModel):
     saved_events: list[EventCard]
     pagination: PaginationOut
+
+
+class CreatedListResponse(SchemaModel):
+    created_events: list[EventCard]
+    pagination: PaginationOut
+
+
+class PatchEventBody(SchemaModel):
+    """PATCH /events/{id}: at least one field must be sent (see router validation)."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    title: str | None = None
+    description: str | None = None
+    event_cover: str | None = None
