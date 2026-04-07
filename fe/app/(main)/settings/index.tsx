@@ -7,6 +7,7 @@ import { Link } from 'expo-router'
 import { SignOutDialog } from '@/components/account/SignOutDialog'
 import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog'
 import PageLayout from '@/components/layout/PageLayout'
+import { openAppSettings } from '@/lib/settings/openAppSettings'
 
 const Settings = () => {
     const [whatsappEnabled, setWhatsappEnabled] = useState(false);
@@ -82,7 +83,7 @@ const Settings = () => {
                     />
                 </View>
 
-                <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
+                <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3' onPress={() => void openAppSettings()}>
                     <View className='flex-row items-center gap-4 flex-1'>
                         <Image source={require('@/assets/images/settings/location.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
                         <View className='flex-1'>
@@ -93,7 +94,7 @@ const Settings = () => {
                     <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
                 </TouchableOpacity>
 
-                <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
+                <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3' onPress={() => void openAppSettings()}>
                     <View className='flex-row items-center gap-4 flex-1'>
                         <Image source={require('@/assets/images/settings/notification.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
                         <View className='flex-1'>
