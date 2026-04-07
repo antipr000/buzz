@@ -2,7 +2,7 @@ import { View, TouchableOpacity, Switch, Alert } from 'react-native'
 import React from 'react'
 import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
-import { ChevronRight } from 'lucide-react-native'
+import { ChevronRight, PenLine } from 'lucide-react-native'
 import { Link, useRouter } from 'expo-router'
 import { SignOutDialog } from '@/components/account/SignOutDialog'
 import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog'
@@ -71,6 +71,16 @@ const Settings = () => {
                         <View className='flex-row items-center gap-4'>
                             <Image source={require('@/assets/images/settings/heart.svg')} style={{ width: 16, height: 16 }} contentFit="contain" />
                             <Text className='text-secondary-foreground font-medium text-xs'>Saved Events</Text>
+                        </View>
+                        <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
+                    </TouchableOpacity>
+                </Link>
+
+                <Link href="/settings/created-events" asChild>
+                    <TouchableOpacity activeOpacity={0.7} className='flex-row items-center justify-between bg-background p-4 rounded-xl mb-3'>
+                        <View className='flex-row items-center gap-4'>
+                            <PenLine size={16} color="#000000" strokeWidth={2} />
+                            <Text className='text-secondary-foreground font-medium text-xs'>Created events</Text>
                         </View>
                         <ChevronRight size={16} color="rgba(79, 70, 229, 1)" />
                     </TouchableOpacity>

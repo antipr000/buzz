@@ -19,6 +19,8 @@ const AVATAR_IMAGES = [
 
 export type FeaturedEventCardProps = {
     eventId: string
+    /** When set, used instead of navigating to `/event/{eventId}` for card taps */
+    onOpenDetail?: () => void
     isSavedInitially?: boolean
     category: string
     categoryIcon: ImageSource
@@ -42,6 +44,7 @@ export type FeaturedEventCardProps = {
 
 export default function FeaturedEventCard({
     eventId,
+    onOpenDetail,
     isSavedInitially = false,
     category,
     categoryIcon,
@@ -67,6 +70,10 @@ export default function FeaturedEventCard({
     const [saved, setSaved] = useState(isSavedInitially)
 
     const goToEventDetail = () => {
+        if (onOpenDetail) {
+            onOpenDetail()
+            return
+        }
         router.push(`/event/${eventId}`)
     }
 
@@ -84,6 +91,9 @@ export default function FeaturedEventCard({
             })
             queryClient.invalidateQueries({
                 queryKey: [...queryKeys.events.all, 'saved'],
+            })
+            queryClient.invalidateQueries({
+                queryKey: [...queryKeys.events.all, 'created'],
             })
         },
         onError: () => {
