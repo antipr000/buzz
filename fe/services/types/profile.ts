@@ -14,6 +14,7 @@ export type ProfileMeResponse = {
   marital_status: MaritalStatus | null;
   mobile_number: string | null;
   profile_image: string | null;
+  whatsapp_notifications_enabled: boolean;
 };
 
 /** POST /user/profile/avatar — matches `be/profile/schemas/detail.py`. */
@@ -29,6 +30,7 @@ export type ProfilePatchPayload = Partial<{
   marital_status: MaritalStatus | null;
   mobile_number: string | null;
   profile_image: string | null;
+  whatsapp_notifications_enabled: boolean;
 }>;
 
 export type UserBriefOut = {

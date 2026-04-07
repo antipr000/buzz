@@ -1,16 +1,44 @@
-import { View, TouchableOpacity, Switch } from 'react-native'
-import React, { useState } from 'react'
+import { View, TouchableOpacity, Switch, Alert } from 'react-native'
+import React from 'react'
 import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
 import { ChevronRight } from 'lucide-react-native'
-import { Link } from 'expo-router'
+import { Link, useRouter } from 'expo-router'
 import { SignOutDialog } from '@/components/account/SignOutDialog'
 import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog'
 import PageLayout from '@/components/layout/PageLayout'
 import { openAppSettings } from '@/lib/settings/openAppSettings'
+import { usePatchProfile, useProfileMe } from '@/hooks/api'
+
+function alertWhatsAppNeedsPhone(router: ReturnType<typeof useRouter>) {
+    Alert.alert(
+        'Add your mobile number',
+        'WhatsApp notifications use the mobile number on your profile. Add it in Profile → Edit, then turn this on again.',
+        [
+            { text: 'Not now', style: 'cancel' },
+            { text: 'Open Profile', onPress: () => router.push('/profile/edit') },
+        ],
+    )
+}
 
 const Settings = () => {
-    const [whatsappEnabled, setWhatsappEnabled] = useState(false);
+    const router = useRouter()
+    const { data: profile } = useProfileMe()
+    const { mutateAsync: patchProfile, isPending: isPatchingWhatsApp } = usePatchProfile()
+
+    const whatsappEnabled = profile?.whatsapp_notifications_enabled ?? false
+
+    const onWhatsAppToggle = async (next: boolean) => {
+        if (next && profile != null && !profile.mobile_number?.trim()) {
+            alertWhatsAppNeedsPhone(router)
+            return
+        }
+        try {
+            await patchProfile({ whatsapp_notifications_enabled: next })  // backend validation exists too
+        } catch {
+            Alert.alert('Could not update')
+        }
+    }
 
     return (
         <PageLayout title="Settings">
@@ -77,7 +105,8 @@ const Settings = () => {
                         trackColor={{ false: "#d4d4d8", true: "rgba(79, 70, 229, 1)" }}
                         thumbColor={whatsappEnabled ? "rgba(79, 70, 229, 1)" : "#f4f3f4"}
                         ios_backgroundColor="#3e3e3e"
-                        onValueChange={setWhatsappEnabled}
+                        disabled={isPatchingWhatsApp}
+                        onValueChange={(v) => void onWhatsAppToggle(v)}
                         value={whatsappEnabled}
                         style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                     />
