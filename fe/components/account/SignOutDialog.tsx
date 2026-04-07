@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Text } from '@/components/ui/text';
 import {
     AlertDialog,
@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/providers/AuthProvider';
 
-export function SignOutDialog({ children }: { children: React.ReactNode }) {
+export function SignOutDialog({ children }: { children: ReactNode }) {
     const { signOut } = useAuth();
     const [isSigningOut, setIsSigningOut] = useState(false);
 

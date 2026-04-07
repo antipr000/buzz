@@ -1,5 +1,9 @@
 import { useAuthDeepLink } from "@/hooks/useAuthDeepLink";
 import { getSupabase } from "@/lib/auth/supabase";
+import {
+  syncDeviceIfNewLocalDay,
+  syncDeviceOnSignedIn,
+} from "@/lib/device/device-register-sync";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   createContext,
@@ -55,8 +59,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, next) => {
+    } = supabase.auth.onAuthStateChange((event, next) => {
       setSession(next);
+      if (!next) return;
+      // Avoid async work inside the auth callback (Supabase deadlock guidance).
+      setTimeout(() => {
+        // SIGNED_IN: fresh login. INITIAL_SESSION: restored session (cold start) — no SIGNED_IN.
+        if (event === "SIGNED_IN") {
+          void syncDeviceOnSignedIn();
+        } else if (event === "INITIAL_SESSION") {
+          void syncDeviceIfNewLocalDay();
+        }
+      }, 0);
     });
 
     return () => {
@@ -73,17 +87,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const syncDailyIfSignedIn = () => {
+      void supabase.auth.getSession().then(({ data: { session: s } }) => {
+        if (s) void syncDeviceIfNewLocalDay();
+      });
+    };
+
     const onAppState = (next: AppStateStatus) => {
       if (next === "active") {
         supabase.auth.startAutoRefresh();
+        syncDailyIfSignedIn();
       } else {
         supabase.auth.stopAutoRefresh();
       }
     };
 
     const sub = AppState.addEventListener("change", onAppState);
+    // Cold start is already `active`; `change` may not fire, so run the same path once.
     if (AppState.currentState === "active") {
       supabase.auth.startAutoRefresh();
+      syncDailyIfSignedIn();
     }
 
     return () => sub.remove();

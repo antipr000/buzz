@@ -65,4 +65,10 @@ export const queryKeys = {
     /** `null` when the hook is disabled (no id yet). */
     detail: (id: string | null) => [...queryKeys.addresses.all, "detail", id] as const,
   },
+
+  /** GET /devices/ */
+  devices: {
+    all: ["devices"] as const,
+    list: () => [...queryKeys.devices.all, "list"] as const,
+  },
 } as const;
