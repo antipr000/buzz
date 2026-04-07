@@ -12,6 +12,7 @@ export { useDiscoverEvents, type UseDiscoverEventsArgs } from "./useDiscoverEven
 export { useInfiniteDiscoverEvents, type UseInfiniteDiscoverEventsArgs } from "./useInfiniteDiscoverEvents";
 export { useInfiniteSavedEvents, type UseInfiniteSavedEventsArgs } from "./useInfiniteSavedEvents";
 export { usePatchProfile } from "./usePatchProfile";
+export { usePatchWhatsAppNotifications } from "./usePatchWhatsAppNotifications";
 export { useProfileMe } from "./useProfileMe";
 export { useProfileStats } from "./useProfileStats";
 export { usePurchaseTickets } from "./usePurchaseTickets";

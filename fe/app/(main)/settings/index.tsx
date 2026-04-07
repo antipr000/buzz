@@ -8,12 +8,12 @@ import { SignOutDialog } from '@/components/account/SignOutDialog'
 import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog'
 import PageLayout from '@/components/layout/PageLayout'
 import { openAppSettings } from '@/lib/settings/openAppSettings'
-import { usePatchProfile, useProfileMe } from '@/hooks/api'
+import { usePatchWhatsAppNotifications, useProfileMe } from '@/hooks/api'
 
 function alertWhatsAppNeedsPhone(router: ReturnType<typeof useRouter>) {
     Alert.alert(
         'Add your mobile number',
-        'WhatsApp notifications use the mobile number on your profile. Add it in Profile → Edit, then turn this on again.',
+        'WhatsApp notifications use the mobile number on your profile.',
         [
             { text: 'Not now', style: 'cancel' },
             { text: 'Open Profile', onPress: () => router.push('/profile/edit') },
@@ -24,7 +24,8 @@ function alertWhatsAppNeedsPhone(router: ReturnType<typeof useRouter>) {
 const Settings = () => {
     const router = useRouter()
     const { data: profile } = useProfileMe()
-    const { mutateAsync: patchProfile, isPending: isPatchingWhatsApp } = usePatchProfile()
+    const { mutateAsync: patchWhatsApp, isPending: isPatchingWhatsApp } =
+        usePatchWhatsAppNotifications()
 
     const whatsappEnabled = profile?.whatsapp_notifications_enabled ?? false
 
@@ -34,7 +35,7 @@ const Settings = () => {
             return
         }
         try {
-            await patchProfile({ whatsapp_notifications_enabled: next })  // backend validation exists too
+            await patchWhatsApp(next) // backend validation exists too
         } catch {
             Alert.alert('Could not update')
         }
