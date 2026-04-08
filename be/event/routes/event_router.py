@@ -80,7 +80,15 @@ async def create_event(
     try:
         ev = await EventService.create(db, user_id=user.id, body=body)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        msg = str(e)
+        if msg == "event_date_past":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Event date must be today or later.",
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
     return CreateEventResponse(id=ev.id)
 
 

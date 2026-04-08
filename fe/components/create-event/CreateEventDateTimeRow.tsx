@@ -33,6 +33,9 @@ export function CreateEventDateTimeRow({
   const [showDate, setShowDate] = useState(false);
   const [showTime, setShowTime] = useState(false);
 
+  const minimumEventDate = new Date();
+  minimumEventDate.setHours(0, 0, 0, 0);
+
   const onDatePickerChange = (event: DateTimePickerEvent, selected?: Date) => {
     if (Platform.OS === 'android') {
       setShowDate(false);
@@ -70,6 +73,7 @@ export function CreateEventDateTimeRow({
             value={dateValue}
             mode="date"
             display="spinner"
+            minimumDate={minimumEventDate} // Might need to to do perodic checks .
             onChange={onDatePickerChange}
           />
           <Pressable
@@ -143,6 +147,7 @@ export function CreateEventDateTimeRow({
             value={dateValue}
             mode="date"
             display="default"
+            minimumDate={minimumEventDate}
             onChange={onDatePickerChange}
           />
         ) : null}

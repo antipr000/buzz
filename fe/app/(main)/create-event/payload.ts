@@ -1,7 +1,8 @@
 /**
  * Colocated with the create-event route: form → `POST /events/create` helpers.
  * Shared by this screen, `CreateEventDateTimeRow` (iOS/Android), and the API call.
- * Submit rules include a required event cover (`isCreateEventFormSubmittable` `hasEventCover`).
+ * Submit rules include a required event cover (`isCreateEventFormSubmittable` `hasEventCover`)
+ * and event date on or after local today (`isCreateEventDateAllowed`), matching the API.
  *
  * API date/time use the device’s local calendar and clock (IST for typical
  * Indian users). Display uses `en-IN` for consistent India-first copy.
@@ -20,6 +21,19 @@ export type CreateEventFormState = {
   eventDate: Date;
   eventTime: Date;
 };
+
+/** Event day (local calendar) must be today or later — matches server `date >= today`. */
+export function isCreateEventDateAllowed(eventDate: Date): boolean {
+  const day = new Date(
+    eventDate.getFullYear(),
+    eventDate.getMonth(),
+    eventDate.getDate()
+  );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  day.setHours(0, 0, 0, 0);
+  return day.getTime() >= today.getTime();
+}
 
 /** Local calendar date → API `date` (YYYY-MM-DD). */
 export function formatLocalDateString(d: Date): string {
@@ -73,6 +87,7 @@ export function buildCreateEventBody(
   if (!title || !description || !form.category) return null;
   const price = parsePriceInt(form.priceText);
   if (price === null) return null;
+  if (!isCreateEventDateAllowed(form.eventDate)) return null;
 
   return {
     event_cover: options?.eventCoverUrl ?? null,

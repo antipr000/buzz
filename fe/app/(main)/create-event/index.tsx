@@ -21,10 +21,12 @@ import {
 import { queryKeys } from '@/lib/query/query-keys';
 import { createEvent, uploadEventCover } from '@/services/events';
 import type { CreateEventBody } from '@/services/types/events';
+import { isAxiosError } from 'axios';
 
 import {
   type CreateEventFormState,
   buildCreateEventBody,
+  isCreateEventDateAllowed,
   isCreateEventFormSubmittable,
 } from './payload';
 
@@ -101,8 +103,9 @@ export default function CreateEventScreen() {
       });
       if (!body) return;
       await createMutation.mutateAsync(body);
-    } catch {
-      Alert.alert('Could not create event', 'Please try again.');
+    } catch (e) {
+     
+      Alert.alert('Could not create event');
     }
   };
 
@@ -247,6 +250,11 @@ export default function CreateEventScreen() {
           onDateChange={setEventDate}
           onTimeChange={setEventTime}
         />
+        {!isCreateEventDateAllowed(eventDate) ? (
+          <Text className="text-destructive text-xs -mt-2">
+            Event date must be today or later.
+          </Text>
+        ) : null}
 
         {/* Location */}
         <View className="gap-1">

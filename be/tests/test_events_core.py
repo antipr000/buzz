@@ -1,6 +1,6 @@
 """Unit tests for pagination, pricing helpers, and schema parsing."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -17,7 +17,10 @@ from common.pagination import (
 from core.schemas.schema_model import to_camel
 from event.models.event import EventCategory
 from event.schemas.event_schemas import CreateEventBody
-from event.services.event_service import sanitize_discover_search_text
+from event.services.event_service import (
+    _ensure_create_event_date_not_past,
+    sanitize_discover_search_text,
+)
 from ticket.models.ticket import TicketTier
 
 
@@ -87,6 +90,22 @@ def test_create_event_body_category_lowercase() -> None:
         }
     )
     assert body.category == EventCategory.MUSIC
+
+
+def test_ensure_create_event_date_past_raises() -> None:
+    ref = date(2026, 6, 15)
+    with pytest.raises(ValueError, match="event_date_past"):
+        _ensure_create_event_date_not_past(date(2026, 6, 14), today=ref)
+
+
+def test_ensure_create_event_date_today_ok() -> None:
+    ref = date(2026, 6, 15)
+    _ensure_create_event_date_not_past(date(2026, 6, 15), today=ref)
+
+
+def test_ensure_create_event_date_future_ok() -> None:
+    ref = date(2026, 6, 15)
+    _ensure_create_event_date_not_past(date(2026, 6, 16), today=ref)
 
 
 def test_create_event_body_invalid_category() -> None:

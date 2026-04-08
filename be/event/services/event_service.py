@@ -39,6 +39,13 @@ class EventPatchForbidden(Exception):
     """Current user is not the event organizer."""
 
 
+def _ensure_create_event_date_not_past(event_day: date, *, today: date | None = None) -> None:
+    """Raise ValueError(event_date_past) if event_day is before the reference calendar day."""
+    ref = today if today is not None else date.today()
+    if event_day < ref:
+        raise ValueError("event_date_past")
+
+
 def _rank_tiny_expr():
     return cast(Event.is_featured, Integer) * 2 + cast(Event.is_popular, Integer)
 
@@ -368,6 +375,8 @@ class EventService:
         p = await db.get(Profile, user_id)
         if p is None:
             raise ValueError("Profile required to create events")
+
+        _ensure_create_event_date_not_past(body.date)
 
         ev = Event(
             title=body.title,
