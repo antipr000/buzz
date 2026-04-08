@@ -15,6 +15,8 @@ export {
   useInfiniteCreatedEvents,
   type UseInfiniteCreatedEventsArgs,
 } from "./useInfiniteCreatedEvents";
+export { useEventDetail } from "./useEventDetail";
+export { usePatchEvent, type PatchEventVariables } from "./usePatchEvent";
 export { usePatchProfile } from "./usePatchProfile";
 export { usePatchWhatsAppNotifications } from "./usePatchWhatsAppNotifications";
 export { useProfileMe } from "./useProfileMe";
