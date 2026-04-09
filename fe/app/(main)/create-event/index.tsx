@@ -1,4 +1,4 @@
-import { View, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Alert, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,6 +18,7 @@ import {
   EVENT_CATEGORY_LABELS,
   type EventCategoryLabel,
 } from '@/constants/eventCategories';
+import { TICKET_TIER_VALUES, type TicketTierValue } from '@/constants/ticketTiers';
 import { queryKeys } from '@/lib/query/query-keys';
 import { createEvent, uploadEventCover } from '@/services/events';
 import type { CreateEventBody } from '@/services/types/events';
@@ -25,10 +26,24 @@ import { isAxiosError } from 'axios';
 
 import {
   type CreateEventFormState,
+  type CreateEventPricingMode,
   buildCreateEventBody,
   isCreateEventDateAllowed,
   isCreateEventFormSubmittable,
 } from './payload';
+
+/** Tiered mode requires an explicit price per tier (type 0 for a free tier). */
+const EMPTY_TIER_PRICES = (): Record<TicketTierValue, string> => ({
+  Standard: '',
+  Premium: '',
+  VIP: '',
+});
+
+const EMPTY_TIER_AMENITIES = (): Record<TicketTierValue, string> => ({
+  Standard: '',
+  Premium: '',
+  VIP: '',
+});
 
 const CATEGORIES: EventCategoryLabel[] = [...EVENT_CATEGORY_LABELS];
 
@@ -46,19 +61,43 @@ export default function CreateEventScreen() {
   const [selectedCategory, setSelectedCategory] = useState<EventCategoryLabel | null>(null);
   const [eventDate, setEventDate] = useState(() => new Date());
   const [eventTime, setEventTime] = useState(() => new Date());
+  const [pricingMode, setPricingMode] = useState<CreateEventPricingMode>('single');
   const [priceText, setPriceText] = useState('0');
+  const [tierPriceText, setTierPriceText] = useState(EMPTY_TIER_PRICES);
+  const [tierAmenitiesText, setTierAmenitiesText] = useState(EMPTY_TIER_AMENITIES);
   const [pickedLocation, setPickedLocation] = useState<PickedLocation | null>(null);
+
+  const setTierPrice = (tier: TicketTierValue, value: string) => {
+    setTierPriceText((prev) => ({ ...prev, [tier]: value }));
+  };
+
+  const setTierAmenities = (tier: TicketTierValue, value: string) => {
+    setTierAmenitiesText((prev) => ({ ...prev, [tier]: value }));
+  };
 
   const form: CreateEventFormState = useMemo(
     () => ({
       title,
       description,
       category: selectedCategory,
+      pricingMode,
       priceText,
+      tierPriceText,
+      tierAmenitiesText,
       eventDate,
       eventTime,
     }),
-    [title, description, selectedCategory, priceText, eventDate, eventTime]
+    [
+      title,
+      description,
+      selectedCategory,
+      pricingMode,
+      priceText,
+      tierPriceText,
+      tierAmenitiesText,
+      eventDate,
+      eventTime,
+    ]
   );
 
   const canSubmit = isCreateEventFormSubmittable(
@@ -271,25 +310,86 @@ export default function CreateEventScreen() {
           </View>
         </View>
 
-        {/* Ticket Price */}
-        <View className="gap-1">
-          <Text className="font-medium text-foreground text-xs">Ticket Price</Text>
-          <View className="relative justify-center">
-            <View className="absolute left-3 z-10 pointer-events-none">
-              <Image
-                source={require('@/assets/images/create/cash.svg')}
-                style={{ width: 12, height: 12 }}
-                contentFit="contain"
+        {/* Ticket Price (always visible; used when tiers are off) */}
+        {pricingMode === 'single' && (
+          <View className="gap-1">
+            <Text className="font-medium text-foreground text-xs">Ticket Price</Text>
+            <View className="relative justify-center">
+              <View className="absolute left-3 z-10 pointer-events-none">
+                <Image
+                  source={require('@/assets/images/create/cash.svg')}
+                  style={{ width: 12, height: 12 }}
+                  contentFit="contain"
+                />
+              </View>
+              <Input
+                placeholder="Keep it 0 for free events"
+                className="pl-9 border-0 bg-[rgba(240,239,255,1)] text-xs"
+                keyboardType="numeric"
+                value={priceText}
+                onChangeText={setPriceText}
               />
             </View>
-            <Input
-              placeholder="Keep it 0 for free events"
-              className="pl-9 border-0 bg-[rgba(240,239,255,1)] text-xs"
-              keyboardType="numeric"
-              value={priceText}
-              onChangeText={setPriceText}
+          </View>
+        )}
+
+        {/* Ticket Tiers (Optional) toggle */}
+        <View className="gap-2">
+          <View className="flex-row items-start justify-between">
+            <View className="flex-1 mr-3">
+              <Text className="font-semibold text-foreground text-sm">
+                Ticket Tiers (Optional)
+              </Text>
+              <Text className="text-[11px] text-secondary-foreground mt-0.5">
+                Add pricing tiers — Standard, Premium, VIP
+              </Text>
+            </View>
+            <Switch
+            className='size-8'
+              value={pricingMode === 'tiered'}
+              onValueChange={(v) => setPricingMode(v ? 'tiered' : 'single')}
+              thumbColor="#fff"
+              trackColor={{ false: '#d1d5db', true: '#4f46e5' }}
             />
           </View>
+
+          {pricingMode === 'tiered' && (
+            <View className="gap-3 mt-1">
+              <Text className="text-[11px] text-secondary-foreground leading-4 px-0.5">
+                Each tier needs a price and at least one amenity line. One perk per line; press Enter
+                between items.
+              </Text>
+              {TICKET_TIER_VALUES.map((tier) => (
+                <View
+                  key={tier}
+                  className="rounded-xl bg-[rgba(240,239,255,0.8)] p-3 gap-2"
+                >
+                  <View className="flex-row items-center justify-between gap-2">
+                    <Text className="text-xs font-semibold text-foreground">{tier}</Text>
+                    <View className="flex-row items-center gap-1">
+                      <Text className="text-xs text-secondary-foreground">₹</Text>
+                      <Input
+                        placeholder="Price"
+                        className="w-28 h-9 border-0 bg-white text-xs px-2"
+                        keyboardType="numeric"
+                        value={tierPriceText[tier]}
+                        onChangeText={(v) => setTierPrice(tier, v)}
+                      />
+                    </View>
+                  </View>
+                  <View className="gap-1">
+                    <Text className="text-[11px] font-medium text-foreground">Amenities</Text>
+                    <Textarea
+                      placeholder="One line per item (e.g. Free parking — then Enter — then Meet & greet)"
+                      className="min-h-[88px] text-xs border-0 bg-white"
+                      value={tierAmenitiesText[tier]}
+                      onChangeText={(v) => setTierAmenities(tier, v)}
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
         <View className="p-4  items-center">
           <Button

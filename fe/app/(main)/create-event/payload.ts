@@ -9,18 +9,38 @@
  */
 import type { PickedLocation } from '@/components/create-event/LocationField';
 import type { EventCategoryLabel } from '@/constants/eventCategories';
+import { TICKET_TIER_VALUES, type TicketTierValue } from '@/constants/ticketTiers';
 import type { CreateEventBody } from '@/services/types/events';
 
 const DISPLAY_LOCALE = 'en-IN';
+
+export type CreateEventPricingMode = 'single' | 'tiered';
 
 export type CreateEventFormState = {
   title: string;
   description: string;
   category: EventCategoryLabel | null;
+  pricingMode: CreateEventPricingMode;
+  /** Used when `pricingMode === 'single'`. */
   priceText: string;
+  /** Tiered: price inputs per fixed tier (Standard / Premium / VIP). */
+  tierPriceText: Record<TicketTierValue, string>;
+  /** Tiered: multiline amenities; one line per bullet on the event page. */
+  tierAmenitiesText: Record<TicketTierValue, string>;
   eventDate: Date;
   eventTime: Date;
 };
+
+/**
+ * Split tier amenities textarea into separate items: each newline starts the next bullet.
+ * Trims each line and drops blank lines so stray Enter keys do not create empty bullets.
+ */
+export function linesToAmenityArray(text: string): string[] {
+  return text
+    .split(/\r?\n/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
 
 /** Event day (local calendar) must be today or later — matches server `date >= today`. */
 export function isCreateEventDateAllowed(eventDate: Date): boolean {
@@ -77,6 +97,45 @@ export function parsePriceInt(text: string): number | null {
   return n;
 }
 
+/**
+ * Pricing must match the selected mode: single → one valid ticket price; tiered → valid integer
+ * price for Standard, Premium, and VIP (use 0 for a free tier), and at least one amenity line
+ * per tier (non-empty after trim; blank lines do not count).
+ */
+export function isPricingCompleteForSubmit(form: CreateEventFormState): boolean {
+  if (form.pricingMode === 'single') {
+    return parsePriceInt(form.priceText) !== null;
+  }
+  const pricesOk = TICKET_TIER_VALUES.every(
+    (tier) => parsePriceInt(form.tierPriceText[tier]) !== null
+  );
+  if (!pricesOk) return false;
+  return TICKET_TIER_VALUES.every(
+    (tier) => linesToAmenityArray(form.tierAmenitiesText[tier]).length > 0
+  );
+}
+
+function tierDetailsFromForm(form: CreateEventFormState): CreateEventBody['tier_details'] | null {
+  const Standard = parsePriceInt(form.tierPriceText.Standard);
+  const Premium = parsePriceInt(form.tierPriceText.Premium);
+  const VIP = parsePriceInt(form.tierPriceText.VIP);
+  if (Standard === null || Premium === null || VIP === null) return null;
+  return {
+    Standard: {
+      price: Standard,
+      amenities: linesToAmenityArray(form.tierAmenitiesText.Standard),
+    },
+    Premium: {
+      price: Premium,
+      amenities: linesToAmenityArray(form.tierAmenitiesText.Premium),
+    },
+    VIP: {
+      price: VIP,
+      amenities: linesToAmenityArray(form.tierAmenitiesText.VIP),
+    },
+  };
+}
+
 export function buildCreateEventBody(
   form: CreateEventFormState,
   location: PickedLocation,
@@ -85,9 +144,30 @@ export function buildCreateEventBody(
   const title = form.title.trim();
   const description = form.description.trim();
   if (!title || !description || !form.category) return null;
-  const price = parsePriceInt(form.priceText);
-  if (price === null) return null;
   if (!isCreateEventDateAllowed(form.eventDate)) return null;
+  if (!isPricingCompleteForSubmit(form)) return null;
+
+  if (form.pricingMode === 'single') {
+    const price = parsePriceInt(form.priceText);
+    if (price === null) return null;
+    return {
+      event_cover: options?.eventCoverUrl ?? null,
+      title,
+      description,
+      category: form.category.toLowerCase(),
+      date: formatLocalDateString(form.eventDate),
+      time: formatLocalTimeString(form.eventTime),
+      location: location.address,
+      price,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      language: null,
+    };
+  }
+
+  const details = tierDetailsFromForm(form);
+  if (!details) return null;
+  const price = details.Standard.price;
 
   return {
     event_cover: options?.eventCoverUrl ?? null,
@@ -101,6 +181,7 @@ export function buildCreateEventBody(
     latitude: location.latitude,
     longitude: location.longitude,
     language: null,
+    tier_details: details,
   };
 }
 
