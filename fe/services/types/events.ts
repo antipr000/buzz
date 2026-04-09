@@ -32,6 +32,7 @@ export type EventCard = {
 export type TicketTierPriceOut = {
   tier: string;
   price: number;
+  amenities: string[];
 };
 
 export type EventDetailOut = EventCard & {
@@ -68,6 +69,12 @@ export type PatchEventBody = {
   event_cover?: string;
 };
 
+/** One tier inside POST /events/create `tier_details` (keys: Standard, Premium, VIP). */
+export type CreateEventTierRow = {
+  price: number;
+  amenities: string[];
+};
+
 /** POST /events/create body (snake_case), matches be/event/schemas/event_schemas.py */
 export type CreateEventBody = {
   event_cover?: string | null;
@@ -77,10 +84,17 @@ export type CreateEventBody = {
   date: string;
   time: string;
   location: string;
+  /** Single-ticket price, or Standard tier price when `tier_details` is set (must match). */
   price: number;
   latitude: number;
   longitude: number;
   language?: string | null;
+  /** When set, must include Standard, Premium, and VIP. Omit or null for single-price events. */
+  tier_details?: {
+    Standard: CreateEventTierRow;
+    Premium: CreateEventTierRow;
+    VIP: CreateEventTierRow;
+  } | null;
 };
 
 export type CreateEventResponse = {

@@ -55,10 +55,11 @@ class TicketTierPriceOut(SchemaModel):
 
     tier: str
     price: int
+    amenities: list[str] = Field(default_factory=list)
 
 
 class EventDetailOut(EventCard):
-    """GET /events/{id}: card fields plus tier prices from Event.price (see ticket.tier_pricing)."""
+    """GET /events/{id}: card fields plus tier rows (prices + amenities)."""
 
     ticket_tiers: list[TicketTierPriceOut]
     is_organizer: bool = False
@@ -75,6 +76,13 @@ class DiscoverResponse(SchemaModel):
     pagination: PaginationOut
 
 
+class EventTierRowIn(SchemaModel):
+    """One tier row inside `CreateEventBody.tier_details` (validated in EventService.create)."""
+
+    price: int = Field(ge=0)
+    amenities: list[str] = Field(default_factory=list)
+
+
 class CreateEventBody(SchemaModel):
     event_cover: str | None = None
     title: str
@@ -83,10 +91,14 @@ class CreateEventBody(SchemaModel):
     date: date
     time: time
     location: str
-    price: int
+    price: int = Field(
+        ge=0,
+        description="Single-ticket price, or Standard tier price when tier_details is set (must match).",
+    )
     latitude: float
     longitude: float
     language: str | None = None
+    tier_details: dict[str, EventTierRowIn] | None = None
 
 
 class CreateEventResponse(SchemaModel):

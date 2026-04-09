@@ -26,13 +26,13 @@ class AddressIn(SchemaModel):
 
 class TicketLineIn(SchemaModel):
     ticket_tier: TicketTier
-    price: int
+    price: int = Field(ge=0)
     quantity: int = Field(ge=1)
 
 
 class PurchaseBody(SchemaModel):
     event_id: str
-    tickets: list[TicketLineIn]
+    tickets: list[TicketLineIn] = Field(min_length=1)
     address_id: str | None = None
     address: AddressIn | None = None
     payment_method: PaymentMethod

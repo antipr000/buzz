@@ -29,10 +29,45 @@ from event.schemas.event_schemas import (
     TicketTierPriceOut,
     category_api_value,
 )
-from ticket.tier_pricing import all_tier_prices
 from profile.models.profile import Profile
 from saved_event.models.saved_event import SavedEvent
-from ticket.models.ticket import Ticket
+from ticket.models.ticket import Ticket, TicketTier
+
+
+def normalized_tier_details_for_create(body: CreateEventBody) -> dict[str, Any] | None:
+    """Validate `tier_details` keys; return plain dicts for JSON storage (not Pydantic models)."""
+    if body.tier_details is None:
+        return None
+    required = {t.value for t in TicketTier}
+    if set(body.tier_details.keys()) != required:
+        raise ValueError(
+            "tier_details must contain exactly the keys Standard, Premium, and VIP"
+        )
+    return {t.value: body.tier_details[t.value].model_dump() for t in TicketTier}
+
+
+def _ensure_tiered_price_matches_body(
+    body: CreateEventBody, tier_blob: dict[str, Any] | None
+) -> None:
+    """When tier_details is present, top-level `price` must equal Standard tier (API consistency)."""
+    if tier_blob is None:
+        return
+    if int(body.price) != int(tier_blob["Standard"]["price"]):
+        raise ValueError("price_must_match_standard_tier")
+
+
+def ticket_tiers_for_event_detail(event: Event) -> list[TicketTierPriceOut]:
+    """Single-price: one Standard row. Tiered: Standard / Premium / VIP from `tier_details`."""
+    if event.tier_details is None:
+        return [TicketTierPriceOut(tier=TicketTier.STANDARD.value, price=event.price)]
+    return [
+        TicketTierPriceOut(
+            tier=t.value,
+            price=event.tier_details[t.value]["price"],
+            amenities=event.tier_details[t.value]["amenities"],
+        )
+        for t in TicketTier
+    ]
 
 
 class EventPatchForbidden(Exception):
@@ -253,10 +288,7 @@ class EventService:
         card = _to_event_card(
             event, counts.get(event_id, 0), is_saved=event_id in saved_ids
         )
-        tiers = [
-            TicketTierPriceOut(tier=t.value, price=p)
-            for t, p in all_tier_prices(event.price)
-        ]
+        tiers = ticket_tiers_for_event_detail(event)
         return EventDetailOut(
             **card.model_dump(),
             ticket_tiers=tiers,
@@ -378,6 +410,10 @@ class EventService:
 
         _ensure_create_event_date_not_past(body.date)
 
+        tier_blob = normalized_tier_details_for_create(body)
+        _ensure_tiered_price_matches_body(body, tier_blob)
+        event_price = body.price if tier_blob is None else int(tier_blob["Standard"]["price"])
+
         ev = Event(
             title=body.title,
             description=body.description,
@@ -385,12 +421,13 @@ class EventService:
             event_date=body.date,
             event_time=body.time,
             location=body.location,
-            price=body.price,
+            price=event_price,
             event_cover=body.event_cover,
             organizer_id=user_id,
             latitude=body.latitude,
             longitude=body.longitude,
             language=body.language,
+            tier_details=tier_blob,
         )
         db.add(ev)
         await db.commit()

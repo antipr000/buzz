@@ -1,11 +1,15 @@
 """Unit tests for pagination, pricing helpers, and schema parsing."""
 
 from datetime import date, datetime, timezone
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
 
-from ticket.tier_pricing import tier_line_price_ok
+from ticket.tier_pricing import (
+    ensure_ticket_line_price_for_event,
+    tier_line_price_ok_for_event,
+)
 from common.pagination import (
     DiscoverCursor,
     EventListKeyset,
@@ -19,6 +23,8 @@ from event.models.event import EventCategory
 from event.schemas.event_schemas import CreateEventBody
 from event.services.event_service import (
     _ensure_create_event_date_not_past,
+    _ensure_tiered_price_matches_body,
+    normalized_tier_details_for_create,
     sanitize_discover_search_text,
 )
 from ticket.models.ticket import TicketTier
@@ -68,11 +74,53 @@ def test_event_list_keyset_roundtrip() -> None:
     assert d.created_at.year == 2025
 
 
-def test_tier_price_ok() -> None:
-    assert tier_line_price_ok(TicketTier.STANDARD, 100, 100) is True
-    assert tier_line_price_ok(TicketTier.PREMIUM, 100, 150) is True
-    assert tier_line_price_ok(TicketTier.VIP, 100, 200) is True
-    assert tier_line_price_ok(TicketTier.STANDARD, 100, 99) is False
+def test_tier_line_price_ok_for_event_single_price() -> None:
+    ev = SimpleNamespace(price=100, tier_details=None)
+    assert tier_line_price_ok_for_event(ev, TicketTier.STANDARD, 100) is True
+    assert tier_line_price_ok_for_event(ev, TicketTier.STANDARD, 99) is False
+    assert tier_line_price_ok_for_event(ev, TicketTier.PREMIUM, 100) is False
+
+
+def test_tier_line_price_ok_for_event_tiered() -> None:
+    ev = SimpleNamespace(
+        price=100,
+        tier_details={
+            "Standard": {"price": 100, "amenities": []},
+            "Premium": {"price": 150, "amenities": ["x"]},
+            "VIP": {"price": 200, "amenities": []},
+        },
+    )
+    assert tier_line_price_ok_for_event(ev, TicketTier.STANDARD, 100) is True
+    assert tier_line_price_ok_for_event(ev, TicketTier.PREMIUM, 150) is True
+    assert tier_line_price_ok_for_event(ev, TicketTier.VIP, 200) is True
+    assert tier_line_price_ok_for_event(ev, TicketTier.VIP, 199) is False
+
+
+def test_ensure_ticket_line_single_price_rejects_non_standard() -> None:
+    ev = SimpleNamespace(price=100, tier_details=None)
+    ensure_ticket_line_price_for_event(ev, TicketTier.STANDARD, 100)
+    with pytest.raises(ValueError, match="purchase_tier_not_available"):
+        ensure_ticket_line_price_for_event(ev, TicketTier.PREMIUM, 100)
+
+
+def test_ensure_ticket_line_single_price_rejects_wrong_amount() -> None:
+    ev = SimpleNamespace(price=100, tier_details=None)
+    with pytest.raises(ValueError, match="purchase_price_mismatch"):
+        ensure_ticket_line_price_for_event(ev, TicketTier.STANDARD, 99)
+
+
+def test_ensure_ticket_line_tiered_rejects_wrong_amount() -> None:
+    ev = SimpleNamespace(
+        price=100,
+        tier_details={
+            "Standard": {"price": 100, "amenities": []},
+            "Premium": {"price": 150, "amenities": []},
+            "VIP": {"price": 200, "amenities": []},
+        },
+    )
+    ensure_ticket_line_price_for_event(ev, TicketTier.PREMIUM, 150)
+    with pytest.raises(ValueError, match="purchase_price_mismatch"):
+        ensure_ticket_line_price_for_event(ev, TicketTier.PREMIUM, 149)
 
 
 def test_create_event_body_category_lowercase() -> None:
@@ -123,3 +171,80 @@ def test_create_event_body_invalid_category() -> None:
                 "longitude": 1.0,
             }
         )
+
+
+def test_create_event_body_tier_details_ok() -> None:
+    body = CreateEventBody.model_validate(
+        {
+            "title": "T",
+            "description": "D",
+            "category": "music",
+            "date": "2026-06-01",
+            "time": "18:00:00",
+            "location": "Here",
+            "price": 100,
+            "latitude": 28.6,
+            "longitude": 77.2,
+            "tier_details": {
+                "Standard": {"price": 100, "amenities": ["  a  ", "", "b"]},
+                "Premium": {"price": 150, "amenities": []},
+                "VIP": {"price": 200, "amenities": ["x"]},
+            },
+        }
+    )
+    assert body.tier_details is not None
+    assert body.tier_details["Standard"].amenities == ["  a  ", "", "b"]
+    blob = normalized_tier_details_for_create(body)
+    assert blob is not None
+    assert blob["Standard"]["amenities"] == ["  a  ", "", "b"]
+    assert blob["Premium"]["amenities"] == []
+
+
+def test_create_tiered_price_must_match_standard() -> None:
+    body = CreateEventBody.model_validate(
+        {
+            "title": "T",
+            "description": "D",
+            "category": "music",
+            "date": "2026-06-01",
+            "time": "18:00:00",
+            "location": "Here",
+            "price": 999,
+            "latitude": 28.6,
+            "longitude": 77.2,
+            "tier_details": {
+                "Standard": {"price": 100, "amenities": []},
+                "Premium": {"price": 150, "amenities": []},
+                "VIP": {"price": 200, "amenities": []},
+            },
+        }
+    )
+    tier_blob = normalized_tier_details_for_create(body)
+    assert tier_blob is not None
+    with pytest.raises(ValueError, match="price_must_match_standard_tier"):
+        _ensure_tiered_price_matches_body(body, tier_blob)
+
+    body_ok = body.model_copy(update={"price": 100})
+    _ensure_tiered_price_matches_body(body_ok, tier_blob)
+
+
+def test_tier_details_wrong_keys_raises_in_service() -> None:
+    body = CreateEventBody.model_validate(
+        {
+            "title": "T",
+            "description": "D",
+            "category": "music",
+            "date": "2026-06-01",
+            "time": "18:00:00",
+            "location": "Here",
+            "price": 100,
+            "latitude": 28.6,
+            "longitude": 77.2,
+            "tier_details": {
+                "Standard": {"price": 100, "amenities": []},
+                "Premium": {"price": 150, "amenities": []},
+            },
+        }
+    )
+    with pytest.raises(ValueError, match="tier_details must contain exactly"):
+        normalized_tier_details_for_create(body)

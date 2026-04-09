@@ -19,7 +19,7 @@ from booking.schemas.booking_schemas import (
 from event.models.event import Event
 from payment.models.payment import Payment, PaymentStatus
 from ticket.models.ticket import Ticket, TicketTier
-from ticket.tier_pricing import tier_line_price_ok
+from ticket.tier_pricing import ensure_ticket_line_price_for_event
 
 
 def _combine_event_datetime(d: date, t: time) -> datetime:
@@ -41,12 +41,14 @@ class BookingService:
             raise ValueError("Event is not upcoming")
 
         for line in body.tickets:
-            if not tier_line_price_ok(line.ticket_tier, ev.price, line.price):
-                raise ValueError("Ticket price does not match tier pricing for this event")
+            ensure_ticket_line_price_for_event(ev, line.ticket_tier, line.price)
 
         total = sum(line.price * line.quantity for line in body.tickets)
-        if total <= 0:
+        if total < 0:
             raise ValueError("Invalid ticket total")
+        payment_status = (
+            PaymentStatus.COMPLETED if total == 0 else PaymentStatus.PENDING_PAYMENT
+        )
 
         if body.address_id is not None:
             addr = await db.get(Address, body.address_id)
@@ -87,7 +89,7 @@ class BookingService:
             booking_id=booking.id,
             payment_method=body.payment_method,
             amount=total,
-            status=PaymentStatus.PENDING_PAYMENT,
+            status=payment_status,
         )
         db.add(payment)
 

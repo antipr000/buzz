@@ -86,6 +86,11 @@ async def create_event(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Event date must be today or later.",
             ) from e
+        if msg == "price_must_match_standard_tier":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="When tier_details is set, price must equal the Standard tier price.",
+            ) from e
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
@@ -130,7 +135,18 @@ async def purchase_tickets(
     try:
         booking, payment = await BookingService.purchase(db, user_id=user.id, body=body)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        msg = str(e)
+        if msg == "purchase_tier_not_available":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This event only offers Standard tickets.",
+            ) from e
+        if msg == "purchase_price_mismatch":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ticket price does not match this event's tier prices.",
+            ) from e
+        raise HTTPException(status_code=400, detail=msg) from e
     return PurchaseResponse(
         booking_id=booking.id,
         payment_id=payment.id,

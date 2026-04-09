@@ -1,25 +1,24 @@
-"""Single source of truth for per-tier prices derived from Event.price (MVP)."""
+"""Two pricing modes: single flat price, or three explicit tiers in `Event.tier_details`."""
 
 from __future__ import annotations
 
+from event.models.event import Event
 from ticket.models.ticket import TicketTier
 
-_TIER_MULTIPLIER: dict[TicketTier, float] = {
-    TicketTier.STANDARD: 1.0,
-    TicketTier.PREMIUM: 1.5,
-    TicketTier.VIP: 2.0,
-}
+
+def tier_line_price_ok_for_event(event: Event, tier: TicketTier, line_price: int) -> bool:
+    if event.tier_details is None:
+        return tier is TicketTier.STANDARD and line_price == event.price
+    row = event.tier_details.get(tier.value, {})
+    return isinstance(row, dict) and int(row.get("price", -1)) == line_price
 
 
-def expected_tier_price(event_base_price: int, tier: TicketTier) -> int:
-    """Matches purchase validation: int(base * multiplier)."""
-    return int(event_base_price * _TIER_MULTIPLIER[tier])
-
-
-def tier_line_price_ok(tier: TicketTier, event_price: int, line_price: int) -> bool:
-    return line_price == expected_tier_price(event_price, tier)
-
-
-def all_tier_prices(event_base_price: int) -> list[tuple[TicketTier, int]]:
-    """Stable order: Standard, Premium, VIP (enum definition order)."""
-    return [(t, expected_tier_price(event_base_price, t)) for t in TicketTier]
+def ensure_ticket_line_price_for_event(
+    event: Event, tier: TicketTier, line_price: int
+) -> None:
+    """Raise ValueError if this tier/price is not allowed for the event (purchase validation)."""
+    if tier_line_price_ok_for_event(event, tier, line_price):
+        return
+    if event.tier_details is None and tier is not TicketTier.STANDARD:
+        raise ValueError("purchase_tier_not_available")
+    raise ValueError("purchase_price_mismatch")

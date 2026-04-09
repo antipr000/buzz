@@ -3,9 +3,9 @@ from __future__ import annotations
 import enum
 import uuid
 from datetime import date, time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
-from sqlalchemy import Boolean, Date, Enum, Float, ForeignKey, Index, Integer, String, Time, Uuid
+from sqlalchemy import Boolean, Date, Enum, Float, ForeignKey, Index, Integer, JSON, String, Time, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import BaseEntity
@@ -29,6 +29,13 @@ class EventCategory(str, enum.Enum):
     NIGHTLIFE = "Nightlife"
     WORKSHOP = "Workshop"
     NETWORK = "Network"
+
+
+class EventTierDetail(TypedDict):
+    """Per-tier row stored in `tier_details` (keys: Standard, Premium, VIP)."""
+
+    price: int
+    amenities: list[str]
 
 
 class Event(BaseEntity):
@@ -57,6 +64,7 @@ class Event(BaseEntity):
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     language: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    tier_details: Mapped[dict[str, EventTierDetail] | None] = mapped_column(JSON, nullable=True)
 
     organizer: Mapped[Profile] = relationship(
         back_populates="organized_events",
