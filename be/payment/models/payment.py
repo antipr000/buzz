@@ -19,6 +19,9 @@ class PaymentStatus(str, enum.Enum):
 
 
 class PaymentMethod(str, enum.Enum):
+    """`free` is only valid when the ticket total is ₹0 (see `BookingService.purchase`)."""
+
+    FREE = "free"
     UPI = "upi"
     CREDIT_DEBIT_CARD = "credit_debit_card"
     PAY_LATER = "pay_later"

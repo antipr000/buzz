@@ -30,6 +30,9 @@ from event.services.event_service import (
 )
 from ticket.models.ticket import TicketTier
 
+from booking.services.booking_service import _validate_payment_method_for_total
+from payment.models.payment import PaymentMethod
+
 
 def test_to_camel() -> None:
     assert to_camel("is_featured") == "isFeatured"
@@ -252,6 +255,13 @@ def test_ticket_tiers_for_event_detail_tiered_amenities() -> None:
     assert tiers[0].price == 100 and tiers[0].amenities == ["Entry", "Standing zone"]
     assert tiers[1].price == 150 and tiers[1].amenities == ["Seat", "Drink"]
     assert tiers[2].price == 500 and tiers[2].amenities == ["Backstage"]
+
+
+def test_validate_payment_method_free_only_when_total_zero() -> None:
+    with pytest.raises(ValueError, match="paid_checkout_cannot_use_free_payment_method"):
+        _validate_payment_method_for_total(PaymentMethod.FREE, 1)
+    _validate_payment_method_for_total(PaymentMethod.FREE, 0)
+    _validate_payment_method_for_total(PaymentMethod.UPI, 100)
 
 
 def test_tier_details_wrong_keys_raises_in_service() -> None:

@@ -8,7 +8,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import { firstParamString } from '@/lib/expo-router/params'
 import type { PurchasePaymentMethod } from '@/constants/paymentMethods'
 import { usePurchaseTickets } from '@/hooks/api'
-import type { PurchaseAddressIn, PurchaseBody, PurchaseTicketLine } from '@/services/types/booking'
+import type { PurchaseAddressIn, PurchaseBody, PurchaseResponse, PurchaseTicketLine } from '@/services/types/booking'
 
 /** Stable row id for React; `method` is the API `payment_method` string. */
 const PAYMENT_OPTIONS: {
@@ -32,19 +32,21 @@ function checkoutFromParams(params: {
     tickets?: string | string[];
     addressId?: string | string[];
     address?: string | string[];
+    eventTitle?: string | string[];
 }): CheckoutState {
     const eventId = firstParamString(params.eventId);
     const ticketsJson = firstParamString(params.tickets);
     const addressId = firstParamString(params.addressId);
     const addressJson = firstParamString(params.address);
+    const eventTitle = firstParamString(params.eventTitle) ?? '';
     if (!eventId || !ticketsJson) return { ok: false };
     if (!addressId && !addressJson) return { ok: false };
     try {
         const tickets = JSON.parse(ticketsJson) as PurchaseTicketLine[];
         if (!Array.isArray(tickets) || tickets.length === 0) return { ok: false };
-        if (addressId) return { ok: true, eventId, tickets, addressId };
+        if (addressId) return { ok: true, eventId, tickets, addressId, eventTitle };
         const address = JSON.parse(addressJson!) as PurchaseAddressIn;
-        return { ok: true, eventId, tickets, address };
+        return { ok: true, eventId, tickets, address, eventTitle };
     } catch {
         return { ok: false };
     }
@@ -54,6 +56,7 @@ type CheckoutReady = {
     ok: true;
     eventId: string;
     tickets: PurchaseTicketLine[];
+    eventTitle: string;
 } & (
     | { addressId: string; address?: never }
     | { address: PurchaseAddressIn; addressId?: never }
@@ -67,10 +70,11 @@ function useCheckoutFromParams(): CheckoutState {
         tickets?: string | string[];
         addressId?: string | string[];
         address?: string | string[];
+        eventTitle?: string | string[];
     }>();
     return useMemo(
         () => checkoutFromParams(params),
-        [params.eventId, params.tickets, params.addressId, params.address],
+        [params.eventId, params.tickets, params.addressId, params.address, params.eventTitle],
     );
 }
 
@@ -86,14 +90,19 @@ const Payment = () => {
         const body: PurchaseBody = checkout.addressId
             ? { event_id: checkout.eventId, tickets: checkout.tickets, address_id: checkout.addressId, payment_method: method }
             : { event_id: checkout.eventId, tickets: checkout.tickets, address: checkout.address!, payment_method: method };
+        const navigateBooked = (data: PurchaseResponse) => {
+            router.replace({
+                pathname: '/event-booked',
+                params: {
+                    bookingId: data.booking_id,
+                    paymentStatus: data.payment_status,
+                    eventTitle: checkout.eventTitle,
+                },
+            });
+        };
+
         purchase.mutate(body, {
-            onSuccess: (data) => {
-                Alert.alert(
-                    'Booking created',
-                    `Reference: ${data.booking_id}. Payment is pending (${data.payment_status}).`,
-                    [{ text: 'OK', onPress: () => router.replace('/(main)/(tabs)/events') }],
-                );
-            },
+            onSuccess: navigateBooked,
             onError: (err) => {
                 Alert.alert(
                     'Could not complete purchase',

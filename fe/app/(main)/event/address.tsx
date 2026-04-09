@@ -12,14 +12,16 @@ import { ChevronLeft } from 'lucide-react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import AddressForm from '@/components/address/AddressForm'
 import { savedAddressSummary } from '@/components/address/savedAddressSummary'
-import { useAddresses } from '@/hooks/api'
+import { useAddresses, usePurchaseTickets } from '@/hooks/api'
 import {
     addressFormSatisfiesPurchase,
     buildValidatedPayload,
     emptyAddressForm,
     type AddressFormState,
 } from '@/components/address/addressFormModel'
+import { checkoutTotal } from '@/lib/booking/checkoutTotal'
 import { firstParamString } from '@/lib/expo-router/params'
+import type { PurchaseResponse, PurchaseTicketLine } from '@/services/types/booking'
 
 type CheckoutAddressMode = 'saved' | 'new'
 
@@ -41,6 +43,8 @@ const AddressDetails = () => {
         refetch: refetchAddresses,
         isFetching: addressesFetching,
     } = useAddresses()
+
+    const purchase = usePurchaseTickets()
 
     const [checkoutForm, setCheckoutForm] = useState<AddressFormState>(() => emptyAddressForm())
     const [addressMode, setAddressMode] = useState<CheckoutAddressMode>('new')
@@ -75,8 +79,24 @@ const AddressDetails = () => {
 
     const checkoutParamsOk = Boolean(eventId && ticketsJson)
 
+    /**
+     * CTA label only ("Confirm booking" vs "Proceed"). Trusts the same `tickets` JSON as submit;
+     * strict validation stays in `proceedToPayment`.
+     */
+    const isFreeCart = useMemo((): boolean | null => {
+        if (!ticketsJson) return null
+        try {
+            const parsed = JSON.parse(ticketsJson) as unknown
+            if (!Array.isArray(parsed) || parsed.length === 0) return null
+            return checkoutTotal(parsed as PurchaseTicketLine[]) === 0
+        } catch {
+            return null
+        }
+    }, [ticketsJson])
+
     const canProceed =
         checkoutParamsOk &&
+        !purchase.isPending &&
         (addressMode === 'saved'
             ? Boolean(selectedSavedRow)
             : addressFormSatisfiesPurchase(checkoutForm))
@@ -98,14 +118,82 @@ const AddressDetails = () => {
             router.back()
             return
         }
+        if (purchase.isPending) return
+
+        let ticketLines: PurchaseTicketLine[]
+        let cartTotal: number
         try {
             const parsed = JSON.parse(ticketsJson) as unknown
             if (!Array.isArray(parsed) || parsed.length === 0) {
                 throw new Error('invalid')
             }
+            ticketLines = parsed as PurchaseTicketLine[]
+            cartTotal = checkoutTotal(ticketLines)
+            if (!Number.isFinite(cartTotal) || cartTotal < 0) {
+                throw new Error('invalid')
+            }
         } catch {
             Alert.alert('Invalid checkout', 'Go back and choose tickets again.')
             router.back()
+            return
+        }
+
+        const eventTitleParam = firstParamString(params.eventTitle) ?? ''
+        /** Zero-total checkout must use `free` (see `PaymentMethod.FREE` on the server). */
+        const freeCheckoutPaymentMethod = 'free' as const
+
+        const navigateBooked = (data: PurchaseResponse) => {
+            router.replace({
+                pathname: '/event-booked',
+                params: {
+                    bookingId: data.booking_id,
+                    paymentStatus: data.payment_status,
+                    eventTitle: eventTitleParam,
+                },
+            })
+        }
+
+        if (cartTotal === 0) {
+            if (addressMode === 'saved') {
+                if (!selectedSavedRow) return
+                purchase.mutate(
+                    {
+                        event_id: eventId,
+                        tickets: ticketLines,
+                        address_id: selectedSavedRow.id,
+                        payment_method: freeCheckoutPaymentMethod,
+                    },
+                    {
+                        onSuccess: navigateBooked,
+                        onError: (err) => {
+                            Alert.alert(
+                                'Could not complete booking',
+                                err instanceof Error ? err.message : 'Please try again.'
+                            )
+                        },
+                    }
+                )
+            } else {
+                const body = buildValidatedPayload(checkoutForm)
+                if (!body) return
+                purchase.mutate(
+                    {
+                        event_id: eventId,
+                        tickets: ticketLines,
+                        address: body,
+                        payment_method: freeCheckoutPaymentMethod,
+                    },
+                    {
+                        onSuccess: navigateBooked,
+                        onError: (err) => {
+                            Alert.alert(
+                                'Could not complete booking',
+                                err instanceof Error ? err.message : 'Please try again.'
+                            )
+                        },
+                    }
+                )
+            }
             return
         }
 
@@ -116,7 +204,7 @@ const AddressDetails = () => {
                 params: {
                     eventId,
                     tickets: ticketsJson,
-                    eventTitle: firstParamString(params.eventTitle) ?? '',
+                    eventTitle: eventTitleParam,
                     addressId: selectedSavedRow.id,
                 },
             })
@@ -128,15 +216,26 @@ const AddressDetails = () => {
                 params: {
                     eventId,
                     tickets: ticketsJson,
-                    eventTitle: firstParamString(params.eventTitle) ?? '',
+                    eventTitle: eventTitleParam,
                     address: JSON.stringify(body),
                 },
             })
         }
     }
 
+    const proceedCtaLabel =
+        isFreeCart === true ? 'Confirm booking' : 'Proceed'
+
     return (
         <SafeAreaView edges={['top']} className='flex-1 bg-white'>
+            {purchase.isPending ? (
+                <View
+                    className="absolute inset-0 z-10 bg-white/60 items-center justify-center"
+                    pointerEvents="auto"
+                >
+                    <ActivityIndicator size="large" color="rgba(79,70,229,1)" />
+                </View>
+            ) : null}
             <View className='flex-row items-center px-5 py-10 pb-4 bg-white border-b border-[rgba(0,0,0,0.05)]'>
                 <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
                     <ChevronLeft size={20} color="rgba(29,27,32,1)" />
@@ -270,7 +369,7 @@ const AddressDetails = () => {
                     onPress={proceedToPayment}
                     className={`bg-primary w-full h-12 rounded-lg items-center justify-center ${!canProceed ? 'opacity-45' : ''}`}
                 >
-                    <Text className='text-white font-bold text-[14px]'>Proceed</Text>
+                    <Text className='text-white font-bold text-[14px]'>{proceedCtaLabel}</Text>
                 </TouchableOpacity>
                 {!checkoutParamsOk ? (
                     <Text className="mt-2 text-center text-[10px] text-[#64748B]">

@@ -146,6 +146,11 @@ async def purchase_tickets(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Ticket price does not match this event's tier prices.",
             ) from e
+        if msg == "paid_checkout_cannot_use_free_payment_method":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Payment method 'free' is only for zero-total bookings.",
+            ) from e
         raise HTTPException(status_code=400, detail=msg) from e
     return PurchaseResponse(
         booking_id=booking.id,

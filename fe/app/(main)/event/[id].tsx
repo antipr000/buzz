@@ -19,6 +19,7 @@ import {
     displayEventDescription,
     displayEventTitle,
 } from '@/lib/events/display-event-title'
+import { checkoutTotal } from '@/lib/booking/checkoutTotal'
 import { openNativeMaps } from '@/lib/maps/openNativeMaps'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useMemo, useState } from 'react'
@@ -106,22 +107,8 @@ export default function EventDetails() {
         })
     }
 
-    const totalPrice = ticketTiers.reduce(
-        (sum, row) => sum + row.price * (ticketCounts[row.tier as TicketTierValue] || 0),
-        0
-    )
-
-    const hasSelectedTickets = useMemo(
-        () =>
-            ticketTiers.some(
-                (row) => (ticketCounts[row.tier as TicketTierValue] || 0) > 0
-            ),
-        [ticketTiers, ticketCounts]
-    )
-
-    const proceedToAddress = () => {
-        if (!event) return
-        const lines: PurchaseTicketLine[] = ticketTiers
+    const purchaseLines = useMemo((): PurchaseTicketLine[] => {
+        return ticketTiers
             .map((row) => {
                 const tier = row.tier as TicketTierValue
                 const quantity = ticketCounts[tier] ?? 0
@@ -133,7 +120,18 @@ export default function EventDetails() {
                 }
             })
             .filter((line): line is PurchaseTicketLine => line !== null)
-        if (lines.length === 0) {
+    }, [ticketTiers, ticketCounts])
+
+    const totalPrice = useMemo(
+        () => checkoutTotal(purchaseLines),
+        [purchaseLines]
+    )
+
+    const hasSelectedTickets = purchaseLines.length > 0
+
+    const proceedToAddress = () => {
+        if (!event) return
+        if (purchaseLines.length === 0) {
             Alert.alert('Select tickets', 'Add at least one ticket to continue.')
             return
         }
@@ -141,7 +139,7 @@ export default function EventDetails() {
             pathname: '/event/address',
             params: {
                 eventId: event.id,
-                tickets: JSON.stringify(lines),
+                tickets: JSON.stringify(purchaseLines),
                 eventTitle: event.title,
             },
         })

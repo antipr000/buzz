@@ -17,13 +17,18 @@ from booking.schemas.booking_schemas import (
     TicketLineOut,
 )
 from event.models.event import Event
-from payment.models.payment import Payment, PaymentStatus
+from payment.models.payment import Payment, PaymentMethod, PaymentStatus
 from ticket.models.ticket import Ticket, TicketTier
 from ticket.tier_pricing import ensure_ticket_line_price_for_event
 
 
 def _combine_event_datetime(d: date, t: time) -> datetime:
     return datetime.combine(d, t, tzinfo=timezone.utc)
+
+
+def _validate_payment_method_for_total(payment_method: PaymentMethod, total: int) -> None:
+    if total > 0 and payment_method == PaymentMethod.FREE:
+        raise ValueError("paid_checkout_cannot_use_free_payment_method")
 
 
 class BookingService:
@@ -46,6 +51,7 @@ class BookingService:
         total = sum(line.price * line.quantity for line in body.tickets)
         if total < 0:
             raise ValueError("Invalid ticket total")
+        _validate_payment_method_for_total(body.payment_method, total)
         payment_status = (
             PaymentStatus.COMPLETED if total == 0 else PaymentStatus.PENDING_PAYMENT
         )

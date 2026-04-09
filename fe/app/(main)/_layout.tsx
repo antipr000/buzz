@@ -14,7 +14,7 @@ export default function MainLayout() {
     <Stack
       screenOptions={({ route }) => {
         const name = route.name;
-        if (name === "event-created") {
+        if (name === "event-created" || name === "event-booked") {
           return {
             headerShown: false,
             presentation: "fullScreenModal" as const,
