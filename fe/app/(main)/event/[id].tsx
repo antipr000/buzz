@@ -49,6 +49,13 @@ export default function EventDetails() {
         if (!data) return null
         const label = eventCategoryFromApiValue(data.category)
         const detailIcons = DETAIL_ICONS[label]
+        const isTiered = data.ticket_tiers.length > 1
+        const fromPriceLabel =
+            data.price === 0
+                ? 'Free'
+                : isTiered
+                  ? `From ₹${data.price} onwards`
+                  : `₹${data.price}`
         return {
             event: {
                 id: data.id,
@@ -61,8 +68,7 @@ export default function EventDetails() {
                 location: data.location,
                 bg: eventCardBackground(data, label),
                 eventColor: CATEGORY_COLORS[label],
-                fromPriceLabel:
-                    data.price === 0 ? 'Free' : `From ₹${data.price} onwards`,
+                fromPriceLabel,
                 organizer: data.organizer.name,
                 organizerLogo: data.organizer.logo?.trim()
                     ? { uri: data.organizer.logo.trim() }
@@ -105,12 +111,16 @@ export default function EventDetails() {
         0
     )
 
+    const hasSelectedTickets = useMemo(
+        () =>
+            ticketTiers.some(
+                (row) => (ticketCounts[row.tier as TicketTierValue] || 0) > 0
+            ),
+        [ticketTiers, ticketCounts]
+    )
+
     const proceedToAddress = () => {
         if (!event) return
-        if (totalPrice <= 0) {
-            Alert.alert('Select tickets', 'Add at least one ticket to continue.')
-            return
-        }
         const lines: PurchaseTicketLine[] = ticketTiers
             .map((row) => {
                 const tier = row.tier as TicketTierValue
@@ -308,12 +318,18 @@ export default function EventDetails() {
                                 const tier = row.tier as TicketTierValue
                                 const count = ticketCounts[tier] || 0
                                 const isOpen = !!openTickets[tier]
+                                const amenityLines =
+                                    row.amenities?.map((a) => a.trim()).filter((a) => a.length > 0) ??
+                                    []
+                                const hasAmenities = amenityLines.length > 0
                                 return (
                                     <View key={tier} className="bg-white rounded-xl shadow-xs border border-[rgba(79,70,229,0.03)] overflow-hidden">
                                         <View className="flex-row items-center justify-between p-2.5 ">
                                             <View>
                                                 <Text className="text-[12px]  text-secondary">{row.tier}</Text>
-                                                <Text className="text-[12px] font-semibold text-secondary mt-0.5 mb-1">₹{row.price}</Text>
+                                                <Text className="text-[12px] font-semibold text-secondary mt-0.5 mb-1">
+                                                    {row.price === 0 ? 'Free' : `₹${row.price}`}
+                                                </Text>
                                             </View>
                                             {count > 0 ? (
                                                 <View className="flex-row items-center border border-primary rounded-md h-7 w-[70px] justify-between overflow-hidden">
@@ -335,30 +351,33 @@ export default function EventDetails() {
                                             )}
                                         </View>
 
-                                        <Collapsible open={isOpen} onOpenChange={() => toggleTicketOpen(tier)}>
-                                            <CollapsibleTrigger asChild>
-                                                <TouchableOpacity className="px-2.5 pb-2.5 flex-row items-center gap-2" activeOpacity={0.7}>
-                                                    <Text className="text-[10px] text-[rgba(228,5,5,0.7)] font-medium">{isOpen ? 'Show less' : 'Know more'}</Text>
-                                                    {isOpen ? (
-                                                        <ChevronUp size={12} color="rgba(228,5,5,0.7)" />
-                                                    ) : (
-                                                        <ChevronDown size={12} color="rgba(228,5,5,0.7)" />
-                                                    )}
-                                                </TouchableOpacity>
-                                            </CollapsibleTrigger>
-                                            <CollapsibleContent>
-                                                <View className="px-4 pb-4 pt-1  mx-4 mb-3 rounded-lg border border-[rgba(255,75,75,0.1)]">
-                                                    <View className="flex-row items-center mt-2">
-                                                        <View className="w-1 h-1 rounded-full bg-slate-800 mr-2" />
-                                                        <Text className="text-[12px] text-slate-700">Event access</Text>
+                                        {hasAmenities ? (
+                                            <Collapsible open={isOpen} onOpenChange={() => toggleTicketOpen(tier)}>
+                                                <CollapsibleTrigger asChild>
+                                                    <TouchableOpacity className="px-2.5 pb-2.5 flex-row items-center gap-2" activeOpacity={0.7}>
+                                                        <Text className="text-[10px] text-[rgba(228,5,5,0.7)] font-medium">{isOpen ? 'Show less' : 'Know more'}</Text>
+                                                        {isOpen ? (
+                                                            <ChevronUp size={12} color="rgba(228,5,5,0.7)" />
+                                                        ) : (
+                                                            <ChevronDown size={12} color="rgba(228,5,5,0.7)" />
+                                                        )}
+                                                    </TouchableOpacity>
+                                                </CollapsibleTrigger>
+                                                <CollapsibleContent>
+                                                    <View className="px-4 pb-4 pt-1 mx-4 mb-3 rounded-lg border border-[rgba(255,75,75,0.1)]">
+                                                        {amenityLines.map((line, idx) => (
+                                                            <View
+                                                                key={`${tier}-amenity-${idx}`}
+                                                                className="flex-row items-start mt-1.5 first:mt-2"
+                                                            >
+                                                                <View className="w-1 h-1 rounded-full bg-slate-800 mr-2 mt-1.5 shrink-0" />
+                                                                <Text className="text-[12px] text-slate-700 flex-1 leading-snug">{line}</Text>
+                                                            </View>
+                                                        ))}
                                                     </View>
-                                                    <View className="flex-row items-center mt-1.5">
-                                                        <View className="w-1 h-1 rounded-full bg-slate-800 mr-2" />
-                                                        <Text className="text-[12px] text-slate-700">Basic Amenities</Text>
-                                                    </View>
-                                                </View>
-                                            </CollapsibleContent>
-                                        </Collapsible>
+                                                </CollapsibleContent>
+                                            </Collapsible>
+                                        ) : null}
                                     </View>
                                 );
                             })}
@@ -400,16 +419,23 @@ export default function EventDetails() {
                 <View className=" w-full  px-6 py-4 flex-row items-center justify-between  pb-8">
                     <View>
                         <Text className="text-[12px] text-[rgba(15,23,42,0.7)] ">Total</Text>
-                        <Text className="text-[16px] font-semibold text-secondary-foreground">₹{totalPrice}</Text>
+                        <Text className="text-[16px] font-semibold text-secondary-foreground">
+                            {totalPrice === 0 ? 'Free' : `₹${totalPrice}`}
+                        </Text>
                     </View>
 
                     
                     <TouchableOpacity
-                        activeOpacity={0.7}
+                        activeOpacity={hasSelectedTickets ? 0.7 : 1}
+                        disabled={!hasSelectedTickets}
                         onPress={proceedToAddress}
-                        className="bg-primary px-8  h-10 rounded-lg items-center justify-center"
+                        className={`px-8 h-10 rounded-lg items-center justify-center bg-primary disabled:opacity-60`}
                     >
-                        <Text className="text-primary-foreground text-[14px] font-bold">Proceed</Text>
+                        <Text
+                            className={`text-[14px] font-bold  text-white`}
+                        >
+                            Proceed
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

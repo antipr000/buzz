@@ -26,6 +26,7 @@ from event.services.event_service import (
     _ensure_tiered_price_matches_body,
     normalized_tier_details_for_create,
     sanitize_discover_search_text,
+    ticket_tiers_for_event_detail,
 )
 from ticket.models.ticket import TicketTier
 
@@ -226,6 +227,31 @@ def test_create_tiered_price_must_match_standard() -> None:
 
     body_ok = body.model_copy(update={"price": 100})
     _ensure_tiered_price_matches_body(body_ok, tier_blob)
+
+
+def test_ticket_tiers_for_event_detail_single_price_no_amenities() -> None:
+    ev = SimpleNamespace(price=50, tier_details=None)
+    tiers = ticket_tiers_for_event_detail(ev)
+    assert len(tiers) == 1
+    assert tiers[0].tier == TicketTier.STANDARD.value
+    assert tiers[0].price == 50
+    assert tiers[0].amenities == []
+
+
+def test_ticket_tiers_for_event_detail_tiered_amenities() -> None:
+    ev = SimpleNamespace(
+        price=100,
+        tier_details={
+            "Standard": {"price": 100, "amenities": ["Entry", "Standing zone"]},
+            "Premium": {"price": 150, "amenities": ["Seat", "Drink"]},
+            "VIP": {"price": 500, "amenities": ["Backstage"]},
+        },
+    )
+    tiers = ticket_tiers_for_event_detail(ev)
+    assert [t.tier for t in tiers] == ["Standard", "Premium", "VIP"]
+    assert tiers[0].price == 100 and tiers[0].amenities == ["Entry", "Standing zone"]
+    assert tiers[1].price == 150 and tiers[1].amenities == ["Seat", "Drink"]
+    assert tiers[2].price == 500 and tiers[2].amenities == ["Backstage"]
 
 
 def test_tier_details_wrong_keys_raises_in_service() -> None:
