@@ -72,9 +72,9 @@ export default function EventBooked() {
                     ? 'No payment required — you are all set.'
                     : 'Payment is still pending. Complete it when you are ready.'}
             </Text>
-            <Text className="text-secondary-foreground text-[11px] text-center mt-4 px-6">
+            {/* <Text className="text-secondary-foreground text-[11px] text-center mt-4 px-6">
                 Reference: {bookingId}
-            </Text>
+            </Text> */}
         </SafeAreaView>
     )
 }

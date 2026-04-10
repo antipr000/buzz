@@ -1,5 +1,6 @@
 import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Text } from '@/components/ui/text'
 import { useBookings } from '@/hooks/api'
 import {
@@ -8,12 +9,13 @@ import {
     formatTicketLines,
     getBookingStatusPresentation,
 } from '@/lib/bookings/display'
+import { cn } from '@/lib/utils'
 import type { BookingListItem } from '@/services/types/booking'
 import { isAxiosError } from 'axios'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
 import { ArrowLeft } from 'lucide-react-native'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
     ActivityIndicator,
     RefreshControl,
@@ -33,6 +35,7 @@ function isUnauthorizedError(error: unknown): boolean {
 
 const Events = () => {
     const router = useRouter()
+    const [activeTab, setActiveTab] = useState<'created' | 'bookings'>('bookings')
     const { data, isLoading, isError, error, refetch, isRefetching } = useBookings()
 
     const bookings = useMemo(() => data?.data ?? [], [data?.data])
@@ -51,103 +54,122 @@ const Events = () => {
         </View>
     )
 
-    if (initialLoading) {
-        return (
-            <SafeAreaView className='flex-1 bg-background' edges={['top']}>
-                <View className='flex-1'>
-                    {header}
-                    <View className='flex-1 items-center justify-center px-10'>
-                        <ActivityIndicator className='text-primary' />
-                    </View>
-                </View>
-            </SafeAreaView>
-        )
-    }
-
-    if (unauthorized) {
-        return (
-            <SafeAreaView className='flex-1 bg-background' edges={['top']}>
-                <View className='flex-1'>
-                    {header}
-                    <View className='flex-1 items-center justify-center px-10'>
-                        <Text className='text-primary text-sm text-center'>
-                            Sign in to see your bookings.
-                        </Text>
-                    </View>
-                </View>
-            </SafeAreaView>
-        )
-    }
-
-    if (isError) {
-        return (
-            <SafeAreaView className='flex-1 bg-background' edges={['top']}>
-                <View className='flex-1'>
-                    {header}
-                    <ScrollView
-                        className='flex-1'
-                        contentContainerClassName='flex-grow items-center justify-center px-10 py-10'
-                        refreshControl={
-                            <RefreshControl
-                                refreshing={isRefetching}
-                                onRefresh={() => refetch()}
-                            />
-                        }
+    const tabBar = (
+        <View className='bg-[rgba(249,250,251,1)] px-4 pb-4 pt-6'>
+            <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as 'created' | 'bookings')}
+                className='w-full gap-0'
+            >
+                <TabsList className='h-[28px] w-[85%] max-w-[340px] self-center flex-row rounded-xl bg-white p-0.5 shadow-sm shadow-black/5'>
+                    <TabsTrigger
+                        value='created'
+                        className={cn(
+                            'h-[24px] flex-1 rounded-lg border-0 px-1 py-0 shadow-none',
+                            activeTab === 'created' ? 'bg-primary' : 'bg-white'
+                        )}
                     >
-                        <Text className='text-primary text-sm text-center'>
-                            Could not load your events. Pull to retry.
+                        <Text
+                            className={cn(
+                                'text-center text-[12px] font-medium',
+                                activeTab === 'created' ? 'text-white' : 'text-primary'
+                            )}
+                        >
+                            Events Created
                         </Text>
-                    </ScrollView>
-                </View>
-            </SafeAreaView>
-        )
-    }
-
-    if (bookings.length === 0) {
-        return (
-            <SafeAreaView className='flex-1 bg-background' edges={['top']}>
-                <View className='flex-1'>
-                    {header}
-                    <ScrollView
-                        className='flex-1'
-                        contentContainerClassName='flex-grow items-center justify-center px-10 py-10'
-                        refreshControl={
-                            <RefreshControl
-                                refreshing={isRefetching}
-                                onRefresh={() => refetch()}
-                            />
-                        }
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value='bookings'
+                        className={cn(
+                            'h-[24px] flex-1 rounded-lg border-0 px-1 py-0 shadow-none',
+                            activeTab === 'bookings' ? 'bg-primary' : 'bg-white'
+                        )}
                     >
-                        <Text className='text-[rgba(15,23,42,0.8)] text-sm text-center font-medium'>
-                            You have no bookings yet.
+                        <Text
+                            className={cn(
+                                'text-center text-[12px] font-medium',
+                                activeTab === 'bookings' ? 'text-white' : 'text-primary'
+                            )}
+                        >
+                            My Bookings
                         </Text>
-                        <Text className='text-[rgba(15,23,42,0.55)] text-xs text-center mt-2'>
-                            When you buy tickets, they will show up here.
-                        </Text>
-                        <Text className='text-[rgba(15,23,42,0.45)] text-[11px] text-center mt-4'>
-                            Pull down to refresh.
-                        </Text>
-                    </ScrollView>
-                </View>
-            </SafeAreaView>
-        )
-    }
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
+        </View>
+    )
+
+    const createdPlaceholder = (
+        <View className='flex-1 items-center justify-center px-10'>
+            <Text className='text-center text-sm font-medium text-[rgba(15,23,42,0.75)]'>
+                Events you create will show up here.
+            </Text>
+            <Text className='mt-2 text-center text-xs text-[rgba(15,23,42,0.5)]'>
+                Switch to My Bookings to see tickets you have purchased.
+            </Text>
+        </View>
+    )
 
     return (
         <SafeAreaView className='flex-1 bg-background' edges={['top']}>
             <View className='flex-1'>
                 {header}
+                {tabBar}
 
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={isRefetching && !isLoading}
-                            onRefresh={() => refetch()}
-                        />
-                    }
-                >
+                {activeTab === 'created' ? (
+                    createdPlaceholder
+                ) : initialLoading ? (
+                    <View className='flex-1 items-center justify-center px-10'>
+                        <ActivityIndicator className='text-primary' />
+                    </View>
+                ) : unauthorized ? (
+                    <View className='flex-1 items-center justify-center px-10'>
+                        <Text className='text-center text-sm text-primary'>
+                            Sign in to see your bookings.
+                        </Text>
+                    </View>
+                ) : isError ? (
+                    <ScrollView
+                        className='flex-1'
+                        contentContainerClassName='flex-grow items-center justify-center px-10 py-10'
+                        refreshControl={
+                            <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
+                        }
+                    >
+                        <Text className='text-center text-sm text-primary'>
+                            Could not load your events. Pull to retry.
+                        </Text>
+                    </ScrollView>
+                ) : bookings.length === 0 ? (
+                    <ScrollView
+                        className='flex-1'
+                        contentContainerClassName='flex-grow items-center justify-center px-10 py-10'
+                        refreshControl={
+                            <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
+                        }
+                    >
+                        <Text className='text-center text-sm font-medium text-[rgba(15,23,42,0.8)]'>
+                            You have no bookings yet.
+                        </Text>
+                        <Text className='mt-2 text-center text-xs text-[rgba(15,23,42,0.55)]'>
+                            When you buy tickets, they will show up here.
+                        </Text>
+                        <Text className='mt-4 text-center text-[11px] text-[rgba(15,23,42,0.45)]'>
+                            Pull down to refresh.
+                        </Text>
+                    </ScrollView>
+                ) : (
+                    <ScrollView
+                        className='flex-1'
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={isRefetching && !isLoading}
+                                onRefresh={() => refetch()}
+                            />
+                        }
+                    >
                     {bookings.map((booking: BookingListItem) => {
                         const statusUi = getBookingStatusPresentation(booking.status)
                         const cover = booking.event_image?.trim() ?? ''
@@ -181,26 +203,32 @@ const Events = () => {
                                         <View className='p-4 flex-row gap-4'>
                                             <Image
                                                 source={imageSource}
-                                                style={{ width: 100, height: 130, borderRadius: 12 }}
+                                                style={{ width: 101, height: 131, borderRadius: 12 }}
                                                 contentFit='cover'
                                             />
 
-                                            <View className='flex-1 shrink'>
-                                                <View className='flex-row justify-between items-start'>
+                                            <View className='flex-1'>
+                                                <View className='flex-row items-start'>
                                                     <View className='flex-1 pr-2'>
-                                                        <Text className='text-secondary-foreground font-bold text-xs'>
+                                                        <Text
+                                                            className='text-secondary-foreground font-bold text-xs'
+                                                            numberOfLines={3}
+                                                        >
                                                             {booking.title}
                                                         </Text>
                                                         <Text className='text-[rgba(15,23,42,0.7)] text-[11px] mt-0.5'>
                                                             {lang}
                                                         </Text>
                                                     </View>
-                                                    <Text className='text-[rgba(15,23,42,0.7)] font-semibold text-[11px]'>
+                                                    <Text
+                                                        className='text-[rgba(15,23,42,0.7)] font-semibold text-[11px]'
+                                                        style={{ flexShrink: 0 }}
+                                                    >
                                                         E-Ticket
                                                     </Text>
                                                 </View>
 
-                                                <View className='mt-9 gap-0.5'>
+                                                <View className='mt-7 gap-0.5'>
                                                     <Text className='text-secondary-foreground font-semibold text-[11px]'>
                                                         {formatEventWhen(booking.date)}
                                                     </Text>
@@ -218,7 +246,8 @@ const Events = () => {
 
                                         <View className='px-4 py-4 flex-row items-center gap-3'>
                                             <View
-                                                className={`px-2 py-1.5 rounded-lg ${statusUi.badgeClassName}`}
+                                                className='px-2 py-1.5 rounded-lg'
+                                                style={{ backgroundColor: statusUi.badgeColor }}
                                             >
                                                 <Text className='text-white font-semibold text-[10px] tracking-wider'>
                                                     {statusUi.label}
@@ -240,6 +269,7 @@ const Events = () => {
                         )
                     })}
                 </ScrollView>
+                )}
             </View>
         </SafeAreaView>
     )

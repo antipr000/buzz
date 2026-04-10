@@ -44,7 +44,7 @@ export function formatTicketLines(tickets: BookingTicketLineOut[]): string {
 export function getBookingStatusPresentation(status: string): {
     label: string
     message: string
-    badgeClassName: string
+    badgeColor: string
 } {
     const u = status.trim().toUpperCase()
     switch (u) {
@@ -52,25 +52,25 @@ export function getBookingStatusPresentation(status: string): {
             return {
                 label: 'UPCOMING',
                 message: 'Your e-ticket is ready. See you at the event!',
-                badgeClassName: 'bg-[rgba(59,130,246,1)]',
+                badgeColor: 'rgb(59,130,246)',
             }
         case 'ATTENDED':
             return {
                 label: 'ATTENDED',
                 message: 'Hope you had an amazing time!',
-                badgeClassName: 'bg-[rgba(145,145,145,1)]',
+                badgeColor: 'rgb(145,145,145)',
             }
         case 'CANCELLED':
             return {
                 label: 'CANCELLED',
                 message: 'This booking was cancelled.',
-                badgeClassName: 'bg-[rgba(239,68,68,1)]',
+                badgeColor: 'rgb(239,68,68)',
             }
         default:
             return {
                 label: u || status,
                 message: '',
-                badgeClassName: 'bg-[rgba(145,145,145,1)]',
+                badgeColor: 'rgb(145,145,145)',
             }
     }
 }
