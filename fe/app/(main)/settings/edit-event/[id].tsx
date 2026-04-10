@@ -207,8 +207,8 @@ export default function EditCreatedEventScreen() {
       {listHeader}
 
       <ScrollView
-        contentContainerClassName="p-5 pb-10 gap-5"
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerClassName="p-5 gap-5"
+        contentContainerStyle={{ paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
@@ -255,7 +255,7 @@ export default function EditCreatedEventScreen() {
           <Input
             placeholder="Event title"
             editable={!locked}
-            className="border-0 placeholder:text-xs bg-[rgba(240,239,255,1)] text-xs"
+            className="border-0 h-[30px]  placeholder:text-xs bg-[rgba(240,239,255,1)] text-xs"
             value={title}
             onChangeText={setTitle}
           />
@@ -266,7 +266,7 @@ export default function EditCreatedEventScreen() {
           <Textarea
             placeholder="Describe your event"
             editable={!locked}
-            className="min-h-[120px] text-xs border-0 bg-[rgba(240,239,255,1)] text-xs"
+            className="min-h-[80px] text-xs border-0 bg-[rgba(240,239,255,1)] text-xs"
             value={description}
             onChangeText={setDescription}
           />
