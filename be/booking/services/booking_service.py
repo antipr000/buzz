@@ -13,6 +13,7 @@ from booking.models.booking import Booking, BookingStatus
 from booking.schemas.booking_schemas import (
     BookingListItem,
     BookingsListBody,
+    OrganizerVerifyBookingResponse,
     PurchaseBody,
     TicketLineOut,
 )
@@ -29,6 +30,39 @@ def _combine_event_datetime(d: date, t: time) -> datetime:
 def _validate_payment_method_for_total(payment_method: PaymentMethod, total: int) -> None:
     if total > 0 and payment_method == PaymentMethod.FREE:
         raise ValueError("paid_checkout_cannot_use_free_payment_method")
+
+
+def _booking_to_list_item(b: Booking) -> BookingListItem:
+    """Build `BookingListItem` from a loaded `Booking` (event + tickets eager-loaded)."""
+    ev = b.event
+    groups: dict[tuple[str, int], list[str]] = defaultdict(list)
+    for t in b.tickets:
+        key = (t.ticket_tier.value, t.price)
+        groups[key].append(t.seat or "")
+
+    ticket_out: list[TicketLineOut] = []
+    for (tier, price), seats in groups.items():
+        ticket_out.append(
+            TicketLineOut(
+                ticket_tier=tier,
+                price=price,
+                quantity=len(seats),
+                seats=seats,
+            )
+        )
+
+    return BookingListItem(
+        id=b.id,
+        event_id=b.event_id,
+        booking_date=b.created_at,
+        title=ev.title,
+        language=ev.language,
+        date=_combine_event_datetime(ev.event_date, ev.event_time),
+        location=ev.location,
+        tickets=ticket_out,
+        event_image=ev.event_cover,
+        status=b.status.value,
+    )
 
 
 class BookingService:
@@ -140,37 +174,71 @@ class BookingService:
 
         result = await db.execute(stmt)
         bookings = list(result.scalars().unique().all())
-        out: list[BookingListItem] = []
-        for b in bookings:
-            ev = b.event
-            groups: dict[tuple[str, int], list[str]] = defaultdict(list)
-            for t in b.tickets:
-                key = (t.ticket_tier.value, t.price)
-                groups[key].append(t.seat or "")
+        return [_booking_to_list_item(b) for b in bookings]
 
-            ticket_out: list[TicketLineOut] = []
-            for (tier, price), seats in groups.items():
-                ticket_out.append(
-                    TicketLineOut(
-                        ticket_tier=tier,
-                        price=price,
-                        quantity=len(seats),
-                        seats=seats,
-                    )
-                )
+    @staticmethod
+    async def verify_booking_for_organizer(
+        db: AsyncSession,
+        *,
+        organizer_user_id: uuid.UUID,
+        event_id: str,
+        booking_id: str,
+    ) -> OrganizerVerifyBookingResponse:
+        raw = booking_id.strip()
+        if not raw:
+            raise ValueError("booking_not_found")
 
-            out.append(
-                BookingListItem(
-                    id=b.id,
-                    event_id=b.event_id,
-                    booking_date=b.created_at,
-                    title=ev.title,
-                    language=ev.language,
-                    date=_combine_event_datetime(ev.event_date, ev.event_time),
-                    location=ev.location,
-                    tickets=ticket_out,
-                    event_image=ev.event_cover,
-                    status=b.status.value,
-                )
+        ev = await db.get(Event, event_id)
+        if ev is None:
+            raise ValueError("event_not_found")
+        if ev.organizer_id != organizer_user_id:
+            raise ValueError("not_event_organizer")
+
+        stmt = (
+            select(Booking)
+            .where(Booking.id == raw)
+            .options(
+                joinedload(Booking.event),
+                joinedload(Booking.tickets),
+                joinedload(Booking.payments),
             )
-        return out
+        )
+        result = await db.execute(stmt)
+        booking = result.unique().scalar_one_or_none()
+        if booking is None:
+            raise ValueError("booking_not_found")
+        if booking.event_id != event_id:
+            raise ValueError("booking_wrong_event")
+
+        if booking.status == BookingStatus.CANCELLED:
+            raise ValueError("booking_cancelled")
+        if booking.status == BookingStatus.ATTENDED:
+            return OrganizerVerifyBookingResponse(
+                outcome="already_attended",
+                booking=_booking_to_list_item(booking),
+            )
+
+        if not booking.payments:
+            raise ValueError("booking_invalid_state")
+
+        payment = booking.payments[0] # currently assuming one payment,might need to update later.
+
+        if payment.amount > 0:
+            if payment.status == PaymentStatus.PENDING_PAYMENT:
+                return OrganizerVerifyBookingResponse(
+                    outcome="pending_payment",
+                    booking=_booking_to_list_item(booking),
+                )
+            if payment.status == PaymentStatus.FAILED:
+                return OrganizerVerifyBookingResponse(
+                    outcome="payment_failed",
+                    booking=_booking_to_list_item(booking),
+                )
+            if payment.status != PaymentStatus.COMPLETED:
+                raise ValueError("payment_not_completed")
+
+        booking.status = BookingStatus.ATTENDED
+        await db.flush()
+        item = _booking_to_list_item(booking)
+        await db.commit()
+        return OrganizerVerifyBookingResponse(outcome="checked_in", booking=item)

@@ -50,7 +50,7 @@ export default function TicketVerificationScreen() {
 
                     <View className='mt-9 w-full max-w-[400px] gap-4'>
                         <TouchableOpacity
-                            className='flex-row mx-4 items-center gap-3.5 rounded-2xl border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
+                            className='flex-row mx-4 items-center gap-3.5 rounded-md border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
                             onPress={() => router.push('/events/ticket-qr-scan' as Href)}
                             activeOpacity={0.8}
                         >
@@ -72,7 +72,7 @@ export default function TicketVerificationScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            className='flex-row mx-4 items-center gap-3.5 rounded-2xl border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
+                            className='flex-row mx-4 items-center gap-3.5 rounded-md border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
                             onPress={() => router.push('/events/ticket-enter-code' as Href)}
                             activeOpacity={0.8}
                         >

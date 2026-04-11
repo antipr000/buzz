@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
+
 from pydantic import Field
 
 from address.schemas.validators import AddressTypeInput
@@ -73,3 +75,19 @@ class BookingsListBody(SchemaModel):
     """Optional filters for POST /events/bookings."""
 
     status: str | None = None
+
+
+class OrganizerVerifyBookingBody(SchemaModel):
+    """POST /events/{event_id}/verify-booking — organizer check-in."""
+
+    booking_id: str = Field(min_length=1, max_length=255)
+
+
+class OrganizerVerifyBookingResponse(SchemaModel):
+    outcome: Literal[
+        "checked_in",
+        "already_attended",
+        "pending_payment",
+        "payment_failed",
+    ]
+    booking: BookingListItem

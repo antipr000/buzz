@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from booking.schemas.booking_schemas import (
     BookingListResponse,
     BookingsListBody,
+    OrganizerVerifyBookingBody,
+    OrganizerVerifyBookingResponse,
     PurchaseBody,
     PurchaseResponse,
 )
@@ -228,6 +230,66 @@ async def list_my_bookings(
         db, user_id=user.id, body=body
     )
     return BookingListResponse(data=data)
+
+
+@event_router.post(
+    "/{event_id}/verify-booking",
+    response_model=OrganizerVerifyBookingResponse,
+)
+async def verify_booking_for_event(
+    event_id: Annotated[str, Path(min_length=1, max_length=255)],
+    body: OrganizerVerifyBookingBody,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    try:
+        return await BookingService.verify_booking_for_organizer(
+            db,
+            organizer_user_id=user.id,
+            event_id=event_id,
+            booking_id=body.booking_id,
+        )
+    except ValueError as e:
+        msg = str(e)
+        if msg == "event_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Event not found",
+            ) from e
+        if msg == "not_event_organizer":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not the organizer for this event",
+            ) from e
+        if msg == "booking_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Booking not found",
+            ) from e
+        if msg == "booking_wrong_event":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This ticket is for a different event",
+            ) from e
+        if msg == "booking_cancelled":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This booking was cancelled",
+            ) from e
+        if msg == "booking_invalid_state":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This booking has no payment on file",
+            ) from e
+        if msg == "payment_not_completed":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Payment is not completed for this booking",
+            ) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=msg,
+        ) from e
 
 
 @event_router.patch("/{event_id}", response_model=EventDetailOut)

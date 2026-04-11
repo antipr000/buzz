@@ -67,3 +67,18 @@ export type BookingListItem = {
 export type BookingListResponse = {
   data: BookingListItem[];
 };
+
+/**
+ * POST /events/{event_id}/verify-booking — aligned with
+ * `OrganizerVerifyBookingResponse` in `be/booking/schemas/booking_schemas.py`.
+ */
+export type OrganizerVerifyBookingOutcome =
+  | "checked_in"
+  | "already_attended"
+  | "pending_payment"
+  | "payment_failed";
+
+export type OrganizerVerifyBookingResponse = {
+  outcome: OrganizerVerifyBookingOutcome;
+  booking: BookingListItem;
+};
