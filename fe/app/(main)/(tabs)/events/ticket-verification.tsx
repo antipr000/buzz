@@ -1,6 +1,6 @@
 import { Text } from '@/components/ui/text'
 import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
+import { type Href, useRouter } from 'expo-router'
 import { ArrowLeft } from 'lucide-react-native'
 import React from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native'
@@ -49,7 +49,11 @@ export default function TicketVerificationScreen() {
                     </Text>
 
                     <View className='mt-9 w-full max-w-[400px] gap-4'>
-                        <View className='flex-row mx-4 items-center gap-3.5 rounded-2xl border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'>
+                        <TouchableOpacity
+                            className='flex-row mx-4 items-center gap-3.5 rounded-2xl border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
+                            onPress={() => router.push('/events/ticket-qr-scan' as Href)}
+                            activeOpacity={0.8}
+                        >
                             <View className='h-12 w-12 items-center justify-center rounded-xl bg-[rgba(79,70,229,1)]'>
                                 <Image
                                     source={IMG_CAMERA}
@@ -65,9 +69,13 @@ export default function TicketVerificationScreen() {
                                     Use camera to scan ticket QR
                                 </Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
 
-                        <View className='flex-row mx-4 items-center gap-3.5 rounded-2xl border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'>
+                        <TouchableOpacity
+                            className='flex-row mx-4 items-center gap-3.5 rounded-2xl border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
+                            onPress={() => router.push('/events/ticket-enter-code' as Href)}
+                            activeOpacity={0.8}
+                        >
                             <View className='h-12 w-12 items-center justify-center rounded-xl bg-[rgba(79,70,229,1)]'>
                                 <Image
                                     source={IMG_KEYBOARD}
@@ -83,7 +91,7 @@ export default function TicketVerificationScreen() {
                                     Type the ticket code
                                 </Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
             </View>
