@@ -32,7 +32,7 @@ export async function postVerifyBooking(
   eventId: string,
   body: OrganizerVerifyBookingBody
 ): Promise<OrganizerVerifyBookingResponse> {
-  const path = `/events/${encodeURIComponent(eventId)}/verify-booking`;
+  const path = `/events/${encodeURIComponent(eventId.trim())}/verify-booking`;
   const { data } = await apiClient.post<OrganizerVerifyBookingResponse>(
     path,
     body

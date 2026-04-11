@@ -8,6 +8,7 @@ export default function EventsLayout() {
             <Stack.Screen name="ticket-verification" />
             <Stack.Screen name="ticket-qr-scan" />
             <Stack.Screen name="ticket-enter-code" />
+            <Stack.Screen name="ticket-verified" />
         </Stack>
     );
 }

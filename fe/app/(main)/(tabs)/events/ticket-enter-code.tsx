@@ -1,10 +1,12 @@
 import { Text } from '@/components/ui/text'
+import { useVerifyBooking } from '@/hooks/api'
+import { mapVerifyBookingError } from '@/lib/bookings/map-verify-error'
 import { firstParamString } from '@/lib/expo-router/params'
 import { Image } from 'expo-image'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ArrowLeft, QrCode } from 'lucide-react-native'
-import React from 'react'
-import { TextInput, TouchableOpacity, View } from 'react-native'
+import React, { useState } from 'react'
+import { ActivityIndicator, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const IMG_KEYBOARD = require('@/assets/images/createdEvents/verify/keyboard.svg')
@@ -13,6 +15,41 @@ export default function TicketEnterCodeScreen() {
     const router = useRouter()
     const params = useLocalSearchParams<{ eventId?: string | string[] }>()
     const eventId = firstParamString(params.eventId)
+    const verify = useVerifyBooking()
+    const [code, setCode] = useState('')
+    const [inlineError, setInlineError] = useState<string | null>(null)
+
+    const trimmed = code.trim()
+    const canSubmit = Boolean(eventId && trimmed.length > 0 && !verify.isPending)
+
+    const submit = () => {
+        setInlineError(null)
+        if (!eventId) {
+            setInlineError('Open verification from one of your created events.')
+            return
+        }
+        if (!trimmed) {
+            setInlineError('Enter the booking ID from the ticket.')
+            return
+        }
+        verify.mutate(
+            { eventId, booking_id: trimmed },
+            {
+                onSuccess: (data) => {
+                    router.replace({
+                        pathname: '/events/ticket-verified',
+                        params: {
+                            eventId,
+                            bookingId: data.booking.id,
+                        },
+                    })
+                },
+                onError: (err) => {
+                    setInlineError(mapVerifyBookingError(err))
+                },
+            }
+        )
+    }
 
     const header = (
         <View className='flex-row items-center gap-4 bg-secondary px-5 py-10 pb-3'>
@@ -33,6 +70,12 @@ export default function TicketEnterCodeScreen() {
 
                 <View className='flex-1 justify-center px-5 pb-10'>
                     <View className='w-full max-w-[400px] self-center'>
+                        {!eventId ? (
+                            <Text className='mb-4 text-center text-xs text-primary'>
+                                Open verification from one of your created events (Verify on the event
+                                card).
+                            </Text>
+                        ) : null}
                         <View className='items-center'>
                             <Image
                                 source={IMG_KEYBOARD}
@@ -55,19 +98,40 @@ export default function TicketEnterCodeScreen() {
                             />
                             <TextInput
                                 className='min-h-[48px] flex-1 py-1 pl-2.5 text-xs text-[rgba(15,23,42,1)]'
-                                placeholder='e.g. ORD-12345'
+                                placeholder='e.g. bkg_…'
                                 placeholderTextColor='rgba(15,23,42,0.3)'
                                 autoCorrect={false}
+                                autoCapitalize='none'
+                                value={code}
+                                onChangeText={(t) => {
+                                    setCode(t)
+                                    if (inlineError) setInlineError(null)
+                                }}
+                                onSubmitEditing={() => {
+                                    if (canSubmit) submit()
+                                }}
+                                returnKeyType='done'
+                                editable={!verify.isPending}
                             />
                         </View>
 
+                        {inlineError ? (
+                            <Text className='mt-3 text-center text-xs text-primary'>{inlineError}</Text>
+                        ) : null}
+
                         <TouchableOpacity
-                            className='mt-6 mx-auto w-fit items-center justify-center rounded-sm bg-secondary py-3.5 px-6'
+                            className='mt-6 mx-auto w-fit min-w-[160px] items-center justify-center rounded-sm bg-secondary py-3.5 px-6'
                             activeOpacity={0.85}
+                            disabled={!canSubmit}
+                            onPress={submit}
                         >
-                            <Text className='text-xs font-medium text-background'>
-                                Verify Ticket
-                            </Text>
+                            {verify.isPending ? (
+                                <ActivityIndicator color='rgba(249, 250, 251, 1)' />
+                            ) : (
+                                <Text className='text-xs font-medium text-background'>
+                                    Verify Ticket
+                                </Text>
+                            )}
                         </TouchableOpacity>
 
                         <View className='mt-4 w-fit mx-auto p-5 flex-row gap-3'>

@@ -18,13 +18,11 @@ export function useVerifyBooking() {
     VerifyBookingVariables
   >({
     mutationFn: ({ eventId, booking_id }) =>
-      postVerifyBooking(eventId, { booking_id: booking_id.trim() }),
+      postVerifyBooking(eventId.trim(), { booking_id: booking_id.trim() }),
     onSuccess: (data, variables) => {
+      const eid = variables.eventId.trim();
       queryClient.setQueryData(
-        queryKeys.events.organizerVerifyPreview(
-          variables.eventId,
-          data.booking.id
-        ),
+        queryKeys.events.organizerVerifyPreview(eid, data.booking.id),
         data
       );
     },
