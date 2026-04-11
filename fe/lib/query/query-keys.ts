@@ -53,6 +53,15 @@ export const queryKeys = {
     /** POST /events/bookings — user’s booking list. */
     bookings: () => [...queryKeys.events.all, "bookings"] as const,
 
+    /** Last organizer verify result (optional cache for result screen). */
+    organizerVerifyPreview: (eventId: string, bookingId: string) =>
+      [
+        ...queryKeys.events.all,
+        "organizerVerifyPreview",
+        eventId,
+        bookingId,
+      ] as const,
+
     /** Prefix for GET /events/{id} keys */
     details: () => [...queryKeys.events.all, "detail"] as const,
     /** GET /events/{id} */

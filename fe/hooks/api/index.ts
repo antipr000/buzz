@@ -22,3 +22,4 @@ export { usePatchWhatsAppNotifications } from "./usePatchWhatsAppNotifications";
 export { useProfileMe } from "./useProfileMe";
 export { useProfileStats } from "./useProfileStats";
 export { usePurchaseTickets } from "./usePurchaseTickets";
+export { useVerifyBooking, type VerifyBookingVariables } from "./useVerifyBooking";

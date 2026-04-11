@@ -70,8 +70,13 @@ export type BookingListResponse = {
 
 /**
  * POST /events/{event_id}/verify-booking — aligned with
- * `OrganizerVerifyBookingResponse` in `be/booking/schemas/booking_schemas.py`.
+ * `OrganizerVerifyBookingBody` / `OrganizerVerifyBookingResponse` in
+ * `be/booking/schemas/booking_schemas.py`.
  */
+export type OrganizerVerifyBookingBody = {
+  booking_id: string;
+};
+
 export type OrganizerVerifyBookingOutcome =
   | "checked_in"
   | "already_attended"

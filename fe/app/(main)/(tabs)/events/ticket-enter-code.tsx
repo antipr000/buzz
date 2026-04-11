@@ -1,6 +1,7 @@
 import { Text } from '@/components/ui/text'
+import { firstParamString } from '@/lib/expo-router/params'
 import { Image } from 'expo-image'
-import { type Href, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ArrowLeft, QrCode } from 'lucide-react-native'
 import React from 'react'
 import { TextInput, TouchableOpacity, View } from 'react-native'
@@ -10,6 +11,8 @@ const IMG_KEYBOARD = require('@/assets/images/createdEvents/verify/keyboard.svg'
 const IMG_SEARCH = require('@/assets/images/home/search.svg')
 export default function TicketEnterCodeScreen() {
     const router = useRouter()
+    const params = useLocalSearchParams<{ eventId?: string | string[] }>()
+    const eventId = firstParamString(params.eventId)
 
     const header = (
         <View className='flex-row items-center gap-4 bg-secondary px-5 py-10 pb-3'>
@@ -79,7 +82,14 @@ export default function TicketEnterCodeScreen() {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 className='flex-row items-center justify-center gap-2 rounded-sm border border-[rgba(0,0,0,0.12)] bg-[rgba(244,248,255,1)] px-6 py-3'
-                                onPress={() => router.push('/events/ticket-qr-scan' as Href)}
+                                disabled={!eventId}
+                                onPress={() => {
+                                    if (!eventId) return
+                                    router.push({
+                                        pathname: '/events/ticket-qr-scan',
+                                        params: { eventId },
+                                    })
+                                }}
                                 activeOpacity={0.8}
                             >
                                 <QrCode

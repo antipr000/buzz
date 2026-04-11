@@ -140,7 +140,10 @@ export default function EventsCreatedTab() {
                             })
                         }
                         onPressVerify={() =>
-                            router.push('/events/ticket-verification')
+                            router.push({
+                                pathname: '/events/ticket-verification',
+                                params: { eventId: item.id },
+                            })
                         }
                     />
                 )

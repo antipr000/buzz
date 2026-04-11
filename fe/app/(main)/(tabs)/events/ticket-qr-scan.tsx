@@ -1,6 +1,7 @@
 import { Text } from '@/components/ui/text'
+import { firstParamString } from '@/lib/expo-router/params'
 import { Image } from 'expo-image'
-import { type Href, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ArrowLeft } from 'lucide-react-native'
 import React from 'react'
 import { TouchableOpacity, View, useWindowDimensions } from 'react-native'
@@ -13,6 +14,8 @@ const VIEWFINDER_GREY = 'rgba(217, 217, 217, 1)'
 
 export default function TicketQrScanScreen() {
     const router = useRouter()
+    const params = useLocalSearchParams<{ eventId?: string | string[] }>()
+    const eventId = firstParamString(params.eventId)
     const { width } = useWindowDimensions()
     const viewfinderSize = Math.min(width - 100, 200)
 
@@ -68,7 +71,14 @@ export default function TicketQrScanScreen() {
                         </TouchableOpacity>
                         <TouchableOpacity
                             className=' flex-row items-center justify-center gap-2 rounded-sm border border-[rgba(0,0,0,0.12)] bg-[rgba(244,248,255,1)] px-6 py-3.5'
-                            onPress={() => router.push('/events/ticket-enter-code' as Href)}
+                            disabled={!eventId}
+                            onPress={() => {
+                                if (!eventId) return
+                                router.push({
+                                    pathname: '/events/ticket-enter-code',
+                                    params: { eventId },
+                                })
+                            }}
                             activeOpacity={0.8}
                         >
                             <Image

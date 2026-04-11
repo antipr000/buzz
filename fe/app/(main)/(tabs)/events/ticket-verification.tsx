@@ -1,6 +1,8 @@
 import { Text } from '@/components/ui/text'
+import { firstParamString } from '@/lib/expo-router/params'
+import { cn } from '@/lib/utils'
 import { Image } from 'expo-image'
-import { type Href, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ArrowLeft } from 'lucide-react-native'
 import React from 'react'
 import { ScrollView, TouchableOpacity, View } from 'react-native'
@@ -12,6 +14,9 @@ const IMG_KEYBOARD = require('@/assets/images/verify/keyboard.svg')
 
 export default function TicketVerificationScreen() {
     const router = useRouter()
+    const params = useLocalSearchParams<{ eventId?: string | string[] }>()
+    const eventId = firstParamString(params.eventId)
+    const canVerify = Boolean(eventId)
 
     const header = (
         <View className='flex-row items-center gap-4 bg-secondary px-5 py-10 pb-3'>
@@ -48,10 +53,24 @@ export default function TicketVerificationScreen() {
                         Choose how you’d like to verify attendee tickets
                     </Text>
 
-                    <View className='mt-9 w-full max-w-[400px] gap-4'>
+                    {!canVerify ? (
+                        <Text className='mt-6 max-w-[320px] px-2 text-center text-xs text-primary'>
+                            Open ticket verification from one of your created events (Verify on the
+                            event card).
+                        </Text>
+                    ) : null}
+
+                    <View className={cn('mt-9 w-full max-w-[400px] gap-4', !canVerify && 'opacity-45')}>
                         <TouchableOpacity
                             className='flex-row mx-4 items-center gap-3.5 rounded-md border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
-                            onPress={() => router.push('/events/ticket-qr-scan' as Href)}
+                            disabled={!canVerify}
+                            onPress={() => {
+                                if (!eventId) return
+                                router.push({
+                                    pathname: '/events/ticket-qr-scan',
+                                    params: { eventId },
+                                })
+                            }}
                             activeOpacity={0.8}
                         >
                             <View className='h-12 w-12 items-center justify-center rounded-xl bg-[rgba(79,70,229,1)]'>
@@ -73,7 +92,14 @@ export default function TicketVerificationScreen() {
 
                         <TouchableOpacity
                             className='flex-row mx-4 items-center gap-3.5 rounded-md border border-[rgba(0,0,0,0.08)] bg-[rgba(244,248,255,1)] px-4 py-3 shadow-sm shadow-black/5'
-                            onPress={() => router.push('/events/ticket-enter-code' as Href)}
+                            disabled={!canVerify}
+                            onPress={() => {
+                                if (!eventId) return
+                                router.push({
+                                    pathname: '/events/ticket-enter-code',
+                                    params: { eventId },
+                                })
+                            }}
                             activeOpacity={0.8}
                         >
                             <View className='h-12 w-12 items-center justify-center rounded-xl bg-[rgba(79,70,229,1)]'>
