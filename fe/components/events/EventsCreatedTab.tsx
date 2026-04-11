@@ -139,6 +139,9 @@ export default function EventsCreatedTab() {
                                 params: { id: item.id },
                             })
                         }
+                        onPressVerify={() =>
+                            router.push('/events/ticket-verification')
+                        }
                     />
                 )
             }}
