@@ -47,6 +47,13 @@
           "locationWhenInUsePermission": "We use your location to show events happening around you."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to use the camera to scan attendee ticket QR codes.",
+          "recordAudioAndroid": false
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {
