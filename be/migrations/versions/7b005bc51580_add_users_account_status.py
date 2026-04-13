@@ -28,7 +28,7 @@ def upgrade() -> None:
             "status",
             sa.Enum(
                 "active",
-                "deleted",
+                "deactivated",
                 "blocked",
                 name="accountstatus",
                 native_enum=False,

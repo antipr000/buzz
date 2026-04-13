@@ -146,10 +146,10 @@ async def get_current_user(
                 "Deploy the trigger in migrations/sql/on_auth_user_created.sql in the Supabase SQL Editor."
             ),
         )
-    if user.status == AccountStatus.deleted:
+    if user.status == AccountStatus.deactivated:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account has been deleted",
+            detail="Account has been deactivated",
         )
     if user.status == AccountStatus.blocked:
         raise HTTPException(

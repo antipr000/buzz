@@ -24,6 +24,6 @@ async def list_users(db: AsyncSession) -> List[User]:
     return list(result.scalars().all())
 
 
-async def soft_delete_user(db: AsyncSession, user: User) -> None:
-    user.status = AccountStatus.deleted
+async def deactivate_user(db: AsyncSession, user: User) -> None:
+    user.status = AccountStatus.deactivated
     await db.commit()

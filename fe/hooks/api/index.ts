@@ -6,6 +6,7 @@ export { useAddress } from "./useAddress";
 export { useBookings } from "./useBookings";
 export { useAddresses } from "./useAddresses";
 export { useCreateAddress } from "./useCreateAddress";
+export { useDeactivateAccount } from "./useDeactivateAccount";
 export { useDeleteAddress } from "./useDeleteAddress";
 export { usePatchAddress } from "./usePatchAddress";
 export { useDiscoverEvents, type UseDiscoverEventsArgs } from "./useDiscoverEvents";

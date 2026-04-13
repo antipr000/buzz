@@ -31,26 +31,27 @@ async def get_user(
     user = await user_service.get_user_by_id(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.status in (AccountStatus.deleted, AccountStatus.blocked):
+    if user.status in (AccountStatus.deactivated, AccountStatus.blocked):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
 @user_router.delete("/{user_id}", response_model=MessageResponse)
-async def delete_user(
+async def deactivate_account(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
     current_id: uuid.UUID = Depends(get_current_user_id),
 ):
+    """Soft-deactivate the authenticated user (`DELETE` keeps REST convention for removing the active account)."""
     if user_id != current_id:
-        raise HTTPException(status_code=403, detail="Can only delete your own account")
+        raise HTTPException(status_code=403, detail="Can only deactivate your own account")
     user = await user_service.get_user_by_id(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.status == AccountStatus.deleted:
-        return MessageResponse(message="Account already deleted")
+    if user.status == AccountStatus.deactivated:
+        return MessageResponse(message="Account already deactivated")
     if user.status == AccountStatus.blocked:
         raise HTTPException(status_code=403, detail="Account is blocked")
 
-    await user_service.soft_delete_user(db, user=user)
-    return MessageResponse(message="Account deletion requested successfully")
+    await user_service.deactivate_user(db, user=user)
+    return MessageResponse(message="Account deactivated successfully")

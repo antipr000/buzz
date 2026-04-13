@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 class AccountStatus(str, enum.Enum):
     active = "active"
-    deleted = "deleted"
+    deactivated = "deactivated"
     blocked = "blocked"
 
 
