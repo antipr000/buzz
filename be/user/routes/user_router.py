@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.auth import get_current_user, get_current_user_id
 from core.database import get_db
 from core.schemas.common import MessageResponse
-from user.models.user import User
+from user.models.user import AccountStatus, User
 from user.schemas.user import UserResponse
 import user.services.user_service as user_service
 
@@ -23,12 +23,15 @@ async def read_me(current: User = Depends(get_current_user)):
 async def get_user(
     user_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _viewer: uuid.UUID = Depends(get_current_user_id),
+    viewer: User = Depends(get_current_user),
 ):
-    """Fetch a user by id (requires authentication)."""
-    # TODO: See if we need to add authorization logic to check if the user is the same as the current user
+    """Fetch the authenticated user by id. Only `user_id == viewer.id` is allowed; others get 404."""
+    if user_id != viewer.id:
+        raise HTTPException(status_code=404, detail="User not found")
     user = await user_service.get_user_by_id(db, user_id=user_id)
     if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.status in (AccountStatus.deleted, AccountStatus.blocked):
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
@@ -44,6 +47,10 @@ async def delete_user(
     user = await user_service.get_user_by_id(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    if user.status == AccountStatus.deleted:
+        return MessageResponse(message="Account already deleted")
+    if user.status == AccountStatus.blocked:
+        raise HTTPException(status_code=403, detail="Account is blocked")
 
-    await user_service.delete_user(db, user=user)
-    return MessageResponse(message="User deleted successfully")
+    await user_service.soft_delete_user(db, user=user)
+    return MessageResponse(message="Account deletion requested successfully")

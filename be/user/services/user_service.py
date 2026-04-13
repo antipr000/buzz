@@ -6,7 +6,7 @@ from typing import List, Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from user.models.user import User
+from user.models.user import AccountStatus, User
 
 
 async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
@@ -24,6 +24,6 @@ async def list_users(db: AsyncSession) -> List[User]:
     return list(result.scalars().all())
 
 
-async def delete_user(db: AsyncSession, user: User) -> None:
-    await db.delete(user)
+async def soft_delete_user(db: AsyncSession, user: User) -> None:
+    user.status = AccountStatus.deleted
     await db.commit()

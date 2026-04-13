@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import config
 from core.database import get_db
-from user.models.user import User
+from user.models.user import AccountStatus, User
 from user.services import user_service
 
 security = HTTPBearer(auto_error=True)
@@ -145,5 +145,15 @@ async def get_current_user(
                 "No application user row for this account. "
                 "Deploy the trigger in migrations/sql/on_auth_user_created.sql in the Supabase SQL Editor."
             ),
+        )
+    if user.status == AccountStatus.deleted:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account has been deleted",
+        )
+    if user.status == AccountStatus.blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is blocked",
         )
     return user
