@@ -5,9 +5,8 @@ export default function AuthLayout() {
   const { session } = useAuth();
   const pathname = usePathname();
 
-  // Let the login screen finish API verification before navigating. Other auth
-  // routes (e.g. signup) still bounce logged-in users to the app.
-  if (session && pathname !== "/login") {
+  // Let login/signup finish GET /users/me after OAuth or email sign-up before navigating.
+  if (session && pathname !== "/login" && pathname !== "/signup") {
     return <Redirect href="/location" />;
   }
 

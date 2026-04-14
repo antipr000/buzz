@@ -4,6 +4,7 @@ import { Text } from "@/components/ui/text";
 import { getAuthRedirectUri } from "@/lib/auth/auth-redirect";
 import { signInWithGoogle } from "@/lib/auth/google-oauth";
 import { getSupabase } from "@/lib/auth/supabase";
+import { verifyAppUserOrSignOut } from "@/lib/auth/verify-app-user";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
@@ -111,14 +112,33 @@ const SignUpScreen = () => {
     setGoogleSubmitting(true);
     try {
       const result = await signInWithGoogle();
-      if (result.status === "success") {
-        router.replace("/location");
-        return;
-      }
       if (result.status === "cancelled") {
         return;
       }
-      setError(result.message);
+      if (result.status !== "success") {
+        setError(result.message);
+        return;
+      }
+      let supabase: ReturnType<typeof getSupabase>;
+      try {
+        supabase = getSupabase();
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "Not configured."
+        );
+        return;
+      }
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        setError("Could not start your session. Please try again.");
+        return;
+      }
+      const verified = await verifyAppUserOrSignOut(supabase);
+      if (!verified.ok) {
+        setError(verified.message);
+        return;
+      }
+      router.replace("/location");
     } finally {
       setGoogleSubmitting(false);
     }

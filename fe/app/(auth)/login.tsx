@@ -1,10 +1,9 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
-import { apiClient } from "@/lib/api/client";
 import { signInWithGoogle } from "@/lib/auth/google-oauth";
 import { getSupabase } from "@/lib/auth/supabase";
-import { isAxiosError } from "axios";
+import { verifyAppUserOrSignOut } from "@/lib/auth/verify-app-user";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
@@ -15,46 +14,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-/** After Supabase sign-in: ensure Buzz API accepts this user (active app row). */
-async function verifyAppUserOrSignOut(
-  supabase: ReturnType<typeof getSupabase>
-): Promise<{ ok: true } | { ok: false; message: string }> {
-  try {
-    await apiClient.get("/users/me");
-    return { ok: true };
-  } catch (err) {
-    // Wrong email/password never reaches here — Supabase fails first.
-    if (!isAxiosError(err)) {
-      return {
-        ok: false,
-        message:
-          "Could not reach the app. Check your connection and try again.",
-      };
-    }
-    const status = err.response?.status;
-
-    if (status === 403) {
-      await supabase.auth.signOut();
-      return {
-        ok: false,
-        message: "This account is deactivated or blocked.",
-      };
-    }
-    if (status === 404) {
-      await supabase.auth.signOut();
-      return {
-        ok: false,
-        message: "You can't sign in with this account.",
-      };
-    }
-    // e.g. 5xx, 401 — not invalid password (that fails in signInWithPassword).
-    return {
-      ok: false,
-      message: "Could not load your account. Please try again.",
-    };
-  }
-}
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
