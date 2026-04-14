@@ -38,7 +38,7 @@ async function verifyAppUserOrSignOut(
       await supabase.auth.signOut();
       return {
         ok: false,
-        message: "You can't sign in with this account.",
+        message: "This account is deactivated or blocked.",
       };
     }
     if (status === 404) {

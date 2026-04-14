@@ -17,6 +17,9 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 const MIN_PASSWORD_LEN = 6;
 
+const DUPLICATE_EMAIL_MSG =
+  "An account with this email already exists. Try signing in.";
+
 const SignUpScreen = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,7 +29,6 @@ const SignUpScreen = () => {
   const [submitting, setSubmitting] = useState(false);
   const [googleSubmitting, setGoogleSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** Set after sign-up when Supabase requires email confirmation (no session yet). */
   const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   const onSignUp = async () => {
@@ -84,6 +86,11 @@ const SignUpScreen = () => {
 
       if (data.session) {
         router.replace("/location");
+        return;
+      }
+
+      if (data.user?.identities?.length === 0) {
+        setError(DUPLICATE_EMAIL_MSG);
         return;
       }
 
