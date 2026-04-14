@@ -10,6 +10,7 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useDeactivateAccount } from '@/hooks/api';
+import { getSupabase } from '@/lib/auth/supabase';
 import { useAuth } from '@/providers/AuthProvider';
 
 export function DeactivateAccountDialog({ children }: { children: ReactNode }) {
@@ -24,6 +25,12 @@ export function DeactivateAccountDialog({ children }: { children: ReactNode }) {
         } catch {
             Alert.alert('Could not deactivate account', 'Please try again.');
             return;
+        }
+        try {
+            const supabase = getSupabase();
+            await supabase.auth.signOut({ scope: 'others' });
+        } catch (e) {
+            console.error('Failed to sign out other devices', e);
         }
         try {
             await signOut();

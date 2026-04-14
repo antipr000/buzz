@@ -1,10 +1,13 @@
 import { useAuth } from "@/providers/AuthProvider";
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack, usePathname } from "expo-router";
 
 export default function AuthLayout() {
   const { session } = useAuth();
+  const pathname = usePathname();
 
-  if (session) {
+  // Let the login screen finish API verification before navigating. Other auth
+  // routes (e.g. signup) still bounce logged-in users to the app.
+  if (session && pathname !== "/login") {
     return <Redirect href="/location" />;
   }
 

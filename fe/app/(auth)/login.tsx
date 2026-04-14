@@ -1,8 +1,10 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ui/text";
+import { apiClient } from "@/lib/api/client";
 import { signInWithGoogle } from "@/lib/auth/google-oauth";
 import { getSupabase } from "@/lib/auth/supabase";
+import { isAxiosError } from "axios";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
@@ -13,6 +15,46 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+/** After Supabase sign-in: ensure Buzz API accepts this user (active app row). */
+async function verifyAppUserOrSignOut(
+  supabase: ReturnType<typeof getSupabase>
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    await apiClient.get("/users/me");
+    return { ok: true };
+  } catch (err) {
+    // Wrong email/password never reaches here — Supabase fails first.
+    if (!isAxiosError(err)) {
+      return {
+        ok: false,
+        message:
+          "Could not reach the app. Check your connection and try again.",
+      };
+    }
+    const status = err.response?.status;
+
+    if (status === 403) {
+      await supabase.auth.signOut();
+      return {
+        ok: false,
+        message: "You can't sign in with this account.",
+      };
+    }
+    if (status === 404) {
+      await supabase.auth.signOut();
+      return {
+        ok: false,
+        message: "You can't sign in with this account.",
+      };
+    }
+    // e.g. 5xx, 401 — not invalid password (that fails in signInWithPassword).
+    return {
+      ok: false,
+      message: "Could not load your account. Please try again.",
+    };
+  }
+}
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -47,7 +89,6 @@ const LoginScreen = () => {
         password,
       });
       if (authError) {
-        // check implementation 
         const msg = authError.message ?? "";
         if (/email not confirmed/i.test(msg)) {
           setError(
@@ -56,6 +97,16 @@ const LoginScreen = () => {
         } else {
           setError(msg);
         }
+        return;
+      }
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        setError("Could not start your session. Please try again.");
+        return;
+      }
+      const verified = await verifyAppUserOrSignOut(supabase);
+      if (!verified.ok) {
+        setError(verified.message);
         return;
       }
       router.replace("/location");
@@ -69,14 +120,33 @@ const LoginScreen = () => {
     setGoogleSubmitting(true);
     try {
       const result = await signInWithGoogle();
-      if (result.status === "success") {
-        router.replace("/location");
-        return;
-      }
       if (result.status === "cancelled") {
         return;
       }
-      setError(result.message);
+      if (result.status !== "success") {
+        setError(result.message);
+        return;
+      }
+      let supabase: ReturnType<typeof getSupabase>;
+      try {
+        supabase = getSupabase();
+      } catch (e) {
+        setError(
+          e instanceof Error ? e.message : "Supabase is not configured."
+        );
+        return;
+      }
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        setError("Could not start your session. Please try again.");
+        return;
+      }
+      const verified = await verifyAppUserOrSignOut(supabase);
+      if (!verified.ok) {
+        setError(verified.message);
+        return;
+      }
+      router.replace("/location");
     } finally {
       setGoogleSubmitting(false);
     }
