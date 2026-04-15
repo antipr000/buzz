@@ -8,6 +8,7 @@ const TabLayout = () => {
   return (
     <Tabs
       screenOptions={{
+        tabBarHideOnKeyboard: true,
         tabBarActiveTintColor: "rgba(79,70,229,1)",
         tabBarInactiveTintColor: "rgba(205,201,255,1)",
         tabBarStyle: {

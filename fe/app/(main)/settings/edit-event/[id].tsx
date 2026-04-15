@@ -207,14 +207,19 @@ export default function EditCreatedEventScreen() {
       {listHeader}
 
       <ScrollView
-        contentContainerClassName="p-5 gap-5"
-        contentContainerStyle={{ paddingBottom: 40 }}
+        className="flex-1"
+        contentContainerClassName="w-full  self-center p-5 gap-5"
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          paddingBottom: 40,
+        }}
         showsVerticalScrollIndicator={false}
         automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
       >
         {notOrganizer ? (
-          <Text className="text-destructive text-sm">
+          <Text className="text-destructive text-sm text-center">
             You can only edit events you organize.
           </Text>
         ) : null}
