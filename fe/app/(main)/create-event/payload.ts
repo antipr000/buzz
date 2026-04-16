@@ -23,6 +23,8 @@ export type CreateEventFormState = {
   pricingMode: CreateEventPricingMode;
   /** Used when `pricingMode === 'single'`. */
   priceText: string;
+  /** Single-price: multiline amenities; one line per item (matches API `amenities`). */
+  singleAmenitiesText: string;
   /** Tiered: price inputs per fixed tier (Standard / Premium / VIP). */
   tierPriceText: Record<TicketTierValue, string>;
   /** Tiered: multiline amenities; one line per bullet on the event page. */
@@ -98,13 +100,14 @@ export function parsePriceInt(text: string): number | null {
 }
 
 /**
- * Pricing must match the selected mode: single → one valid ticket price; tiered → valid integer
- * price for Standard, Premium, and VIP (use 0 for a free tier), and at least one amenity line
- * per tier (non-empty after trim; blank lines do not count).
+ * Pricing must match the selected mode: single → one valid ticket price and at least one amenity
+ * line; tiered → valid integer price for Standard, Premium, and VIP (use 0 for a free tier),
+ * and at least one amenity line per tier (non-empty after trim; blank lines do not count).
  */
 export function isPricingCompleteForSubmit(form: CreateEventFormState): boolean {
   if (form.pricingMode === 'single') {
-    return parsePriceInt(form.priceText) !== null;
+    if (parsePriceInt(form.priceText) === null) return false;
+    return linesToAmenityArray(form.singleAmenitiesText).length > 0;
   }
   const pricesOk = TICKET_TIER_VALUES.every(
     (tier) => parsePriceInt(form.tierPriceText[tier]) !== null
@@ -150,6 +153,8 @@ export function buildCreateEventBody(
   if (form.pricingMode === 'single') {
     const price = parsePriceInt(form.priceText);
     if (price === null) return null;
+    const amenities = linesToAmenityArray(form.singleAmenitiesText);
+    if (amenities.length === 0) return null;
     return {
       event_cover: options?.eventCoverUrl ?? null,
       title,
@@ -162,6 +167,7 @@ export function buildCreateEventBody(
       latitude: location.latitude,
       longitude: location.longitude,
       language: null,
+      amenities,
     };
   }
 

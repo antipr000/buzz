@@ -26,6 +26,8 @@ export type EventCard = {
   is_saved: boolean;
   latitude: number | null;
   longitude: number | null;
+  /** Single-price perks; empty when event uses `tier_details`. */
+  amenities: string[];
 };
 
 /** GET /events/{id} — extends card with tier prices and purchase hints */
@@ -95,6 +97,8 @@ export type CreateEventBody = {
     Premium: CreateEventTierRow;
     VIP: CreateEventTierRow;
   } | null;
+  /** Single flat price: at least one item required by API. Omit when `tier_details` is set. */
+  amenities?: string[];
 };
 
 export type CreateEventResponse = {

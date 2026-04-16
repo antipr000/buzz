@@ -63,6 +63,7 @@ export default function CreateEventScreen() {
   const [eventTime, setEventTime] = useState(() => new Date());
   const [pricingMode, setPricingMode] = useState<CreateEventPricingMode>('single');
   const [priceText, setPriceText] = useState('0');
+  const [singleAmenitiesText, setSingleAmenitiesText] = useState('');
   const [tierPriceText, setTierPriceText] = useState(EMPTY_TIER_PRICES);
   const [tierAmenitiesText, setTierAmenitiesText] = useState(EMPTY_TIER_AMENITIES);
   const [pickedLocation, setPickedLocation] = useState<PickedLocation | null>(null);
@@ -82,6 +83,7 @@ export default function CreateEventScreen() {
       category: selectedCategory,
       pricingMode,
       priceText,
+      singleAmenitiesText,
       tierPriceText,
       tierAmenitiesText,
       eventDate,
@@ -93,6 +95,7 @@ export default function CreateEventScreen() {
       selectedCategory,
       pricingMode,
       priceText,
+      singleAmenitiesText,
       tierPriceText,
       tierAmenitiesText,
       eventDate,
@@ -312,22 +315,38 @@ export default function CreateEventScreen() {
 
         {/* Ticket Price (always visible; used when tiers are off) */}
         {pricingMode === 'single' && (
-          <View className="gap-1">
-            <Text className="font-medium text-foreground text-xs">Ticket Price</Text>
-            <View className="relative justify-center">
-              <View className="absolute left-3 z-10 pointer-events-none">
-                <Image
-                  source={require('@/assets/images/create/cash.svg')}
-                  style={{ width: 12, height: 12 }}
-                  contentFit="contain"
+          <View className="gap-4">
+            <View className="gap-1">
+              <Text className="font-medium text-foreground text-xs">Ticket Price</Text>
+              <View className="relative justify-center">
+                <View className="absolute left-3 z-10 pointer-events-none">
+                  <Image
+                    source={require('@/assets/images/create/cash.svg')}
+                    style={{ width: 12, height: 12 }}
+                    contentFit="contain"
+                  />
+                </View>
+                <Input
+                  placeholder="Keep it 0 for free events"
+                  className="pl-9 border-0 bg-[rgba(240,239,255,1)] text-xs"
+                  keyboardType="numeric"
+                  value={priceText}
+                  onChangeText={setPriceText}
                 />
               </View>
-              <Input
-                placeholder="Keep it 0 for free events"
-                className="pl-9 border-0 bg-[rgba(240,239,255,1)] text-xs"
-                keyboardType="numeric"
-                value={priceText}
-                onChangeText={setPriceText}
+            </View>
+            <View className="gap-1">
+              <Text className="font-medium text-foreground text-xs">
+                Amenities <Text className="text-destructive">*</Text>
+              </Text>
+              <Text className="text-[11px] text-secondary-foreground leading-4">
+                One perk per line; press Enter between items.
+              </Text>
+              <Textarea
+                placeholder="e.g. Free parking — then Enter — then Meet & greet"
+                className="min-h-[88px] text-xs border-0 bg-[rgba(240,239,255,1)]"
+                value={singleAmenitiesText}
+                onChangeText={setSingleAmenitiesText}
               />
             </View>
           </View>
