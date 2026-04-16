@@ -65,6 +65,8 @@ class Event(BaseEntity):
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     language: Mapped[str | None] = mapped_column(String(64), nullable=True)
     tier_details: Mapped[dict[str, EventTierDetail] | None] = mapped_column(JSON, nullable=True)
+    #: Ticket perks when `tier_details` is null (single flat price). Null when tiered.
+    amenities: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
 
     organizer: Mapped[Profile] = relationship(
         back_populates="organized_events",

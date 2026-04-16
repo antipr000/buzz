@@ -56,10 +56,34 @@ def _ensure_tiered_price_matches_body(
         raise ValueError("price_must_match_standard_tier")
 
 
+def _ensure_amenities_only_when_single_price(body: CreateEventBody) -> None:
+    """Top-level amenities apply only to single-price events; tier perks live in tier_details."""
+    if body.tier_details is not None and body.amenities:
+        raise ValueError("amenities_with_tier_details")
+
+
+def _ensure_single_price_amenities_non_empty(
+    body: CreateEventBody, tier_blob: dict[str, Any] | None
+) -> None:
+    """Single-price events must list at least one amenity (non-whitespace)."""
+    if tier_blob is not None:
+        return
+    if any((s or "").strip() for s in body.amenities):
+        return
+    raise ValueError("single_price_amenities_required")
+
+
 def ticket_tiers_for_event_detail(event: Event) -> list[TicketTierPriceOut]:
     """Single-price: one Standard row. Tiered: Standard / Premium / VIP from `tier_details`."""
     if event.tier_details is None:
-        return [TicketTierPriceOut(tier=TicketTier.STANDARD.value, price=event.price)]
+        am = event.amenities or []
+        return [
+            TicketTierPriceOut(
+                tier=TicketTier.STANDARD.value,
+                price=event.price,
+                amenities=am,
+            )
+        ]
     return [
         TicketTierPriceOut(
             tier=t.value,
@@ -157,6 +181,9 @@ async def _participant_counts(db: AsyncSession, event_ids: list[str]) -> dict[st
 def _to_event_card(event: Event, participants: int, *, is_saved: bool) -> EventCard:
     org = event.organizer
     user = org.user
+    card_amenities = (
+        list(event.amenities or []) if event.tier_details is None else []
+    )
     return EventCard(
         id=event.id,
         category=category_api_value(event.category),
@@ -174,6 +201,7 @@ def _to_event_card(event: Event, participants: int, *, is_saved: bool) -> EventC
         is_saved=is_saved,
         latitude=event.latitude,
         longitude=event.longitude,
+        amenities=card_amenities,
     )
 
 
@@ -409,10 +437,17 @@ class EventService:
             raise ValueError("Profile required to create events")
 
         _ensure_create_event_date_not_past(body.date)
+        _ensure_amenities_only_when_single_price(body)
 
         tier_blob = normalized_tier_details_for_create(body)
         _ensure_tiered_price_matches_body(body, tier_blob)
+        _ensure_single_price_amenities_non_empty(body, tier_blob)
         event_price = body.price if tier_blob is None else int(tier_blob["Standard"]["price"])
+        row_amenities: list[str] | None = (
+            (body.amenities if body.amenities else None)
+            if tier_blob is None
+            else None
+        )
 
         ev = Event(
             title=body.title,
@@ -428,6 +463,7 @@ class EventService:
             longitude=body.longitude,
             language=body.language,
             tier_details=tier_blob,
+            amenities=row_amenities,
         )
         db.add(ev)
         await db.commit()

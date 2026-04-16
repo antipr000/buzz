@@ -48,6 +48,7 @@ class EventCard(SchemaModel):
     is_saved: bool = False
     latitude: float | None = None
     longitude: float | None = None
+    amenities: list[str] = Field(default_factory=list)
 
 
 class TicketTierPriceOut(SchemaModel):
@@ -99,6 +100,10 @@ class CreateEventBody(SchemaModel):
     longitude: float
     language: str | None = None
     tier_details: dict[str, EventTierRowIn] | None = None
+    amenities: list[str] = Field(
+        default_factory=list,
+        description="Single-price perks; must be empty when tier_details is set.",
+    )
 
 
 class CreateEventResponse(SchemaModel):

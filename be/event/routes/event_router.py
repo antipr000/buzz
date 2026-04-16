@@ -93,6 +93,16 @@ async def create_event(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="When tier_details is set, price must equal the Standard tier price.",
             ) from e
+        if msg == "amenities_with_tier_details":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Do not send top-level amenities when tier_details is set; use per-tier amenities.",
+            ) from e
+        if msg == "single_price_amenities_required":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Single-price events require at least one non-empty amenity.",
+            ) from e
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e

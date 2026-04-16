@@ -23,6 +23,7 @@ from event.models.event import EventCategory
 from event.schemas.event_schemas import CreateEventBody
 from event.services.event_service import (
     _ensure_create_event_date_not_past,
+    _ensure_single_price_amenities_non_empty,
     _ensure_tiered_price_matches_body,
     normalized_tier_details_for_create,
     sanitize_discover_search_text,
@@ -139,9 +140,90 @@ def test_create_event_body_category_lowercase() -> None:
             "price": 10,
             "latitude": 28.6,
             "longitude": 77.2,
+            "amenities": ["Entry"],
         }
     )
     assert body.category == EventCategory.MUSIC
+
+
+def test_single_price_amenities_required_empty_list() -> None:
+    body = CreateEventBody.model_validate(
+        {
+            "title": "T",
+            "description": "D",
+            "category": "music",
+            "date": "2026-06-01",
+            "time": "18:00:00",
+            "location": "Here",
+            "price": 10,
+            "latitude": 28.6,
+            "longitude": 77.2,
+            "amenities": [],
+        }
+    )
+    with pytest.raises(ValueError, match="single_price_amenities_required"):
+        _ensure_single_price_amenities_non_empty(body, None)
+
+
+def test_single_price_amenities_required_only_whitespace() -> None:
+    body = CreateEventBody.model_validate(
+        {
+            "title": "T",
+            "description": "D",
+            "category": "music",
+            "date": "2026-06-01",
+            "time": "18:00:00",
+            "location": "Here",
+            "price": 10,
+            "latitude": 28.6,
+            "longitude": 77.2,
+            "amenities": ["", "  ", "\t"],
+        }
+    )
+    with pytest.raises(ValueError, match="single_price_amenities_required"):
+        _ensure_single_price_amenities_non_empty(body, None)
+
+
+def test_single_price_amenities_ok_when_non_whitespace() -> None:
+    body = CreateEventBody.model_validate(
+        {
+            "title": "T",
+            "description": "D",
+            "category": "music",
+            "date": "2026-06-01",
+            "time": "18:00:00",
+            "location": "Here",
+            "price": 10,
+            "latitude": 28.6,
+            "longitude": 77.2,
+            "amenities": ["  Parking  "],
+        }
+    )
+    _ensure_single_price_amenities_non_empty(body, None)
+
+
+def test_tiered_skips_single_price_amenity_rule() -> None:
+    body = CreateEventBody.model_validate(
+        {
+            "title": "T",
+            "description": "D",
+            "category": "music",
+            "date": "2026-06-01",
+            "time": "18:00:00",
+            "location": "Here",
+            "price": 100,
+            "latitude": 28.6,
+            "longitude": 77.2,
+            "tier_details": {
+                "Standard": {"price": 100, "amenities": ["x"]},
+                "Premium": {"price": 150, "amenities": ["y"]},
+                "VIP": {"price": 200, "amenities": ["z"]},
+            },
+        }
+    )
+    blob = normalized_tier_details_for_create(body)
+    assert blob is not None
+    _ensure_single_price_amenities_non_empty(body, blob)
 
 
 def test_ensure_create_event_date_past_raises() -> None:
@@ -233,7 +315,7 @@ def test_create_tiered_price_must_match_standard() -> None:
 
 
 def test_ticket_tiers_for_event_detail_single_price_no_amenities() -> None:
-    ev = SimpleNamespace(price=50, tier_details=None)
+    ev = SimpleNamespace(price=50, tier_details=None, amenities=None)
     tiers = ticket_tiers_for_event_detail(ev)
     assert len(tiers) == 1
     assert tiers[0].tier == TicketTier.STANDARD.value
