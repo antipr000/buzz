@@ -89,7 +89,7 @@ export function LocationField({ onLocationChange, placeholder }: LocationFieldPr
   );
 
   return (
-    <View className="z-10 w-full">
+    <View className="w-full">
       <GooglePlacesTextInput
         ref={inputRef}
         apiKey={apiKey}

@@ -135,7 +135,11 @@ export default function FeaturedEventCard({
                 {isFeatured && (
                     <View className='absolute top-2 left-3 z-[1]' pointerEvents='none'>
                         <Badge variant='outline' className='border-0 px-3 py-1.5 bg-secondary '>
-                            <Image source={require('@/assets/images/common/shine.svg')} className='size-3' contentFit='contain' />
+                            <Image
+                                source={require('@/assets/images/common/shine.svg')}
+                                style={{ width: 12, height: 12 }}
+                                contentFit='contain'
+                            />
                             <Text className='text-[10px] font-medium text-primary-foreground'>Featured</Text>
                         </Badge>
                     </View>
@@ -163,26 +167,33 @@ export default function FeaturedEventCard({
                 >
                     {/* Avatar stack */}
                     <View className='flex-row items-center'>
-                        {AVATAR_IMAGES.map((src, i) => (
+                        {/* {AVATAR_IMAGES.map((src, i) => (
                             <Image
                                 key={i}
                                 source={src}
-                                className={`size-5 rounded-[14px] border-2 border-[rgba(4,0,71,1)] ${i === 0 ? 'ml-0' : '-ml-2.5'}`}
+                                style={{ width: 20, height: 20, borderRadius: 14 }}
+                                className={`border-2 border-[rgba(4,0,71,1)] ${i === 0 ? 'ml-0' : '-ml-2.5'}`}
                                 contentFit='cover'
                             />
-                        ))}
-                        <Badge className='border-0 px-3 py-1 bg-secondary ml-1.5'>
-                            <Text className='text-primary-foreground text-[10px] font-semibold'>
-                                + {attendees.toLocaleString()}
-                            </Text>
-                        </Badge>
+                        ))} */}
+                        {attendees > 0 ? (
+                            <Badge className='border-0 px-3 py-1 bg-secondary ml-1.5'>
+                                <Text className='text-primary-foreground text-[10px] font-semibold'>
+                                    + {attendees.toLocaleString()}
+                                </Text>
+                            </Badge>
+                        ) : null}
                     </View>
 
                     {/* Price Badge */}
                     <Badge variant='outline' className='border-0 bg-[rgba(196,240,0,1)] px-3 py-1'>
                         {price === 'Free' ? (
                             <>
-                                <Image source={require('@/assets/images/home/free.svg')} className='size-2.5' contentFit='contain' />
+                                <Image
+                                    source={require('@/assets/images/home/free.svg')}
+                                    style={{ width: 10, height: 10 }}
+                                    contentFit='contain'
+                                />
                                 <Text className='text-[10px] font-bold text-secondary'>Free</Text>
                             </>
                         ) : (
@@ -198,12 +209,16 @@ export default function FeaturedEventCard({
                 {/* Category + Popular */}
                 <View className='flex-row items-center gap-2 mb-2'>
                     <Badge variant='outline' className='border-0 px-2.5 py-1' style={{ backgroundColor: eventColor }}>
-                        <Image source={categoryIcon} className='size-[13px]' contentFit='contain' />
+                        {/* <Image source={categoryIcon} style={{ width: 13, height: 13 }} contentFit='contain' /> */}
                         <Text className='text-primary-foreground text-[10px] font-medium'>{category}</Text>
                     </Badge>
                     {isPopular && (
                         <View className='flex-row items-center gap-1'>
-                            <Image source={require('@/assets/images/common/shine2.svg')} className='size-2.5' contentFit='contain' />
+                            <Image
+                                source={require('@/assets/images/common/shine2.svg')}
+                                style={{ width: 10, height: 10 }}
+                                contentFit='contain'
+                            />
                             <Text className='text-primary text-[10px] font-medium'>Popular</Text>
                         </View>
                     )}
@@ -218,18 +233,18 @@ export default function FeaturedEventCard({
                 {/* Date & Time */}
                 <View className='flex-row items-center gap-4 mb-1.5'>
                     <View className='flex-row items-center gap-1.5'>
-                        <Image source={calendarIcon} className='size-[13px]' contentFit='contain' />
+                        <Image source={calendarIcon} style={{ width: 13, height: 13 }} contentFit='contain' />
                         <Text className='text-[rgba(15,23,42,1)] font-medium text-[10px]'>{date}</Text>
                     </View>
                     <View className='flex-row items-center gap-1.5'>
-                        <Image source={timeIcon} className='size-[13px]' contentFit='contain' />
+                        <Image source={timeIcon} style={{ width: 13, height: 13 }} contentFit='contain' />
                         <Text className='text-[rgba(15,23,42,1)] font-medium text-[10px]'>{time}</Text>
                     </View>
                 </View>
 
                 {/* Location */}
                 <View className='flex-row items-center gap-1.5 mb-3'>
-                    <Image source={locationIcon} className='size-[13px]' contentFit='contain' />
+                    <Image source={locationIcon} style={{ width: 13, height: 13 }} contentFit='contain' />
                     <Text className='text-[rgba(15,23,42,1)] font-medium text-[10px]'>{location}</Text>
                 </View>
 
@@ -239,13 +254,17 @@ export default function FeaturedEventCard({
                 {/* Organizer Footer */}
                 <View className='flex-row items-center justify-between'>
                     <View className='flex-row items-center gap-2'>
-                        <Image source={organizerLogo} className='size-[15px]' contentFit='contain' />
+                        <Image source={organizerLogo} style={{ width: 15, height: 15 }} contentFit='contain' />
                         <Text className='text-[rgba(15,23,42,1)] text-xs'>
                             by <Text className='text-[rgba(15,23,42,1)] text-xs font-semibold'>{organizer}</Text>
                         </Text>
                     </View>
                     <Badge className='border-0 px-3 py-1.5 bg-secondary'>
-                        <Image source={require('@/assets/images/common/people.svg')} className='size-2.5' contentFit='contain' />
+                        <Image
+                            source={require('@/assets/images/common/people.svg')}
+                            style={{ width: 10, height: 10 }}
+                            contentFit='contain'
+                        />
                         <Text className='text-primary-foreground text-[10px] font-medium'>{attendees.toLocaleString()}</Text>
                     </Badge>
                 </View>

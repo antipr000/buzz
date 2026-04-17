@@ -3,7 +3,7 @@ import type { EventCategoryLabel } from '@/constants/eventCategories';
 /** Brand tint per category — keys must match `EventCategoryLabel` only. */
 export const CATEGORY_COLORS: Record<EventCategoryLabel, string> = {
   Music: '#EC4899',
-  Art: '#FEF08A',
+  Art: '#E49B0F',
   Food: '#F97316',
   Fitness: '#EF4444',
   Tech: '#2563EB',

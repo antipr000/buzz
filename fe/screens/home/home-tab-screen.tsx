@@ -80,7 +80,7 @@ const EventCard = ({
       <View className='mt-3 flex-row items-center gap-1.5'>
         <Image
           source={require('@/assets/images/home/calender.svg')}
-          className='size-3'
+          style={{ width: 12, height: 12 }}
           contentFit='contain'
         />
         <Text className='min-w-0 flex-1 text-[10px] text-primary-foreground' numberOfLines={1}>
@@ -91,7 +91,7 @@ const EventCard = ({
       <View className='mt-1 flex-row items-center gap-1.5'>
         <Image
           source={require('@/assets/images/home/location2.svg')}
-          className='size-3'
+          style={{ width: 12, height: 12 }}
           contentFit='contain'
         />
         <Text className='min-w-0 flex-1 text-[10px] text-primary-foreground' numberOfLines={1}>
@@ -107,7 +107,7 @@ const EventCard = ({
           <Text className='text-[10px] font-semibold text-primary-foreground'>Join Now</Text>
           <Image
             source={require('@/assets/images/home/arrow.svg')}
-            className='size-3'
+            style={{ width: 12, height: 12 }}
             contentFit='contain'
           />
         </TouchableOpacity>
@@ -188,7 +188,7 @@ export default function HomeTabScreen() {
             <View className='flex-row items-center gap-2'>
               <Image
                 source={require('@/assets/images/home/location.svg')}
-                className='size-[18px]'
+                style={{ width: 18, height: 18 }}
                 contentFit='contain'
               />
               <Text className='text-xs text-primary-foreground' numberOfLines={1}>
@@ -198,7 +198,7 @@ export default function HomeTabScreen() {
             <View>
               <Image
                 source={require('@/assets/images/home/bell.svg')}
-                className='size-[22px]'
+                style={{ width: 22, height: 22 }}
                 contentFit='contain'
               />
             </View>
@@ -232,7 +232,8 @@ export default function HomeTabScreen() {
                 </Text>
                 <Image
                   source={require('@/assets/images/home/fire.gif')}
-                  className='size-[30px]'
+                  style={{ width: 30, height: 30 }}
+                  contentFit='contain'
                 />
               </View>
               <Link href="/all" asChild>
@@ -292,7 +293,7 @@ export default function HomeTabScreen() {
                   className={`flex-row items-center gap-[6px] rounded-full border border-primary mr-3 px-4 py-1.5 ${isSelected ? 'bg-primary' : 'bg-transparent'}`}
                 >
                   {cat.icon && (
-                    <Image source={cat.icon} className='size-2.5' contentFit='contain' />
+                    <Image source={cat.icon} style={{ width: 10, height: 10 }} contentFit='contain' />
                   )}
                   <Text className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-primary'}`}>
                     {cat.label}
