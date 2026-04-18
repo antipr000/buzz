@@ -1,13 +1,14 @@
 import { View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { Text } from '@/components/ui/text'
 import { Image, ImageSource } from 'expo-image'
 import { ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { firstParamString } from '@/lib/expo-router/params'
 import type { PurchasePaymentMethod } from '@/constants/paymentMethods'
-import { usePurchaseTickets } from '@/hooks/api'
+import { usePurchaseTickets, useVerifyRazorpayPayment } from '@/hooks/api'
+import { useRazorpay } from '@codearcade/expo-razorpay'
 import type { PurchaseAddressIn, PurchaseBody, PurchaseResponse, PurchaseTicketLine } from '@/services/types/booking'
 
 /** Stable row id for React; `method` is the API `payment_method` string. */
@@ -25,6 +26,24 @@ const PAYMENT_OPTIONS: {
     { id: 'net_banking', method: 'net_banking', label: 'Net Banking', icon: require('@/assets/images/payments/net_banking.svg') },
     { id: 'cod', method: 'cash_on_delivery', label: 'Cash on Delivery', icon: require('@/assets/images/payments/cod.svg') },
 ];
+
+/**
+ * Methods that skip Razorpay checkout entirely (free bookings or COD).
+ * All other methods open the Razorpay WebView after the server creates an order.
+ */
+const NON_RAZORPAY_METHODS = new Set<PurchasePaymentMethod>(['free', 'cash_on_delivery']);
+
+/**
+ * Maps our payment_method values to Razorpay prefill.method strings so the
+ * checkout opens on the right tab. Unmapped methods (pay_later) open on the default tab.
+ */
+const RAZORPAY_PREFILL_METHOD: Partial<Record<PurchasePaymentMethod, string>> = {
+    upi: 'upi',
+    credit_debit_card: 'card',
+    wallets: 'wallet',
+    emi: 'emi',
+    net_banking: 'netbanking',
+};
 
 /** Route params are strings; previous screens send either addressId (saved) or address JSON (new). */
 function checkoutFromParams(params: {
@@ -83,27 +102,103 @@ const Payment = () => {
     const insets = useSafeAreaInsets();
     const checkout = useCheckoutFromParams();
     const purchase = usePurchaseTickets();
+    const verify = useVerifyRazorpayPayment();
+    const { openCheckout, RazorpayUI } = useRazorpay();
     const [selectedMethod, setSelectedMethod] = useState<PurchasePaymentMethod | null>(null);
+    const submittingRef = useRef(false);
+
+    const navigateBooked = (data: Pick<PurchaseResponse, 'booking_id' | 'payment_status'>) => {
+        if (!checkout.ok) return;
+        router.replace({
+            pathname: '/event-booked',
+            params: {
+                bookingId: data.booking_id,
+                paymentStatus: data.payment_status,
+                eventTitle: checkout.eventTitle,
+            },
+        });
+    };
 
     const submitPurchase = (method: PurchasePaymentMethod) => {
-        if (!checkout.ok || purchase.isPending) return;
+        if (!checkout.ok || purchase.isPending || verify.isPending) return;
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+
         const body: PurchaseBody = checkout.addressId
             ? { event_id: checkout.eventId, tickets: checkout.tickets, address_id: checkout.addressId, payment_method: method }
             : { event_id: checkout.eventId, tickets: checkout.tickets, address: checkout.address!, payment_method: method };
-        const navigateBooked = (data: PurchaseResponse) => {
-            router.replace({
-                pathname: '/event-booked',
-                params: {
-                    bookingId: data.booking_id,
-                    paymentStatus: data.payment_status,
-                    eventTitle: checkout.eventTitle,
-                },
-            });
-        };
 
         purchase.mutate(body, {
-            onSuccess: navigateBooked,
+            onSuccess: (data) => {
+                submittingRef.current = false;
+                // Free / COD: no Razorpay checkout needed, navigate immediately.
+                if (NON_RAZORPAY_METHODS.has(method)) {
+                    navigateBooked(data);
+                    return;
+                }
+
+                // No Razorpay order → nothing to open in WebView (e.g. ₹0 total with UPI/card/etc.).
+                if (!data.razorpay_order_id) {
+                    navigateBooked(data);
+                    return;
+                }
+
+                // Have an order but no publishable key — misconfiguration; cannot open checkout.
+                if (!data.razorpay_key_id) {
+                    Alert.alert(
+                        'Payment unavailable',
+                        'Online checkout could not start because payments are not fully configured. Please try again later or contact support.',
+                    );
+                    return;
+                }
+
+                // Online payment: open Razorpay checkout.
+                // amount * 100 converts rupees (stored in DB) → paise (required by Razorpay SDK).
+                openCheckout(
+                    {
+                        key: data.razorpay_key_id,
+                        order_id: data.razorpay_order_id,
+                        amount: data.amount * 100,
+                        currency: data.currency,
+                        name: 'Buzz',
+                        description: checkout.eventTitle || 'Event Booking',
+                        prefill: { method: RAZORPAY_PREFILL_METHOD[method] },
+                        theme: { color: '#4F46E5' },
+                    },
+                    {
+                        onSuccess: (rzpData) => {
+                            // Razorpay gave us three ids — verify HMAC on the server before marking paid.
+                            verify.mutate(
+                                {
+                                    booking_id: data.booking_id,
+                                    razorpay_payment_id: rzpData.razorpay_payment_id,
+                                    razorpay_order_id: rzpData.razorpay_order_id,
+                                    razorpay_signature: rzpData.razorpay_signature,
+                                },
+                                {
+                                    onSuccess: () => navigateBooked({ booking_id: data.booking_id, payment_status: 'completed' }),
+                                    onError: () => {
+                                        Alert.alert(
+                                            'Verification failed',
+                                            'Your payment was received but could not be confirmed. Please contact support with your booking ID: ' + data.booking_id,
+                                        );
+                                    },
+                                },
+                            );
+                        },
+                        onFailure: (err) => {
+                            // The package has a known quirk: err may already be the inner error object.
+                            const description = err?.description ?? 'Payment could not be completed. Please try again.';
+                            Alert.alert('Payment failed', description);
+                        },
+                        onClose: () => {
+                            // User dismissed without paying — stay on screen so they can retry.
+                        },
+                    },
+                );
+            },
             onError: (err) => {
+                submittingRef.current = false;
                 Alert.alert(
                     'Could not complete purchase',
                     err instanceof Error ? err.message : 'Please try again.',
@@ -112,7 +207,8 @@ const Payment = () => {
         });
     };
 
-    const canProceed = selectedMethod != null && !purchase.isPending;
+    const isLoading = purchase.isPending || verify.isPending;
+    const canProceed = selectedMethod != null && !isLoading;
 
     /** One source of truth with footer: pt-4 (16) + Proceed h-10 (40) + bottom inset */
     const footerBottomInset = Math.max(insets.bottom, 16);
@@ -153,7 +249,7 @@ const Payment = () => {
             </View>
 
             <View className="flex-1 relative">
-                {purchase.isPending ? (
+                {isLoading ? (
                     <View
                         className="absolute inset-0 z-10 bg-white/60 items-center justify-center"
                         pointerEvents="auto"
@@ -189,7 +285,7 @@ const Payment = () => {
                             <TouchableOpacity
                                 key={option.id}
                                 activeOpacity={0.7}
-                                disabled={purchase.isPending}
+                                disabled={isLoading}
                                 onPress={() => setSelectedMethod(option.method)}
                                 className={`flex-row items-center px-5 py-4 ${selected ? 'bg-[rgba(79,70,229,0.08)]' : ''
                                     } ${index !== PAYMENT_OPTIONS.length - 1 ? 'border-b border-[rgba(0,0,0,0.1)]' : ''}`}
@@ -219,6 +315,9 @@ const Payment = () => {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {/* Razorpay WebView checkout — renders as a native Modal, so placement in tree doesn't matter */}
+            {RazorpayUI}
         </SafeAreaView>
     );
 };
