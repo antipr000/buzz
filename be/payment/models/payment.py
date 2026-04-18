@@ -49,6 +49,8 @@ class Payment(BaseEntity):
         Enum(PaymentStatus, native_enum=False, length=32),
         nullable=False,
     )
+    razorpay_order_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    razorpay_payment_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     booking: Mapped[Booking] = relationship(back_populates="payments", lazy="raise")
 

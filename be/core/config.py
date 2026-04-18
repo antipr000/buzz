@@ -28,6 +28,10 @@ class Config(BaseSettings):
     # Optional: verify PSP webhook signatures in production
     payment_webhook_secret: str = Field(default="", alias="PAYMENT_WEBHOOK_SECRET")
 
+    # Razorpay (Orders API + signature verification). Empty = online checkout disabled server-side.
+    razorpay_key_id: str = Field(default="", alias="RAZORPAY_KEY_ID")
+    razorpay_key_secret: str = Field(default="", alias="RAZORPAY_KEY_SECRET")
+
     # Supabase project URL (https://<ref>.supabase.co) — JWT verification via JWKS (see Supabase JWT docs)
     supabase_url: str = Field(default="", alias="SUPABASE_URL")
 

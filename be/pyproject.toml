@@ -17,6 +17,7 @@ dependencies = [
     "uvicorn>=0.42.0",
     "python-multipart>=0.0.22",
     "google-cloud-storage>=3.10.1",
+    "razorpay>=2.0.1",
 ]
 
 [dependency-groups]
