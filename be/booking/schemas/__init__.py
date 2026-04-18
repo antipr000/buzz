@@ -8,6 +8,8 @@ from booking.schemas.booking_schemas import (
     PurchaseResponse,
     TicketLineIn,
     TicketLineOut,
+    VerifyRazorpayPaymentBody,
+    VerifyRazorpayPaymentResponse,
 )
 
 __all__ = [
@@ -20,4 +22,6 @@ __all__ = [
     "PurchaseResponse",
     "TicketLineIn",
     "TicketLineOut",
+    "VerifyRazorpayPaymentBody",
+    "VerifyRazorpayPaymentResponse",
 ]

@@ -115,7 +115,9 @@ async def main() -> None:
     )
 
     async with AsyncSessionLocal() as session:
-        booking, payment = await BookingService.purchase(db=session, user_id=buyer_id, body=body)
+        booking, payment, _currency = await BookingService.purchase(
+            db=session, user_id=buyer_id, body=body
+        )
 
     print(f"Seeded booking for buyer {buyer_id} on event {event.id} ({event.title!r}):")
     print(f"  booking_id={booking.id}")

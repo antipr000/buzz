@@ -16,10 +16,17 @@ from booking.schemas.booking_schemas import (
     OrganizerVerifyBookingResponse,
     PurchaseBody,
     TicketLineOut,
+    VerifyRazorpayPaymentBody,
 )
 from event.models.event import Event
 from payment.models.payment import Payment, PaymentMethod, PaymentStatus
-from ticket.models.ticket import Ticket, TicketTier
+from payment.razorpay_client import (
+    create_order,
+    razorpay_credentials_configured,
+    verify_payment_signature,
+)
+from razorpay.errors import SignatureVerificationError
+from ticket.models.ticket import Ticket
 from ticket.tier_pricing import ensure_ticket_line_price_for_event
 
 
@@ -30,6 +37,29 @@ def _combine_event_datetime(d: date, t: time) -> datetime:
 def _validate_payment_method_for_total(payment_method: PaymentMethod, total: int) -> None:
     if total > 0 and payment_method == PaymentMethod.FREE:
         raise ValueError("paid_checkout_cannot_use_free_payment_method")
+
+
+def _needs_razorpay_order(total: int, payment_method: PaymentMethod) -> bool:
+    """Online gateway: paid amount and not cash-on-delivery."""
+    if total <= 0:
+        return False
+    if payment_method == PaymentMethod.CASH_ON_DELIVERY:
+        return False
+    return True
+
+
+def _normalize_currency(currency: str) -> str:
+    """Strip/uppercase ISO code; empty → INR (caller should send valid 3-letter codes)."""
+    raw = (currency or "").strip()
+    return raw.upper() if raw else "INR"
+
+
+def _amount_minor_units_for_razorpay(total: int, currency: str) -> int:
+    """Razorpay `amount` in smallest currency unit (e.g. paise for INR)."""
+    c = _normalize_currency(currency)
+    if c == "INR":
+        return total * 100
+    raise ValueError("unsupported_checkout_currency")
 
 
 def _booking_to_list_item(b: Booking) -> BookingListItem:
@@ -72,7 +102,7 @@ class BookingService:
         *,
         user_id: uuid.UUID,
         body: PurchaseBody,
-    ) -> tuple[Booking, Payment]:
+    ) -> tuple[Booking, Payment, str]:
         ev = await db.get(Event, body.event_id)
         if ev is None:
             raise ValueError("Event not found")
@@ -144,10 +174,85 @@ class BookingService:
                     )
                 )
 
+        checkout_currency = _normalize_currency(body.currency)
+
+        if _needs_razorpay_order(total, body.payment_method):
+            if not razorpay_credentials_configured():
+                await db.rollback()
+                raise ValueError("razorpay_not_configured")
+            try:
+                amount_minor = _amount_minor_units_for_razorpay(total, checkout_currency)
+            except ValueError:
+                await db.rollback()
+                raise
+            try:
+                order = await create_order(
+                    amount_paise=amount_minor,
+                    currency=checkout_currency,
+                    receipt=payment.id[:40],
+                    notes={"booking_id": booking.id},
+                )
+            except Exception as exc:
+                await db.rollback()
+                raise ValueError("razorpay_order_failed") from exc
+            payment.razorpay_order_id = order["id"]
+
         await db.commit()
         await db.refresh(booking)
         await db.refresh(payment)
-        return booking, payment
+        return booking, payment, checkout_currency
+
+    @staticmethod
+    async def verify_razorpay_payment(
+        db: AsyncSession,
+        *,
+        user_id: uuid.UUID,
+        body: VerifyRazorpayPaymentBody,
+    ) -> None:
+        raw_bid = body.booking_id.strip()
+        stmt = (
+            select(Booking)
+            .where(Booking.id == raw_bid)
+            .options(joinedload(Booking.payments))
+        )
+        result = await db.execute(stmt)
+        booking = result.unique().scalar_one_or_none()
+        if booking is None:
+            raise ValueError("booking_not_found")
+        if booking.user_id != user_id:
+            raise ValueError("verify_forbidden")
+
+        if not booking.payments:
+            raise ValueError("payment_not_found")
+
+        payment = booking.payments[0]
+
+        if payment.razorpay_order_id is None:
+            raise ValueError("razorpay_order_not_expected")
+
+        if payment.razorpay_order_id != body.razorpay_order_id.strip():
+            raise ValueError("razorpay_order_mismatch")
+
+        if payment.status == PaymentStatus.COMPLETED:
+            if payment.razorpay_payment_id == body.razorpay_payment_id.strip():
+                return
+            raise ValueError("payment_already_completed")
+
+        if payment.status != PaymentStatus.PENDING_PAYMENT:
+            raise ValueError("payment_not_pending")
+
+        try:
+            await verify_payment_signature(
+                razorpay_order_id=body.razorpay_order_id.strip(),
+                razorpay_payment_id=body.razorpay_payment_id.strip(),
+                razorpay_signature=body.razorpay_signature.strip(),
+            )
+        except SignatureVerificationError as exc:
+            raise ValueError("razorpay_signature_invalid") from exc
+
+        payment.status = PaymentStatus.COMPLETED
+        payment.razorpay_payment_id = body.razorpay_payment_id.strip()
+        await db.commit()
 
     @staticmethod
     async def list_bookings_for_user(

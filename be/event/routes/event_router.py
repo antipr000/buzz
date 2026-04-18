@@ -14,9 +14,12 @@ from booking.schemas.booking_schemas import (
     OrganizerVerifyBookingResponse,
     PurchaseBody,
     PurchaseResponse,
+    VerifyRazorpayPaymentBody,
+    VerifyRazorpayPaymentResponse,
 )
 from booking.services.booking_service import BookingService
 from core.auth import get_current_user
+from core.config import config
 from core.database import get_db
 from core.storage.gcs_event_cover import upload_event_cover_image
 from event.schemas.event_schemas import (
@@ -145,7 +148,9 @@ async def purchase_tickets(
     user: User = Depends(get_current_user),
 ):
     try:
-        booking, payment = await BookingService.purchase(db, user_id=user.id, body=body)
+        booking, payment, checkout_currency = await BookingService.purchase(
+            db, user_id=user.id, body=body
+        )
     except ValueError as e:
         msg = str(e)
         if msg == "purchase_tier_not_available":
@@ -163,13 +168,86 @@ async def purchase_tickets(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Payment method 'free' is only for zero-total bookings.",
             ) from e
+        if msg == "razorpay_not_configured":
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Online payments are not configured. Try again later.",
+            ) from e
+        if msg == "razorpay_order_failed":
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Could not start payment with Razorpay. Try again.",
+            ) from e
+        if msg == "unsupported_checkout_currency":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This currency is not supported for online checkout yet. Use INR or contact support.",
+            ) from e
         raise HTTPException(status_code=400, detail=msg) from e
+    key = config.razorpay_key_id.strip() or None
     return PurchaseResponse(
         booking_id=booking.id,
         payment_id=payment.id,
         amount=payment.amount,
         payment_status=payment.status.value,
+        razorpay_order_id=payment.razorpay_order_id,
+        razorpay_key_id=key if payment.razorpay_order_id else None,
+        currency=checkout_currency,
     )
+
+
+@event_router.post(
+    "/verify-razorpay-payment",
+    response_model=VerifyRazorpayPaymentResponse,
+)
+async def verify_razorpay_payment(
+    body: VerifyRazorpayPaymentBody,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    try:
+        await BookingService.verify_razorpay_payment(
+            db, user_id=user.id, body=body
+        )
+    except ValueError as e:
+        msg = str(e)
+        if msg == "booking_not_found":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Booking not found.",
+            ) from e
+        if msg == "verify_forbidden":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not allowed to verify this booking.",
+            ) from e
+        if msg in ("payment_not_found", "razorpay_order_not_expected"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid payment state for verification.",
+            ) from e
+        if msg == "razorpay_order_mismatch":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Order id does not match this booking.",
+            ) from e
+        if msg == "payment_already_completed":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Payment already recorded with different details.",
+            ) from e
+        if msg == "payment_not_pending":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Payment is not pending verification.",
+            ) from e
+        if msg == "razorpay_signature_invalid":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Payment signature verification failed.",
+            ) from e
+        raise HTTPException(status_code=400, detail=msg) from e
+    return VerifyRazorpayPaymentResponse()
 
 
 @event_router.get("/saved", response_model=SavedListResponse)

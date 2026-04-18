@@ -38,6 +38,15 @@ class PurchaseBody(SchemaModel):
     address_id: str | None = None
     address: AddressIn | None = None
     payment_method: PaymentMethod
+    currency: str = Field(
+        default="INR",
+        min_length=3,
+        max_length=3,
+        description=(
+            "ISO 4217 code; must match Razorpay order and checkout. "
+            "Only INR minor-unit rules are implemented server-side."
+        ),
+    )
 
 
 class PurchaseResponse(SchemaModel):
@@ -45,6 +54,22 @@ class PurchaseResponse(SchemaModel):
     payment_id: str
     amount: int
     payment_status: str
+    razorpay_order_id: str | None = None
+    razorpay_key_id: str | None = None
+    currency: str = "INR"
+
+
+class VerifyRazorpayPaymentBody(SchemaModel):
+    """POST /events/verify-razorpay-payment — client sends Checkout success payload."""
+
+    booking_id: str = Field(min_length=1, max_length=255)
+    razorpay_payment_id: str = Field(min_length=1, max_length=255)
+    razorpay_order_id: str = Field(min_length=1, max_length=255)
+    razorpay_signature: str = Field(min_length=1, max_length=2048)
+
+
+class VerifyRazorpayPaymentResponse(SchemaModel):
+    verified: bool = True
 
 
 class TicketLineOut(SchemaModel):
