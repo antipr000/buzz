@@ -5,6 +5,8 @@ import type {
   OrganizerVerifyBookingResponse,
   PurchaseBody,
   PurchaseResponse,
+  VerifyRazorpayPaymentBody,
+  VerifyRazorpayPaymentResponse,
 } from "@/services/types/booking";
 
 /** POST /events/purchase — requires auth. */
@@ -13,6 +15,17 @@ export async function postPurchase(
 ): Promise<PurchaseResponse> {
   const { data } = await apiClient.post<PurchaseResponse>(
     "/events/purchase",
+    body
+  );
+  return data;
+}
+
+/** POST /events/verify-razorpay-payment — requires auth. */
+export async function postVerifyRazorpayPayment(
+  body: VerifyRazorpayPaymentBody
+): Promise<VerifyRazorpayPaymentResponse> {
+  const { data } = await apiClient.post<VerifyRazorpayPaymentResponse>(
+    "/events/verify-razorpay-payment",
     body
   );
   return data;

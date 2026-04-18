@@ -23,6 +23,8 @@ export type PurchaseBody = {
   event_id: string;
   tickets: PurchaseTicketLine[];
   payment_method: PurchasePaymentMethod;
+  /** ISO 4217; omit for server default (INR). */
+  currency?: string;
 } & (
   | { address_id: string; address?: never }
   | { address: PurchaseAddressIn; address_id?: never }
@@ -34,6 +36,22 @@ export type PurchaseResponse = {
   payment_id: string;
   amount: number;
   payment_status: string;
+  razorpay_order_id: string | null;
+  razorpay_key_id: string | null;
+  currency: string;
+};
+
+/** `VerifyRazorpayPaymentBody` — POST /events/verify-razorpay-payment */
+export type VerifyRazorpayPaymentBody = {
+  booking_id: string;
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+};
+
+/** `VerifyRazorpayPaymentResponse` */
+export type VerifyRazorpayPaymentResponse = {
+  verified: boolean;
 };
 
 /**

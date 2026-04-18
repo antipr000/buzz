@@ -24,3 +24,4 @@ export { useProfileMe } from "./useProfileMe";
 export { useProfileStats } from "./useProfileStats";
 export { usePurchaseTickets } from "./usePurchaseTickets";
 export { useVerifyBooking, type VerifyBookingVariables } from "./useVerifyBooking";
+export { useVerifyRazorpayPayment } from "./useVerifyRazorpayPayment";
