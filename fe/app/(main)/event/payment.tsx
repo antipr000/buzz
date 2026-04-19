@@ -1,4 +1,4 @@
-import { View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native'
+import { View, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Image as RNImage } from 'react-native'
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import React, { useMemo, useRef, useState } from 'react'
 import { Text } from '@/components/ui/text'
@@ -7,8 +7,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react-native'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { firstParamString } from '@/lib/expo-router/params'
 import type { PurchasePaymentMethod } from '@/constants/paymentMethods'
-import { usePurchaseTickets, useVerifyRazorpayPayment } from '@/hooks/api'
-import { useRazorpay } from '@codearcade/expo-razorpay'
+import { usePurchaseTickets, useVerifyRazorpayPayment, useProfileMe } from '@/hooks/api'
+import RazorpayCheckout from 'react-native-razorpay'
 import type { PurchaseAddressIn, PurchaseBody, PurchaseResponse, PurchaseTicketLine } from '@/services/types/booking'
 
 /** Stable row id for React; `method` is the API `payment_method` string. */
@@ -37,13 +37,17 @@ const NON_RAZORPAY_METHODS = new Set<PurchasePaymentMethod>(['free', 'cash_on_de
  * Maps our payment_method values to Razorpay prefill.method strings so the
  * checkout opens on the right tab. Unmapped methods (pay_later) open on the default tab.
  */
-const RAZORPAY_PREFILL_METHOD: Partial<Record<PurchasePaymentMethod, string>> = {
+const RAZORPAY_PREFILL_METHOD: Partial<Record<PurchasePaymentMethod, 'upi' | 'card' | 'wallet' | 'emi' | 'netbanking'>> = {
     upi: 'upi',
     credit_debit_card: 'card',
     wallets: 'wallet',
     emi: 'emi',
     net_banking: 'netbanking',
 };
+
+const RAZORPAY_CHECKOUT_LOGO_URL =
+    process.env.EXPO_PUBLIC_RAZORPAY_CHECKOUT_LOGO_URL
+
 
 /** Route params are strings; previous screens send either addressId (saved) or address JSON (new). */
 function checkoutFromParams(params: {
@@ -103,7 +107,7 @@ const Payment = () => {
     const checkout = useCheckoutFromParams();
     const purchase = usePurchaseTickets();
     const verify = useVerifyRazorpayPayment();
-    const { openCheckout, RazorpayUI } = useRazorpay();
+    const profile = useProfileMe();
     const [selectedMethod, setSelectedMethod] = useState<PurchasePaymentMethod | null>(null);
     const submittingRef = useRef(false);
 
@@ -152,50 +156,48 @@ const Payment = () => {
                     return;
                 }
 
-                // Online payment: open Razorpay checkout.
+                // Online payment: open Razorpay native checkout.
                 // amount * 100 converts rupees (stored in DB) → paise (required by Razorpay SDK).
-                openCheckout(
-                    {
-                        key: data.razorpay_key_id,
-                        order_id: data.razorpay_order_id,
-                        amount: data.amount * 100,
-                        currency: data.currency,
-                        name: 'Buzz',
-                        description: checkout.eventTitle || 'Event Booking',
-                        prefill: { method: RAZORPAY_PREFILL_METHOD[method] },
-                        theme: { color: '#4F46E5' },
+                RazorpayCheckout.open({
+                    key: data.razorpay_key_id,
+                    image: RAZORPAY_CHECKOUT_LOGO_URL,
+                    order_id: data.razorpay_order_id,
+                    amount: data.amount * 100,
+                    currency: data.currency,
+                    name: `Buzz | ${checkout.eventTitle}`,
+                    description: checkout.eventTitle || 'Event Booking',
+                    prefill: {
+                        method: RAZORPAY_PREFILL_METHOD[method],
+                        // contact + email are required for prefill.method to take effect (including netbanking)
+                        contact: profile.data?.mobile_number ?? undefined,
+                        email: profile.data?.email ?? undefined,
                     },
-                    {
-                        onSuccess: (rzpData) => {
-                            // Razorpay gave us three ids — verify HMAC on the server before marking paid.
-                            verify.mutate(
-                                {
-                                    booking_id: data.booking_id,
-                                    razorpay_payment_id: rzpData.razorpay_payment_id,
-                                    razorpay_order_id: rzpData.razorpay_order_id,
-                                    razorpay_signature: rzpData.razorpay_signature,
-                                },
-                                {
-                                    onSuccess: () => navigateBooked({ booking_id: data.booking_id, payment_status: 'completed' }),
-                                    onError: () => {
-                                        Alert.alert(
-                                            'Verification failed',
-                                            'Your payment was received but could not be confirmed. Please contact support with your booking ID: ' + data.booking_id,
-                                        );
-                                    },
-                                },
-                            );
+                    theme: { color: '#4F46E5' },
+                    send_sms_hash: true,
+                }).then((rzpData) => {
+                    // Razorpay gave us three ids — verify HMAC on the server before marking paid.
+                    verify.mutate(
+                        {
+                            booking_id: data.booking_id,
+                            razorpay_payment_id: rzpData.razorpay_payment_id,
+                            razorpay_order_id: rzpData.razorpay_order_id,
+                            razorpay_signature: rzpData.razorpay_signature,
                         },
-                        onFailure: (err) => {
-                            // The package has a known quirk: err may already be the inner error object.
-                            const description = err?.description ?? 'Payment could not be completed. Please try again.';
-                            Alert.alert('Payment failed', description);
+                        {
+                            onSuccess: () => navigateBooked({ booking_id: data.booking_id, payment_status: 'completed' }),
+                            onError: () => {
+                                Alert.alert(
+                                    'Verification failed',
+                                    'Your payment was received but could not be confirmed. Please contact support with your booking ID: ' + data.booking_id,
+                                );
+                            },
                         },
-                        onClose: () => {
-                            // User dismissed without paying — stay on screen so they can retry.
-                        },
-                    },
-                );
+                    );
+                }).catch((error) => {
+                    // code === 0 means the user dismissed/cancelled the modal
+                    if (error.code === 0) return;
+                    Alert.alert('Payment failed', error.description ?? 'Payment could not be completed. Please try again.');
+                });
             },
             onError: (err) => {
                 submittingRef.current = false;
@@ -316,8 +318,6 @@ const Payment = () => {
                 </View>
             </View>
 
-            {/* Razorpay WebView checkout — renders as a native Modal, so placement in tree doesn't matter */}
-            {RazorpayUI}
         </SafeAreaView>
     );
 };
