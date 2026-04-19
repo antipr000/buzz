@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from address.models.address import Address
     from booking.models.booking import Booking
     from device.models.device import Device
+    from payouts.models.payout import Payout
     from profile.models.profile import Profile
     from saved_event.models.saved_event import SavedEvent
 
@@ -55,6 +56,10 @@ class User(Base, TimestampMixin):
         lazy="raise",
     )
     saved_events: Mapped[list[SavedEvent]] = relationship(
+        back_populates="user",
+        lazy="raise",
+    )
+    payouts: Mapped[list[Payout]] = relationship(
         back_populates="user",
         lazy="raise",
     )

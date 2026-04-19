@@ -8,6 +8,7 @@ from address.routes.address_router import address_router
 from device.routes.device_router import device_router
 from event.routes.event_router import event_router
 from payment.routes.payment_router import payment_router
+from payouts.routes.payout_router import payout_router
 from profile.routes.profile_router import profile_router
 from user.routes.user_router import user_router
 
@@ -37,6 +38,7 @@ app.include_router(event_router, prefix="/api/v1")
 app.include_router(payment_router, prefix="/api/v1")
 app.include_router(profile_router, prefix="/api/v1")
 app.include_router(address_router, prefix="/api/v1")
+app.include_router(payout_router, prefix="/api/v1")
 app.include_router(device_router, prefix="/api/v1")
 
 @app.get("/", response_model=MessageResponse)

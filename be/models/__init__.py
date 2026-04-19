@@ -9,6 +9,7 @@ from booking.models.booking import Booking
 from device.models.device import Device
 from event.models.event import Event
 from payment.models.payment import Payment
+from payouts.models.payout import Payout
 from profile.models.profile import Profile
 from saved_event.models.saved_event import SavedEvent
 from ticket.models.ticket import Ticket
@@ -20,6 +21,7 @@ __all__ = [
     "Device",
     "Event",
     "Payment",
+    "Payout",
     "Profile",
     "SavedEvent",
     "Ticket",
