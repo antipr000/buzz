@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Text } from '@/components/ui/text'
 import { Image, type ImageSource } from 'expo-image'
 import { Card } from '@/components/ui/card'
-import { ChevronRight } from 'lucide-react-native'
+import { ChevronRight, Wallet } from 'lucide-react-native'
 import { Link, Href } from 'expo-router'
 import { SignOutDialog } from '@/components/account/SignOutDialog'
 import { useProfileStats } from '@/hooks/api'
@@ -174,6 +174,18 @@ const Profile = () => {
             </Card>
           ))}
         </View>
+
+        <Link href="/profile/payout-detail" asChild>
+          <TouchableOpacity activeOpacity={0.7} className="mb-3">
+            <Card className="flex-row border border-[rgba(4,0,71,0.1)] items-center justify-between px-6 py-6 bg-background rounded-xl shadow-none">
+              <View className="flex-row items-center gap-4">
+                <Wallet size={15} color="rgba(79, 70, 229, 1)" />
+                <Text className="text-black font-medium text-xs">Payout accounts</Text>
+              </View>
+              <ChevronRight size={15} color="rgba(79, 70, 229, 1)" />
+            </Card>
+          </TouchableOpacity>
+        </Link>
 
         {/* Menu Options */}
         <View className='gap-3'>

@@ -84,6 +84,14 @@ export const queryKeys = {
     detail: (id: string | null) => [...queryKeys.addresses.all, "detail", id] as const,
   },
 
+  /** GET/PATCH /user/payouts */
+  payouts: {
+    all: ["user", "payouts"] as const,
+    list: () => [...queryKeys.payouts.all, "list"] as const,
+    detail: (id: string | null) =>
+      [...queryKeys.payouts.all, "detail", id] as const,
+  },
+
   /** GET /devices/ */
   devices: {
     all: ["devices"] as const,
