@@ -67,11 +67,11 @@ export default function EventBooked() {
                     {eventTitle}
                 </Text>
             ) : null}
-            <Text className="text-[rgba(15,23,42,0.7)] text-xs text-center mt-3 px-8 leading-snug">
+            {/* <Text className="text-[rgba(15,23,42,0.7)] text-xs text-center mt-3 px-8 leading-snug">
                 {isCompleted
-                    ? 'No payment required — you are all set.'
-                    : 'Payment is still pending. Complete it when you are ready.'}
-            </Text>
+                    ? 'Your booking is confirmed.'
+                    : 'Payment is still pending — complete checkout when you are ready.'}
+            </Text> */}
             {/* <Text className="text-secondary-foreground text-[11px] text-center mt-4 px-6">
                 Reference: {bookingId}
             </Text> */}

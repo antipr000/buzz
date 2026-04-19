@@ -1,3 +1,3 @@
-from payment.schemas.confirm import PaymentConfirmBody, WebhookBody
+from payment.schemas.confirm import PaymentConfirmBody
 
-__all__ = ["PaymentConfirmBody", "WebhookBody"]
+__all__ = ["PaymentConfirmBody"]

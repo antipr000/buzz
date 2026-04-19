@@ -89,3 +89,34 @@ async def verify_payment_signature(
         razorpay_payment_id=razorpay_payment_id,
         razorpay_signature=razorpay_signature,
     )
+
+
+def _verify_webhook_signature_sync(
+    *,
+    raw_body: str,
+    signature: str,
+    secret: str,
+) -> None:
+    """Verify Razorpay webhook HMAC-SHA256 signature.
+
+    Per Razorpay docs: pass the raw request body as a string, never re-serialise JSON.
+    Raises razorpay.errors.SignatureVerificationError on mismatch.
+    """
+    razorpay.Client(auth=("", "")).utility.verify_webhook_signature(
+        raw_body, signature, secret
+    )
+
+
+async def verify_webhook_signature(
+    *,
+    raw_body: bytes,
+    signature: str,
+    secret: str,
+) -> None:
+    """Async wrapper around the Razorpay SDK webhook signature verifier."""
+    await asyncio.to_thread(
+        _verify_webhook_signature_sync,
+        raw_body=raw_body.decode(),
+        signature=signature,
+        secret=secret,
+    )

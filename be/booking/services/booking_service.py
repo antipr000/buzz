@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from collections import defaultdict
 from datetime import date, datetime, time, timezone
@@ -28,6 +29,8 @@ from payment.razorpay_client import (
 from razorpay.errors import SignatureVerificationError
 from ticket.models.ticket import Ticket
 from ticket.tier_pricing import ensure_ticket_line_price_for_event
+
+logger = logging.getLogger(__name__)
 
 
 def _combine_event_datetime(d: date, t: time) -> datetime:
@@ -235,6 +238,12 @@ class BookingService:
 
         if payment.status == PaymentStatus.COMPLETED:
             if payment.razorpay_payment_id == body.razorpay_payment_id.strip():
+                logger.info(
+                    "Razorpay verify: idempotent OK (already COMPLETED; webhook often arrives first) "
+                    "booking_id=%s db_payment_id=%s",
+                    booking.id,
+                    payment.id,
+                )
                 return
             raise ValueError("payment_already_completed")
 
@@ -253,6 +262,43 @@ class BookingService:
         payment.status = PaymentStatus.COMPLETED
         payment.razorpay_payment_id = body.razorpay_payment_id.strip()
         await db.commit()
+
+    @staticmethod
+    async def complete_payment_by_order_id(
+        db: AsyncSession,
+        *,
+        razorpay_order_id: str,
+        razorpay_payment_id: str,
+    ) -> None:
+        """Mark a payment as completed using the Razorpay order_id from a webhook payload.
+
+        Idempotent: silently returns if already COMPLETED with the same payment_id.
+        Raises ValueError if no matching payment is found or the state is unexpected.
+        """
+        stmt = select(Payment).where(Payment.razorpay_order_id == razorpay_order_id.strip())
+        result = await db.execute(stmt)
+        payment = result.scalar_one_or_none()
+
+        if payment is None:
+            raise ValueError("webhook_payment_not_found")
+
+        if payment.status == PaymentStatus.COMPLETED:
+            if payment.razorpay_payment_id == razorpay_payment_id.strip():
+                logger.info(
+                    "Razorpay webhook: idempotent skip (already COMPLETED) "
+                    "booking_id=%s db_payment_id=%s razorpay_order_id=%s razorpay_payment_id=%s",
+                    payment.booking_id,
+                    payment.id,
+                    razorpay_order_id.strip(),
+                    razorpay_payment_id.strip(),
+                )
+                return
+            raise ValueError("webhook_payment_already_completed_different_id")
+
+        payment.status = PaymentStatus.COMPLETED
+        payment.razorpay_payment_id = razorpay_payment_id.strip()
+        await db.commit()
+       
 
     @staticmethod
     async def list_bookings_for_user(

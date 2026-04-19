@@ -21,14 +21,3 @@ class PaymentService:
         await db.refresh(pay)
         return pay
 
-    @staticmethod
-    async def process_webhook_stub(
-        db: AsyncSession,
-        *,
-        payment_id: str | None,
-        success: bool,
-    ) -> Payment | None:
-        """Placeholder webhook: body should be verified against PSP in production."""
-        if not payment_id:
-            return None
-        return await PaymentService.confirm(db, payment_id=payment_id, success=success)
