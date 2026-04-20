@@ -36,7 +36,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatDisplayDate } from '@/app/(main)/create-event/payload';
 import { savedAddressSummary } from '@/components/address/savedAddressSummary';
-import { useAddresses, useDeleteAddress, usePatchProfile, useProfileMe } from '@/hooks/api';
+import { ProfilePayoutAccountsSection } from '@/components/payout/ProfilePayoutAccountsSection';
+import {
+  useAddresses,
+  useDeleteAddress,
+  usePatchProfile,
+  usePayouts,
+  useProfileMe,
+} from '@/hooks/api';
 import { uploadProfileAvatar } from '@/services/profile';
 import type { AddressOut } from '@/services/types/address';
 import type { MaritalStatus, ProfileIdentify } from '@/services/types/profile';
@@ -140,6 +147,7 @@ const EditProfile = () => {
     refetch: refetchAddresses,
     isFetching: addressesFetching,
   } = useAddresses();
+  const payoutsQuery = usePayouts();
   const deleteAddressMutation = useDeleteAddress();
 
   const initialRef = useRef<typeof data>(null);
@@ -544,6 +552,8 @@ const EditProfile = () => {
               </TouchableOpacity>
             </Link>
           </View>
+
+          <ProfilePayoutAccountsSection query={payoutsQuery} />
         </View>
       </ScrollView>
 

@@ -8,7 +8,10 @@ export function useDeletePayout() {
 
   return useMutation({
     mutationFn: (payoutId: string) => deletePayout(payoutId),
-    onSuccess: () => {
+    onSuccess: (_, payoutId) => {
+      queryClient.removeQueries({
+        queryKey: queryKeys.payouts.detail(payoutId),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.payouts.all });
     },
   });
