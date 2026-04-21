@@ -12,6 +12,12 @@ export type PayoutFormFieldsProps = {
   update: (partial: Partial<PayoutFormState>) => void;
   saving: boolean;
   contentHorizontalPadding?: number;
+  /** Add = full account required; edit = optional (API only exposes last4). */
+  variant?: "add" | "edit";
+  /** Edit mode: show “ends in ····{last4}” hint. */
+  accountLast4?: string;
+  /** First account — server always forces primary; hide toggle and show note. */
+  forcePrimary?: boolean;
 };
 
 export function PayoutFormFields({
@@ -19,7 +25,13 @@ export function PayoutFormFields({
   update,
   saving,
   contentHorizontalPadding = 16,
+  variant = "add",
+  accountLast4,
+  forcePrimary = false,
 }: PayoutFormFieldsProps) {
+  const isEdit = variant === "edit";
+  const accountRequired = !isEdit;
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -32,7 +44,9 @@ export function PayoutFormFields({
     >
       <View className="bg-white rounded-md border border-[rgba(0,0,0,0.1)] p-4">
         <Text className="text-[rgba(15,23,42,0.7)] font-semibold text-[11px] mb-4">
-          Bank account for receiving payouts (organizer settlements)
+          {isEdit
+            ? "Update bank details for this payout account."
+            : "Bank account for receiving payouts (organizer settlements)"}
         </Text>
 
         <View className="mb-4">
@@ -94,12 +108,21 @@ export function PayoutFormFields({
 
         <View className="mb-4">
           <Text className="text-[#475569] font-semibold text-[12px] mb-1.5">
-            Account number <Text className="text-[rgba(255,20,51,0.9)]">*</Text>
+            Account number{" "}
+            {accountRequired ? (
+              <Text className="text-[rgba(255,20,51,0.9)]">*</Text>
+            ) : null}
           </Text>
+          {isEdit && accountLast4 ? (
+            <Text className="text-[10px] text-[#64748B] mb-1.5">
+              Current account ends in ****{accountLast4}. Leave both fields blank to keep it, or
+              enter a new number twice to change.
+            </Text>
+          ) : null}
           <Input
             value={form.accountNumber}
             onChangeText={(accountNumber) => update({ accountNumber })}
-            placeholder="6–18 digits"
+            placeholder={isEdit ? "Leave blank to keep existing account number" : "6–18 digits"}
             placeholderTextColor="#94A3B8"
             editable={!saving}
             keyboardType="number-pad"
@@ -109,12 +132,15 @@ export function PayoutFormFields({
 
         <View className="mb-4">
           <Text className="text-[#475569] font-semibold text-[12px] mb-1.5">
-            Confirm account number <Text className="text-[rgba(255,20,51,0.9)]">*</Text>
+            Confirm account number{" "}
+            {accountRequired ? (
+              <Text className="text-[rgba(255,20,51,0.9)]">*</Text>
+            ) : null}
           </Text>
           <Input
             value={form.confirmAccountNumber}
             onChangeText={(confirmAccountNumber) => update({ confirmAccountNumber })}
-            placeholder="Re-enter account number"
+            placeholder={isEdit ? "Leave blank to keep existing account number" : "Re-enter account number"}
             placeholderTextColor="#94A3B8"
             editable={!saving}
             keyboardType="number-pad"
@@ -138,16 +164,22 @@ export function PayoutFormFields({
           />
         </View>
 
-        <View className="flex-row items-center justify-between gap-3 py-1">
-          <Text className="text-[#475569] font-medium text-[12px] flex-1">
-            Set as primary payout account
+        {forcePrimary ? (
+          <Text className="text-[10px] text-[#64748B] py-1">
+            *This will be your primary payout account.
           </Text>
-          <Switch
-            value={form.setAsPrimary}
-            onValueChange={(setAsPrimary) => update({ setAsPrimary })}
-            disabled={saving}
-          />
-        </View>
+        ) : (
+          <View className="flex-row items-center justify-between gap-3 py-1">
+            <Text className="text-[#475569] font-medium text-[12px] flex-1">
+              Set as primary payout account
+            </Text>
+            <Switch
+              value={form.setAsPrimary}
+              onValueChange={(setAsPrimary) => update({ setAsPrimary })}
+              disabled={saving}
+            />
+          </View>
+        )}
       </View>
     </ScrollView>
   );

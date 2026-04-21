@@ -6,7 +6,7 @@ import {
   Alert,
 } from "react-native";
 import React, { useState } from "react";
-import { Link } from "expo-router";
+import { Link, router } from "expo-router";
 import { Text } from "@/components/ui/text";
 import { ChevronRight, MoreVertical } from "lucide-react-native";
 import {
@@ -117,6 +117,15 @@ export function ProfilePayoutAccountsSection({
                     </Pressable>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onPress={() =>
+                        router.push(
+                          `/profile/payout-detail?payoutId=${encodeURIComponent(row.id)}`
+                        )
+                      }
+                    >
+                      <Text className="text-sm text-popover-foreground">Edit</Text>
+                    </DropdownMenuItem>
                     {!row.is_primary ? (
                       <DropdownMenuItem
                         onPress={() => onSetPrimary(row)}

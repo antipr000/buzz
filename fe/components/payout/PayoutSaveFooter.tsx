@@ -6,9 +6,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 type PayoutSaveFooterProps = {
   saving: boolean;
   onPress: () => void;
+  /** Defaults to “Save account” (add flow). */
+  submitLabel?: string;
 };
 
-export function PayoutSaveFooter({ saving, onPress }: PayoutSaveFooterProps) {
+export function PayoutSaveFooter({
+  saving,
+  onPress,
+  submitLabel = "Save account",
+}: PayoutSaveFooterProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -30,7 +36,7 @@ export function PayoutSaveFooter({ saving, onPress }: PayoutSaveFooterProps) {
         {saving ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text className="text-white font-semibold text-[13px]">Save account</Text>
+          <Text className="text-white font-semibold text-[13px]">{submitLabel}</Text>
         )}
       </TouchableOpacity>
     </View>
