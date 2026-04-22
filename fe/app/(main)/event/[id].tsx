@@ -14,6 +14,7 @@ import {
     formatTimeOfDay,
 } from '@/screens/home/discoverAdapters'
 import { Image } from 'expo-image'
+import * as Linking from 'expo-linking'
 import { LinearGradient } from 'expo-linear-gradient'
 import {
     displayEventDescription,
@@ -23,7 +24,7 @@ import { checkoutTotal } from '@/lib/booking/checkoutTotal'
 import { openNativeMaps } from '@/lib/maps/openNativeMaps'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useMemo, useState } from 'react'
-import { ActivityIndicator, Alert, ScrollView, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Alert, ScrollView, Share, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const FALLBACK_ORGANIZER_LOGO = require('@/assets/images/home/logo1.svg')
@@ -145,6 +146,12 @@ export default function EventDetails() {
         })
     }
 
+    const shareEvent = async () => {
+        if (!trimmedId) return
+        const url = Linking.createURL(`/event/${trimmedId}`)
+        await Share.share({ message: url }).catch(() => {})
+    }
+
     const backHeader = (
         <SafeAreaView edges={['top']}>
             <View className="flex-row items-center justify-between px-6 pt-2">
@@ -246,8 +253,11 @@ export default function EventDetails() {
                                 <Image source={require('@/assets/images/events/detailed/arrow_back.svg')} style={{ width: 24, height: 24, marginRight: 2 }} contentFit="contain" />
                             </TouchableOpacity>
 
-                            {/* TODO: Add share functionality */}
-                            <TouchableOpacity activeOpacity={0.8} className="w-8 h-8 rounded-full bg-white items-center justify-center shadow-sm">
+                            <TouchableOpacity
+                                onPress={shareEvent}
+                                activeOpacity={0.8}
+                                className="w-8 h-8 rounded-full bg-white items-center justify-center shadow-sm"
+                            >
                                 <Image source={require('@/assets/images/events/detailed/share.svg')} style={{ width: 24, height: 24 }} contentFit="contain" />
                             </TouchableOpacity>
                         </View>
