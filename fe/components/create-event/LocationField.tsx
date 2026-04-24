@@ -32,9 +32,20 @@ function pickFromPlace(place: Place): PickedLocation | null {
   const lng = loc?.longitude;
   if (!formattedAddress || typeof lat !== 'number' || typeof lng !== 'number') return null;
 
+  // Places docs: use structured main/secondary text for concise display labels.
+  const mainText = place.structuredFormat?.mainText?.text?.trim();
+  const secondaryCountry = place.structuredFormat?.secondaryText?.text
+    ?.split(',')
+    .at(-1)
+    ?.trim();
+  const shortLabel =
+    [mainText, secondaryCountry].filter(Boolean).join(', ') ||
+    formattedAddress.split(',')[0]?.trim() ||
+    formattedAddress;
+
   return {
     address: formattedAddress,
-    label: formattedAddress,
+    label: shortLabel,
     latitude: lat,
     longitude: lng,
   };
