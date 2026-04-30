@@ -31,6 +31,13 @@ class Config(BaseSettings):
     # Razorpay (Orders API + signature verification). Empty = online checkout disabled server-side.
     razorpay_key_id: str = Field(default="", alias="RAZORPAY_KEY_ID")
     razorpay_key_secret: str = Field(default="", alias="RAZORPAY_KEY_SECRET")
+    brevo_api_key: str = Field(default="", alias="BREVO_API_KEY")
+    brevo_sender_email: str = Field(default="", alias="BREVO_SENDER_EMAIL")
+    brevo_sender_name: str = Field(default="", alias="BREVO_SENDER_NAME")
+    brevo_payment_confirm_template_id: int = Field(
+        default=0,
+        alias="BREVO_PAYMENT_CONFIRM_TEMPLATE_ID",
+    )
 
     # Supabase project URL (https://<ref>.supabase.co) — JWT verification via JWKS (see Supabase JWT docs)
     supabase_url: str = Field(default="", alias="SUPABASE_URL")

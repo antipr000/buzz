@@ -211,7 +211,7 @@ class BookingService:
         *,
         user_id: uuid.UUID,
         body: VerifyRazorpayPaymentBody,
-    ) -> None:
+    ) -> bool:
         raw_bid = body.booking_id.strip()
         stmt = (
             select(Booking)
@@ -244,7 +244,7 @@ class BookingService:
                     booking.id,
                     payment.id,
                 )
-                return
+                return False
             raise ValueError("payment_already_completed")
 
         if payment.status != PaymentStatus.PENDING_PAYMENT:
@@ -262,6 +262,7 @@ class BookingService:
         payment.status = PaymentStatus.COMPLETED
         payment.razorpay_payment_id = body.razorpay_payment_id.strip()
         await db.commit()
+        return True
 
     @staticmethod
     async def complete_payment_by_order_id(
@@ -269,7 +270,7 @@ class BookingService:
         *,
         razorpay_order_id: str,
         razorpay_payment_id: str,
-    ) -> None:
+    ) -> bool:
         """Mark a payment as completed using the Razorpay order_id from a webhook payload.
 
         Idempotent: silently returns if already COMPLETED with the same payment_id.
@@ -292,13 +293,13 @@ class BookingService:
                     razorpay_order_id.strip(),
                     razorpay_payment_id.strip(),
                 )
-                return
+                return False
             raise ValueError("webhook_payment_already_completed_different_id")
 
         payment.status = PaymentStatus.COMPLETED
         payment.razorpay_payment_id = razorpay_payment_id.strip()
         await db.commit()
-       
+        return True
 
     @staticmethod
     async def list_bookings_for_user(

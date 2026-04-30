@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, File, HTTPException, Path, Query, Response, UploadFile, status
 from google.api_core import exceptions as google_api_exceptions
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking.schemas.booking_schemas import (
@@ -35,10 +37,13 @@ from event.schemas.event_schemas import (
     SavedListResponse,
 )
 from event.services.event_service import EventPatchForbidden, EventService
+from payment.models.payment import Payment
+from payment.services.payment_email_service import PaymentEmailService
 from saved_event.services.saved_event_service import SavedEventService
 from user.models.user import User
 
 event_router = APIRouter(prefix="/events", tags=["Events"])
+logger = logging.getLogger(__name__)
 
 
 @event_router.get("/discover", response_model=DiscoverResponse)
@@ -206,7 +211,7 @@ async def verify_razorpay_payment(
     user: User = Depends(get_current_user),
 ):
     try:
-        await BookingService.verify_razorpay_payment(
+        completed_now = await BookingService.verify_razorpay_payment(
             db, user_id=user.id, body=body
         )
     except ValueError as e:
@@ -247,6 +252,29 @@ async def verify_razorpay_payment(
                 detail="Payment signature verification failed.",
             ) from e
         raise HTTPException(status_code=400, detail=msg) from e
+
+    if completed_now:
+        try:
+            stmt = select(Payment).where(Payment.booking_id == body.booking_id.strip())
+            result = await db.execute(stmt)
+            payment = result.scalar_one_or_none()
+            if payment is None:
+                raise ValueError("payment_not_found")
+            await PaymentEmailService.send_payment_confirmation(
+                to_email=user.email,
+                to_name=user.full_name,
+                payment_id=body.razorpay_payment_id.strip(),
+                order_id=body.razorpay_order_id.strip(),
+                booking_id=body.booking_id.strip(),
+                amount=payment.amount,
+            )
+        except Exception:
+            # Payment completion should not fail just because email provider failed.
+            logger.exception(
+                "Verify email send failed for booking_id=%s order_id=%s",
+                body.booking_id,
+                body.razorpay_order_id,
+            )
     return VerifyRazorpayPaymentResponse()
 
 

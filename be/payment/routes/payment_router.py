@@ -5,6 +5,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from razorpay.errors import SignatureVerificationError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from booking.models.booking import Booking
@@ -18,6 +19,7 @@ from payment.schemas.confirm import (
     PaymentConfirmBody,
     PaymentOutcomeResponse,
 )
+from payment.services.payment_email_service import PaymentEmailService
 from payment.services.payment_service import PaymentService
 from user.models.user import User
 
@@ -110,7 +112,7 @@ async def payment_webhook(
         raise HTTPException(status_code=400, detail="Unexpected payload structure")
 
     try:
-        await BookingService.complete_payment_by_order_id(
+        completed_now = await BookingService.complete_payment_by_order_id(
             db,
             razorpay_order_id=order_id,
             razorpay_payment_id=payment_id,
@@ -129,6 +131,37 @@ async def payment_webhook(
             )
             return {"status": "ignored", "reason": "already_completed_different_id"}
         raise HTTPException(status_code=500, detail=msg) from exc
+    # we can  add a flag in table to avoid duplicate  email send
+    if completed_now:
+        try:
+            stmt = (
+                select(User.email, User.full_name, Payment.booking_id, Payment.amount)
+                .join(Booking, Booking.user_id == User.id)
+                .join(Payment, Payment.booking_id == Booking.id)
+                .where(Payment.razorpay_order_id == order_id.strip())
+            )
+            result = await db.execute(stmt)
+            row = result.first()
+            if row is None:
+                logger.warning(
+                    "Webhook email skipped: payment context not found for order_id=%s",
+                    order_id,
+                )
+            else:
+                await PaymentEmailService.send_payment_confirmation(
+                    to_email=row.email,
+                    to_name=row.full_name,
+                    payment_id=payment_id,
+                    order_id=order_id,
+                    booking_id=row.booking_id,
+                    amount=row.amount,
+                )
+        except Exception:
+            logger.exception(
+                "Webhook email send failed for order_id=%s payment_id=%s",
+                order_id,
+                payment_id,
+            )
 
     # Completion / idempotent skip is logged in BookingService.complete_payment_by_order_id
     return {"status": "ok", "event": event}

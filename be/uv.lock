@@ -101,6 +101,7 @@ dependencies = [
     { name = "cuid2" },
     { name = "fastapi" },
     { name = "google-cloud-storage" },
+    { name = "httpx" },
     { name = "psycopg2-binary" },
     { name = "pydantic", extra = ["email"] },
     { name = "pydantic-settings" },
@@ -113,7 +114,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "httpx" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -125,6 +125,7 @@ requires-dist = [
     { name = "cuid2", specifier = ">=2.0.1" },
     { name = "fastapi", specifier = ">=0.135.2" },
     { name = "google-cloud-storage", specifier = ">=3.10.1" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.12.5" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
@@ -137,7 +138,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx", specifier = ">=0.28.1" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "ruff", specifier = ">=0.15.7" },
 ]

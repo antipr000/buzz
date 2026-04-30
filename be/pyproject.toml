@@ -18,11 +18,11 @@ dependencies = [
     "python-multipart>=0.0.22",
     "google-cloud-storage>=3.10.1",
     "razorpay>=2.0.1",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "pytest>=9.0.2",
     "ruff>=0.15.7",
 ]
