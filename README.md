@@ -69,6 +69,18 @@ Run `adb reverse` once after plugging in. Then `localhost` on the phone tunnels 
 
 ---
 
+### Web (browser)
+
+```bash
+cd fe
+npx expo start 
+```
+
+Opens at **http://localhost:8081**. Most features work in the browser. Native-only APIs (camera, Razorpay, haptics) won't work on web.
+
+
+
+
 ## Running on a Device
 
 ### Expo Go (quick testing)
@@ -91,6 +103,9 @@ cd fe
 npx expo run:android
 ```
 This compiles native code, installs the APK on your connected device/emulator, and starts Metro automatically. usb debugging should be enabled on your device and device should be connnected to the computer.
+
+---
+
 
 ---
 
